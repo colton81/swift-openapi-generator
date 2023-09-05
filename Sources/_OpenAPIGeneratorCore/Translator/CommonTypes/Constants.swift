@@ -129,6 +129,7 @@ enum Constants {
             "Codable",
             "Hashable",
             "Sendable",
+            "Identifiable"
         ]
     }
 

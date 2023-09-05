@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 import OpenAPIKit
+import Foundation
 
 extension FileTranslator {
 
@@ -29,8 +30,26 @@ extension FileTranslator {
         let propertyDecls =
             allProperties
             .flatMap(translatePropertyBlueprint)
+        let uuidFunctionCall = FunctionCallDescription(
+            calledExpression: .identifier(IdentifierDescription(name: "UUID")),
+            arguments: [] as [FunctionArgumentDescription]
+        )
 
+        let idRightExpression = Expression.functionCall(uuidFunctionCall)
+
+        let idProperty = Declaration.commentable(
+            nil,
+            .variable(
+                .init(
+                    accessModifier: config.access,
+                    kind: .var,
+                    left: "id",
+                    type: "UUID", right: idRightExpression
+                )
+            )
+        )
         var members = propertyDecls
+        members.append(idProperty)
         let initDecl = translateStructBlueprintInitializer(
             typeName: typeName,
             properties: allProperties
