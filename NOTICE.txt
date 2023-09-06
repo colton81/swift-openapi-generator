@@ -41,3 +41,4 @@ This product contains derivations of examples from the OpenAPI project.
     * https://github.com/OAI/OpenAPI-Specification/blob/main/LICENSE
   * HOMEPAGE:
     * https://github.com/OAI/OpenAPI-Specification
+/Users/coltonhillebrand/Documents/github/MTillAccounting/GeneratedClient/openapi.yml
