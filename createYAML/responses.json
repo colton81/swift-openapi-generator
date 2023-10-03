@@ -1,0 +1,24 @@
+[
+    {
+        "name": "AccountTypesList",
+        "path": "/v3/Misc/GetAccountTypes",
+        "method": "get",
+        "response": "200",
+        "responseOBJ":{
+
+            "status": true,
+            "data": {
+                "records": [
+                    {
+                        "AcctTypeDesc": "Accounts Payable",
+                        "PLBS": "B",
+                        "PLSort": 100,
+                        "BSSort": "",
+                        "TypeGroup": "Accounts Payable"
+                    }
+                ]
+            }
+        }
+        
+    }
+]

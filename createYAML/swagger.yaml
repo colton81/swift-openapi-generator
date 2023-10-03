@@ -1,0 +1,4715 @@
+openapi: 3.0.1
+info:
+  title: API
+  version: v3
+paths:
+  /v3/Entity/GetList:
+    get:
+      tags:
+      - Entity
+      summary: Retrieve a List or DropDown
+      parameters:
+      - name: ListType
+        in: query
+        required: true
+        style: form
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/TypeEntityList'
+      - name: Status
+        in: query
+        description: Filter Enabled/Disabled
+        style: form
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/FilterStatus'
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Entity:
+    get:
+      tags:
+      - Entity
+      summary: Retrieve a Single Record
+      parameters:
+      - name: IDNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    patch:
+      tags:
+      - Entity
+      summary: Create or Update a single record
+      parameters:
+      - name: IDNo
+        in: query
+        description: Send a 0 to create a new record
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    delete:
+      tags:
+      - Entity
+      summary: Delete a single record
+      parameters:
+      - name: IDNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Transaction/GetList:
+    get:
+      tags:
+      - Transaction
+      summary: Retrieve a list of records (Specifically for Transaction Listings that
+        aren't registers)
+      parameters:
+      - name: TransListType
+        in: query
+        required: true
+        style: form
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/TypeTransList'
+      - name: AccountNo
+        in: query
+        style: form
+        schema:
+          type: string
+      - name: StartDate
+        in: query
+        style: form
+        schema:
+          type: string
+          format: date-time
+      - name: EndDate
+        in: query
+        style: form
+        schema:
+          type: string
+          format: date-time
+      - name: EntityID
+        in: query
+        style: form
+        schema:
+          type: integer
+          format: int64
+          default: 0
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Transaction/GetRegister:
+    get:
+      tags:
+      - Transaction
+      summary: Retrieves a list with a running balance
+      parameters:
+      - name: RegisterType
+        in: query
+        required: true
+        style: form
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/TypeRegister'
+      - name: AccountNo
+        in: query
+        style: form
+        schema:
+          type: string
+      - name: StartDate
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+          format: date-time
+      - name: EndDate
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+          format: date-time
+      - name: EntityID
+        in: query
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Transaction:
+    get:
+      tags:
+      - Transaction
+      summary: Retrieves the Main transaction record, as well as a SubGrid item that
+        contains all of the Sub Records
+      parameters:
+      - name: TransTypeName
+        in: query
+        required: true
+        style: form
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/TypeTransRecord'
+      - name: TransNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Transaction/PatchMain:
+    patch:
+      tags:
+      - Transaction
+      summary: Create or Update a single Main transaction record (Generates a TransNo
+        and returns it)
+      parameters:
+      - name: TransNo
+        in: query
+        description: Send a 0 to create a new record
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Transaction/PatchSub:
+    patch:
+      tags:
+      - Transaction
+      summary: Creates or updates a single Sub transaction record (Also updates the
+        current balance on the Main record and returns it)
+      parameters:
+      - name: TransTypeName
+        in: query
+        required: true
+        style: form
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/TypeTransRecord'
+      - name: TransNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: IDNo
+        in: query
+        description: Send a 0 to create a new record
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Transaction/DeleteMain:
+    delete:
+      tags:
+      - Transaction
+      summary: Deletes a Main transaction record as well as all Sub records
+      parameters:
+      - name: TransTypeName
+        in: query
+        required: true
+        style: form
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/TypeTransRecord'
+      - name: TransNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Transaction/DeleteSub:
+    delete:
+      tags:
+      - Transaction
+      summary: Deletes a Sub transaction record (Also updates the current balance
+        on the Main record and returns it)
+      parameters:
+      - name: TransTypeName
+        in: query
+        required: true
+        style: form
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/TypeTransRecord'
+      - name: TransNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: IDNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Depreciation/GetList:
+    get:
+      tags:
+      - Depreciation
+      summary: Retrieve a list of records
+      parameters:
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/GLAccount/GetList:
+    get:
+      tags:
+      - GLAccount
+      summary: Retrieve a List or DropDown
+      parameters:
+      - name: GLAccountType
+        in: query
+        description: Filter by GL Account Type
+        style: form
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/FilterGLAccountTypes'
+      - name: GLAccountGroup
+        in: query
+        description: Filter by GL Account Group
+        style: form
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/FilterGLAccountGroups'
+      - name: Status
+        in: query
+        description: Filter Enabled/Disabled
+        style: form
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/FilterStatus'
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/NotesPayable/GetList:
+    get:
+      tags:
+      - NotesPayable
+      summary: Retrieve a list of records
+      parameters:
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/NotesReceivable/GetList:
+    get:
+      tags:
+      - NotesReceivable
+      summary: Retrieve a list of records
+      parameters:
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Reconciliation/GetList:
+    get:
+      tags:
+      - Reconciliation
+      summary: Retrieve a list of records
+      parameters:
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Depreciation:
+    get:
+      tags:
+      - Depreciation
+      summary: Retrieve a single Main note receivable record, as well as a SubRecords
+        array that contains all of the Sub Records
+      parameters:
+      - name: AssetID
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/GLAccount:
+    get:
+      tags:
+      - GLAccount
+      summary: Retrieve a Single Record
+      parameters:
+      - name: AccountNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    post:
+      tags:
+      - GLAccount
+      summary: Create a single record
+      parameters:
+      - name: AccountNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    patch:
+      tags:
+      - GLAccount
+      summary: Update a single record
+      parameters:
+      - name: AccountNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    delete:
+      tags:
+      - GLAccount
+      summary: Delete a single record
+      parameters:
+      - name: AccountNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/NotesPayable:
+    get:
+      tags:
+      - NotesPayable
+      summary: Retrieve a single Main note payable record, as well as a SubRecords
+        array that contains all of the Sub Records
+      parameters:
+      - name: LoanNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/NotesReceivable:
+    get:
+      tags:
+      - NotesReceivable
+      summary: Retrieve a single Main note receivable record, as well as a SubRecords
+        array that contains all of the Sub Records
+      parameters:
+      - name: LoanNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Reconciliation:
+    get:
+      tags:
+      - Reconciliation
+      summary: Retrieve a single Main Reconciliation record, as well as a SubRecords
+        array that contains all of the Sub Transaction records
+      parameters:
+      - name: RecNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Reconciliation/GetSubTransactions:
+    get:
+      tags:
+      - Reconciliation
+      summary: Retrieve Sub Transactions for the selected Account
+      parameters:
+      - name: AccountNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: RecNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Depreciation/PatchMain:
+    patch:
+      tags:
+      - Depreciation
+      summary: Create or Update a single Main record (Generates a AssetID and returns
+        it)
+      parameters:
+      - name: AssetID
+        in: query
+        description: Send a 0 to create a new record
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Depreciation/PatchSubSchedule:
+    patch:
+      tags:
+      - Depreciation
+      summary: Creates Sub schedule records (Bulk insert of multiple records)
+      parameters:
+      - name: AssetID
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) list of payloads for the records:'
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                additionalProperties: {}
+          text/json:
+            schema:
+              type: array
+              items:
+                type: object
+                additionalProperties: {}
+          application/*+json:
+            schema:
+              type: array
+              items:
+                type: object
+                additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/NotesPayable/PatchMainNote:
+    patch:
+      tags:
+      - NotesPayable
+      summary: Create or Update a single Main note record (Generates a LoanNo and
+        returns it)
+      parameters:
+      - name: LoanNo
+        in: query
+        description: Send a 0 to create a new record
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/NotesPayable/PatchSubSchedule:
+    patch:
+      tags:
+      - NotesPayable
+      summary: Creates Sub schedule records (Bulk insert of multiple records)
+      parameters:
+      - name: LoanNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) list of payloads for the records:'
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                additionalProperties: {}
+          text/json:
+            schema:
+              type: array
+              items:
+                type: object
+                additionalProperties: {}
+          application/*+json:
+            schema:
+              type: array
+              items:
+                type: object
+                additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/NotesReceivable/PatchMainNote:
+    patch:
+      tags:
+      - NotesReceivable
+      summary: Create or Update a single Main note record (Generates a LoanNo and
+        returns it)
+      parameters:
+      - name: LoanNo
+        in: query
+        description: Send a 0 to create a new record
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/NotesReceivable/PatchSubSchedule:
+    patch:
+      tags:
+      - NotesReceivable
+      summary: Creates Sub schedule records (Bulk insert of multiple records)
+      parameters:
+      - name: LoanNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) list of payloads for the records:'
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                additionalProperties: {}
+          text/json:
+            schema:
+              type: array
+              items:
+                type: object
+                additionalProperties: {}
+          application/*+json:
+            schema:
+              type: array
+              items:
+                type: object
+                additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Reconciliation/PatchMainRec:
+    patch:
+      tags:
+      - Reconciliation
+      summary: Create or Update a single Main Reconciliation record (Generates a RecNo
+        and returns it)
+      parameters:
+      - name: RecNo
+        in: query
+        description: Send a 0 to create a new record
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Reconciliation/PatchSubTransactions:
+    patch:
+      tags:
+      - Reconciliation
+      summary: Updates Sub Transaction records (Bulk update of multiple records)
+      parameters:
+      - name: RecNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) list of payloads for the records:'
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                additionalProperties: {}
+          text/json:
+            schema:
+              type: array
+              items:
+                type: object
+                additionalProperties: {}
+          application/*+json:
+            schema:
+              type: array
+              items:
+                type: object
+                additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Depreciation/DeleteMain:
+    delete:
+      tags:
+      - Depreciation
+      summary: Deletes a Main record as well as all Sub Schedule records
+      parameters:
+      - name: AssetID
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Depreciation/DeleteSubSchedule:
+    delete:
+      tags:
+      - Depreciation
+      summary: Deletes all Sub Schedule records
+      parameters:
+      - name: AssetID
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/NotesPayable/DeleteMainNote:
+    delete:
+      tags:
+      - NotesPayable
+      summary: Deletes a Main Note record as well as all Sub Schedule records
+      parameters:
+      - name: LoanNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/NotesPayable/DeleteSubSchedule:
+    delete:
+      tags:
+      - NotesPayable
+      summary: Deletes all Sub Schedule records
+      parameters:
+      - name: LoanNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/NotesReceivable/DeleteMainNote:
+    delete:
+      tags:
+      - NotesReceivable
+      summary: Deletes a Main Note record as well as all Sub Schedule records
+      parameters:
+      - name: LoanNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/NotesReceivable/DeleteSubSchedule:
+    delete:
+      tags:
+      - NotesReceivable
+      summary: Deletes all Sub Schedule records
+      parameters:
+      - name: LoanNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Reconciliation/DeleteMainRec:
+    delete:
+      tags:
+      - Reconciliation
+      summary: Deletes a Main Rec record
+      parameters:
+      - name: RecNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Item/ItemCategories/GetProducts:
+    get:
+      tags:
+      - Item
+      summary: Retrieve a list or dropdown
+      parameters:
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Item/ItemCategories/GetServices:
+    get:
+      tags:
+      - Item
+      summary: Retrieve a list or dropdown
+      parameters:
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Item/ItemCategories:
+    get:
+      tags:
+      - Item
+      summary: Retrieve a Single Record
+      parameters:
+      - name: CategoryCode
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    post:
+      tags:
+      - Item
+      summary: Add a single record
+      parameters:
+      - name: CategoryCode
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    patch:
+      tags:
+      - Item
+      summary: Update a single record
+      parameters:
+      - name: CategoryCode
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    delete:
+      tags:
+      - Item
+      summary: Delete a single record
+      parameters:
+      - name: CategoryCode
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Item/ItemCodes/GetProducts:
+    get:
+      tags:
+      - Item
+      summary: Retrieve a list or dropdown of Products
+      parameters:
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Item/ItemCodes/GetServices:
+    get:
+      tags:
+      - Item
+      summary: Retrieve a list or dropdown of Services
+      parameters:
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Item/ItemCodes/GetProduct:
+    get:
+      tags:
+      - Item
+      summary: Retrieve a Single Product Record
+      parameters:
+      - name: ItemCode
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Item/ItemCodes/GetService:
+    get:
+      tags:
+      - Item
+      summary: Retrieve a Single Service Record
+      parameters:
+      - name: ItemCode
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Item/ItemCodes:
+    post:
+      tags:
+      - Item
+      summary: Add a single record
+      parameters:
+      - name: ItemCode
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    patch:
+      tags:
+      - Item
+      summary: Update a single record
+      parameters:
+      - name: ItemCode
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    delete:
+      tags:
+      - Item
+      summary: Delete a single record
+      parameters:
+      - name: ItemCode
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Setup/CompanyInfo:
+    get:
+      tags:
+      - Setup
+      summary: Retrieve a Single Record
+      parameters:
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    patch:
+      tags:
+      - Setup
+      summary: Update a single record
+      parameters:
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Setup/AccountingDefaults:
+    get:
+      tags:
+      - Setup
+      summary: Retrieve a Single Record
+      parameters:
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    patch:
+      tags:
+      - Setup
+      summary: Update a single record
+      parameters:
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Setup/MeasurementUnits/GetList:
+    get:
+      tags:
+      - Setup
+      summary: Retrieve a list or dropdown
+      parameters:
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Setup/MeasurementUnits:
+    get:
+      tags:
+      - Setup
+      summary: Retrieve a Single Record
+      parameters:
+      - name: UnitCode
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    post:
+      tags:
+      - Setup
+      summary: Add a single record
+      parameters:
+      - name: UnitCode
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    patch:
+      tags:
+      - Setup
+      summary: Update a single record
+      parameters:
+      - name: UnitCode
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    delete:
+      tags:
+      - Setup
+      summary: Delete a single record
+      parameters:
+      - name: UnitCode
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Setup/TermsCodes/GetList:
+    get:
+      tags:
+      - Setup
+      summary: Retrieve a list or dropdown
+      parameters:
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Setup/TermsCodes:
+    get:
+      tags:
+      - Setup
+      summary: Retrieve a Single Record
+      parameters:
+      - name: IDNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    patch:
+      tags:
+      - Setup
+      summary: Add or Update a single record
+      parameters:
+      - name: IDNo
+        in: query
+        description: Send a 0 to create a new record
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    delete:
+      tags:
+      - Setup
+      summary: Delete a single record
+      parameters:
+      - name: IDNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Document/GetFileURL:
+    get:
+      tags:
+      - Document
+      summary: Retrieves a 15 minute temporary URL to access a single file
+      parameters:
+      - name: FileID
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                type: string
+            text/json:
+              schema:
+                type: string
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Document/GetThumbnailUrls:
+    get:
+      tags:
+      - Document
+      parameters:
+      - name: FileIDs
+        in: query
+        required: true
+        style: form
+        schema:
+          type: array
+          items:
+            type: integer
+            format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  type: string
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+            text/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Document/DownloadFile:
+    get:
+      tags:
+      - Document
+      parameters:
+      - name: FileID
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Document/DownloadFiles:
+    get:
+      tags:
+      - Document
+      parameters:
+      - name: FileIDs
+        in: query
+        required: true
+        style: form
+        schema:
+          type: array
+          items:
+            type: integer
+            format: int32
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Document/UploadFile:
+    post:
+      tags:
+      - Document
+      summary: Upload a single file
+      parameters:
+      - name: FileCategory
+        in: query
+        description: Category of record this image is assigned to
+        required: true
+        style: form
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/TypeFileCategory'
+      - name: CategoryID
+        in: query
+        description: ID of assigned category record
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: FileType
+        in: query
+        description: "I\u0332mage, L\u0332ogo, word D\u0332oc, eX\u0332cel, P\u0332\
+          df"
+        required: true
+        style: form
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/TypeFileType'
+      - name: FileDescription
+        in: query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: FileExt
+        in: query
+        description: File Extension without the "."
+        required: true
+        style: form
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/TypeFileExt'
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+              - file
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+            encoding:
+              file:
+                style: form
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Document/DeleteFile:
+    delete:
+      tags:
+      - Document
+      parameters:
+      - name: FileID
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int32
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Perm/PermCode/GetPermCodes:
+    get:
+      tags:
+      - Perm
+      summary: Retrieve the static system Perm Codes
+      parameters:
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Perm/PermGroupRoles/GetList:
+    get:
+      tags:
+      - Perm
+      summary: Retrieve a List or DropDown
+      parameters:
+      - name: Category
+        in: query
+        required: true
+        style: form
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/TypeCategory'
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Perm/PermGroupRoles:
+    get:
+      tags:
+      - Perm
+      summary: Retrieve a Single Record
+      parameters:
+      - name: ID
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    patch:
+      tags:
+      - Perm
+      summary: Create or Update a single record
+      parameters:
+      - name: Category
+        in: query
+        required: true
+        style: form
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/TypeCategory'
+      - name: ID
+        in: query
+        description: Send a 0 to create a new record
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    delete:
+      tags:
+      - Perm
+      summary: Delete a single record
+      parameters:
+      - name: Category
+        in: query
+        required: true
+        style: form
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/TypeCategory'
+      - name: ID
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Perm/PermRolesUsers/GetListUserAssignedRoles:
+    get:
+      tags:
+      - Perm
+      summary: Retrieve a List of User Assigned Roles
+      parameters:
+      - name: UserID
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Perm/PermRolesUsers:
+    post:
+      tags:
+      - Perm
+      summary: Create single record
+      parameters:
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    delete:
+      tags:
+      - Perm
+      summary: Delete a single record
+      parameters:
+      - name: IDNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Perm/PermsAssigned/GetListRolePerms:
+    get:
+      tags:
+      - Perm
+      summary: Retrieve a List Perms Assigned to a Role or Group
+      parameters:
+      - name: GroupRoleID
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Perm/PermsAssigned/GetListUserPerms:
+    get:
+      tags:
+      - Perm
+      summary: Retrieve a List Perms Assigned to a User
+      parameters:
+      - name: UserID
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Perm/PermsAssigned:
+    post:
+      tags:
+      - Perm
+      summary: Create single record
+      parameters:
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      requestBody:
+        description: 'JSON ("Field": Value) payload for the record:'
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          text/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/*+json:
+            schema:
+              type: object
+              additionalProperties: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+    delete:
+      tags:
+      - Perm
+      summary: Delete a single record
+      parameters:
+      - name: IDNo
+        in: query
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Misc/GetStates:
+    get:
+      tags:
+      - Misc
+      summary: Retrieve a list of US states
+      parameters:
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request - Oops! Something's off with the data you sent.
+            Probably a bad parameter.
+        '422':
+          description: Validation Error - Some values in your payload aren't playing
+            nice with our database. Double-check any user inputs.
+        '500':
+          description: Internal Server Error - Our bad! Something hiccuped on our
+            end.
+  /v3/Misc/GetAccountTypes:
+    get:
+      tags:
+      - Misc
+      summary: Retrieve the static system Account Types
+      parameters:
+      - name: GLAccountGroup
+        in: query
+        description: Filter by GL Account Group
+        style: form
+        schema:
+          allOf:
+          - $ref: '#/components/schemas/FilterGLAccountGroups'
+      - name: CID
+        in: header
+        required: true
+        style: simple
+      - name: AK
+        in: header
+        required: true
+        style: simple
+      - name: User
+        in: header
+        required: true
+        style: simple
+      - name: ClientPlatform
+        in: header
+        description: 'Example Values: Android v11.2.5, IOS v15.0.1, Edge v93.0.961.38,
+          Chrome v93.0.4577.63, Firefox v92.0.2, Safari v15.0...'
+        required: true
+        style: simple
+      - name: ClientTime
+        in: header
+        description: Client's Local Date / Time
+        style: simple
+      responses:
+        '200':
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountTypesList'
+      operationId: v3MiscGetAccountTypesGet
+components:
+  schemas:
+    FilterGLAccountGroups:
+      enum:
+      - All
+      - Asset
+      - AssetOnly
+      - Liability
+      - LiabilityOnly
+      - Equity
+      - Income
+      - Expense
+      type: string
+    FilterGLAccountTypes:
+      enum:
+      - All
+      - AccountsPayable
+      - AccountsReceivable
+      - Bank
+      - CostofGoodSold
+      - CostofSales
+      - CreditCard
+      - CurrentAsset
+      - CurrentLiability
+      - Equity
+      - Expense
+      - ExpenseOnly
+      - FixedAsset
+      - Income
+      - Inventory
+      - LongTermLiability
+      - NotesPayable
+      - NotesReceivable
+      - OtherAsset
+      - OtherCurrentAsset
+      - OtherCurrentLiabilty
+      - OtherExpense
+      - OtherFixedAsset
+      - OtherIncome
+      - OtherLiability
+      - OtherLongTermLiability
+      - PaymentAccounts
+      type: string
+    FilterStatus:
+      enum:
+      - Enabled
+      - Disabled
+      - All
+      type: string
+    TypeCategory:
+      enum:
+      - Role
+      - Group
+      type: string
+    TypeEntityList:
+      enum:
+      - All
+      - Customer
+      - Vendor
+      - CustomerVendor
+      - Employee
+      - Salesman
+      type: string
+    TypeFileCategory:
+      enum:
+      - ENT_CUST
+      - ENT_VEND
+      - ENT_EMP
+      - GL_INV
+      - GL_BIL
+      - CRM_PROJ
+      - SET_COMP
+      type: string
+    TypeFileExt:
+      enum:
+      - png
+      - jpg
+      - docx
+      - doc
+      - xlsx
+      - xls
+      - pdf
+      type: string
+    TypeFileType:
+      enum:
+      - I
+      - L
+      - D
+      - X
+      - P
+      type: string
+    TypeRegister:
+      enum:
+      - None
+      - Asset
+      - Liability
+      - Equity
+      - Bank
+      - AccountsReceivable
+      - AccountsPayable
+      - CreditCard
+      type: string
+    TypeTransList:
+      enum:
+      - None
+      - Payments
+      - Deposits
+      - InvoicesAll
+      - InvoicesPaid
+      - InvoicesUnpaid
+      - BillsAll
+      - BillsPaid
+      - BillsUnpaid
+      - JournalEntries
+      - Income
+      - Expense
+      type: string
+    TypeTransRecord:
+      enum:
+      - None
+      - Payment
+      - Deposit
+      - Invoice
+      - Bill
+      - Journal
+      type: string
+    VAuth:
+      type: object
+      properties:
+        cid:
+          type: integer
+          format: int32
+        ak:
+          type: string
+          nullable: true
+        user:
+          type: string
+          nullable: true
+        clientPlatform:
+          type: string
+          nullable: true
+        clientTime:
+          type: string
+          format: date-time
+          nullable: true
+      additionalProperties: false
+    AccountTypesListRecord:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            type: object
+            properties:
+              AcctTypeDesc: Accounts Payable
+              PLBS: B
+              PLSort: 100
+              BSSort: ''
+              TypeGroup: Accounts Payable
+  securitySchemes:
+    CID:
+      type: apiKey
+      in: header
+      name: CID
+    AK:
+      type: apiKey
+      in: header
+      name: AK
+    User:
+      type: apiKey
+      in: header
+      name: User
+    ClientPlatform:
+      type: apiKey
+      in: header
+      name: ClientPlatform
+    ClientTime:
+      type: apiKey
+      in: header
+      name: ClientTime
+security:
+- CID: []
+- AK: []
+- User: []
+- ClientPlatform: []
+- ClientTime: []
