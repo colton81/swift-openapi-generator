@@ -17,6 +17,7 @@ fi
 swift run swift-openapi-generator generate \
   --mode types \
   --mode client \
+  --additional-import Foundation \
   --output-directory "$OUTPUT_DIRECTORY" \
   "$OPENAPI_YAML_PATH"
 
