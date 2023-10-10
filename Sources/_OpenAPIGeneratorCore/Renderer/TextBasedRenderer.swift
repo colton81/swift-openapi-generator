@@ -73,23 +73,30 @@ struct TextBasedRenderer: RendererProtocol {
 
     /// Renders a single import statement.
     func renderImport(_ description: ImportDescription) -> String {
-        func render(moduleName: String, spi: String?, preconcurrency: Bool) -> String {
-            let spiPrefix = spi.map { "@_spi(\($0)) " } ?? ""
+        func render(preconcurrency: Bool) -> String {
+            let spiPrefix = description.spi.map { "@_spi(\($0)) " } ?? ""
             let preconcurrencyPrefix = preconcurrency ? "@preconcurrency " : ""
-            return "\(preconcurrencyPrefix)\(spiPrefix)import \(moduleName)"
+            var types = [String]()
+            if let moduleTypes = description.moduleTypes {
+                types = moduleTypes.map {
+                    "\(preconcurrencyPrefix)\(spiPrefix)import \($0)"
+                }
+                return types.joinedLines()
+            }
+            return "\(preconcurrencyPrefix)\(spiPrefix)import \(description.moduleName)"
         }
 
         switch description.preconcurrency {
         case .always:
-            return render(moduleName: description.moduleName, spi: description.spi, preconcurrency: true)
+            return render(preconcurrency: true)
         case .never:
-            return render(moduleName: description.moduleName, spi: description.spi, preconcurrency: false)
+            return render(preconcurrency: false)
         case .onOS(let operatingSystems):
             var lines = [String]()
             lines.append("#if \(operatingSystems.map { "os(\($0))" }.joined(separator: " || "))")
-            lines.append(render(moduleName: description.moduleName, spi: description.spi, preconcurrency: true))
+            lines.append(render(preconcurrency: true))
             lines.append("#else")
-            lines.append(render(moduleName: description.moduleName, spi: description.spi, preconcurrency: false))
+            lines.append(render(preconcurrency: false))
             lines.append("#endif")
             return lines.joinedLines()
         }
@@ -278,6 +285,13 @@ struct TextBasedRenderer: RendererProtocol {
         renderedExpression(description.referencedExpr) + "?"
     }
 
+    /// Renders the specified tuple expression.
+    func renderedTupleDescription(
+        _ description: TupleDescription
+    ) -> String {
+        "(" + description.members.map(renderedExpression).joined(separator: ", ") + ")"
+    }
+
     /// Renders the specified expression.
     func renderedExpression(_ expression: Expression) -> String {
         switch expression {
@@ -309,6 +323,8 @@ struct TextBasedRenderer: RendererProtocol {
             return renderedInOutDescription(inOut)
         case .optionalChaining(let optionalChaining):
             return renderedOptionalChainingDescription(optionalChaining)
+        case .tuple(let tuple):
+            return renderedTupleDescription(tuple)
         }
     }
 
@@ -414,9 +430,15 @@ struct TextBasedRenderer: RendererProtocol {
         }
 
         var lines: [String] = [words.joinedWords()]
-        if let body = variable.body {
+        if let body = variable.getter {
             lines.append("{")
+            if !variable.getterEffects.isEmpty {
+                lines.append("get \(variable.getterEffects.map(renderedFunctionKeyword).joined(separator: " ")) {")
+            }
             lines.append(renderedCodeBlocks(body))
+            if !variable.getterEffects.isEmpty {
+                lines.append("}")
+            }
             lines.append("}")
         }
         return lines.joinedLines()
@@ -599,7 +621,7 @@ struct TextBasedRenderer: RendererProtocol {
         }
         if let returnType = signature.returnType {
             words.append("->")
-            words.append(returnType)
+            words.append(renderedExpression(returnType))
         }
         return words.joinedWords()
     }

@@ -26,8 +26,18 @@ enum Constants {
         /// The descriptions of modules imported by every generated file.
         static let imports: [ImportDescription] = [
             ImportDescription(moduleName: "OpenAPIRuntime", spi: "Generated"),
-            ImportDescription(moduleName: "Foundation", preconcurrency: .onOS(["Linux"])),
+            ImportDescription(
+                moduleName: "Foundation",
+                moduleTypes: ["struct Foundation.URL", "struct Foundation.Data", "struct Foundation.Date"],
+                preconcurrency: .onOS(["Linux"])
+            ),
         ]
+
+        /// The descriptions of modules imported by client and server files.
+        static let clientServerImports: [ImportDescription] =
+            imports + [
+                ImportDescription(moduleName: "HTTPTypes")
+            ]
     }
 
     /// Constants related to the OpenAPI server object.
@@ -366,11 +376,11 @@ enum Constants {
         /// The substring used in method names for the URI coding strategy.
         static let uri: String = "URI"
 
-        /// The substring used in method names for the string coding strategy.
-        static let string: String = "String"
-
         /// The substring used in method names for the binary coding strategy.
         static let binary: String = "Binary"
+
+        /// The substring used in method names for the url encoded form coding strategy.
+        static let urlEncodedForm: String = "URLEncodedForm"
     }
 
     /// Constants related to types used in many components.

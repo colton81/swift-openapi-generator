@@ -77,7 +77,7 @@ extension TypesFileTranslator {
             inParent: bodyTypeName
         )
 
-        let contentProperty: PropertyBlueprint?
+        let bodyProperty: PropertyBlueprint?
         if !typedContents.isEmpty {
             var bodyCases: [Declaration] = []
             for typedContent in typedContents {
@@ -103,6 +103,61 @@ extension TypesFileTranslator {
                     )
                 )
                 bodyCases.append(bodyCase)
+
+                var throwingGetterSwitchCases = [
+                    SwitchCaseDescription(
+                        kind: .case(.identifier(".\(identifier)"), ["body"]),
+                        body: [.expression(.return(.identifier("body")))]
+                    )
+                ]
+                // We only generate the default branch if there is more than one case to prevent
+                // a warning when compiling the generated code.
+                if typedContents.count > 1 {
+                    throwingGetterSwitchCases.append(
+                        SwitchCaseDescription(
+                            kind: .default,
+                            body: [
+                                .expression(
+                                    .try(
+                                        .identifier("throwUnexpectedResponseBody")
+                                            .call([
+                                                .init(
+                                                    label: "expectedContent",
+                                                    expression: .literal(.string(contentType.headerValueForValidation))
+                                                ),
+                                                .init(label: "body", expression: .identifier("self")),
+                                            ])
+                                    )
+                                )
+                            ]
+                        )
+                    )
+                }
+                let throwingGetter = VariableDescription(
+                    accessModifier: config.access,
+                    isStatic: false,
+                    kind: .var,
+                    left: identifier,
+                    type: associatedType.fullyQualifiedSwiftName,
+                    getter: [
+                        .expression(
+                            .switch(
+                                switchedExpression: .identifier("self"),
+                                cases: throwingGetterSwitchCases
+                            )
+                        )
+                    ],
+                    getterEffects: [.throws]
+                )
+                let throwingGetterComment = Comment.doc(
+                    """
+                    The associated value of the enum case if `self` is `.\(identifier)`.
+
+                    - Throws: An error if `self` is not `.\(identifier)`.
+                    - SeeAlso: `.\(identifier)`.
+                    """
+                )
+                bodyCases.append(.commentable(throwingGetterComment, .variable(throwingGetter)))
             }
             let hasNoContent: Bool = bodyCases.isEmpty
             let contentEnumDecl: Declaration = .commentable(
@@ -117,7 +172,7 @@ extension TypesFileTranslator {
             )
 
             let contentTypeUsage = bodyTypeName.asUsage.withOptional(hasNoContent)
-            contentProperty = PropertyBlueprint(
+            bodyProperty = PropertyBlueprint(
                 comment: .doc("Received HTTP response body"),
                 originalName: Constants.Operation.Body.variableName,
                 typeUsage: contentTypeUsage,
@@ -128,7 +183,7 @@ extension TypesFileTranslator {
                 asSwiftSafeName: swiftSafeName
             )
         } else {
-            contentProperty = nil
+            bodyProperty = nil
         }
 
         let responseStructDecl = translateStructBlueprint(
@@ -139,7 +194,7 @@ extension TypesFileTranslator {
                 conformances: Constants.Operation.Output.Payload.conformances,
                 properties: [
                     headersProperty,
-                    contentProperty,
+                    bodyProperty,
                 ]
                 .compactMap { $0 }
             )

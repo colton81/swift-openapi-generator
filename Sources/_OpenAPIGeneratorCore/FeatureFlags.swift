@@ -25,13 +25,14 @@
 /// enabled unconditionally on main and the feature flag removed, and version
 /// 0.2 is tagged. (This is for pre-1.0 versioning, would be 1.0 and 2.0 after
 /// 1.0 is released.)
-public enum FeatureFlag: String, Hashable, Codable, CaseIterable {
+public enum FeatureFlag: String, Hashable, Codable, CaseIterable, Sendable {
+    // needs to be here for the enum to compile
+    case empty
 
-    /// Support for `nullable` schemas.
+    /// Base64 encoding and decoding.
     ///
-    /// A dedicated field in OpenAPI 3.0, a `null` value present in
-    /// the `types` array in OpenAPI 3.1.
-    case nullableSchemas
+    /// Enable interpretation of `type: string, format: byte` as base64-encoded data.
+    case base64DataEncodingDecoding
 }
 
 /// A set of enabled feature flags.

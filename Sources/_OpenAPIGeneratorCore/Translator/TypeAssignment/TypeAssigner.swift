@@ -45,9 +45,8 @@ struct TypeAssigner {
     /// safe to be used as a Swift identifier.
     var asSwiftSafeName: (String) -> String
 
-    /// A Boolean value indicating whether the `nullable` field on schemas
-    /// should be taken into account.
-    var supportNullableSchemas: Bool
+    ///Enable decoding and encoding of as base64-encoded data strings.
+    var enableBase64EncodingDecoding: Bool
 
     /// Returns a type name for an OpenAPI-named component type.
     ///
@@ -87,11 +86,13 @@ struct TypeAssigner {
     /// - Parameters:
     ///   - hint: A hint string used when computing a name for an inline type.
     ///   - schema: The OpenAPI schema.
+    ///   - components: The components in which to look up references.
     ///   - parent: The parent type in which to name the type.
     /// - Returns: A type usage; or nil if the schema is nil or unsupported.
     func typeUsage(
         usingNamingHint hint: String,
         withSchema schema: UnresolvedSchema?,
+        components: OpenAPI.Components,
         inParent parent: TypeName
     ) throws -> TypeUsage? {
         let associatedType: TypeUsage?
@@ -103,6 +104,7 @@ struct TypeAssigner {
                 associatedType = try _typeUsage(
                     forPotentiallyInlinedValueNamed: hint,
                     withSchema: schema,
+                    components: components,
                     inParent: parent,
                     subtype: .appendScope
                 )
@@ -117,16 +119,19 @@ struct TypeAssigner {
     /// - Parameters:
     ///   - originalName: The name of the property in the OpenAPI document.
     ///   - schema: The OpenAPI schema provided for the property.
+    ///   - components: The components in which to look up references.
     ///   - parent: The parent type in which to name the type.
     /// - Returns: A type usage.
     func typeUsage(
         forObjectPropertyNamed originalName: String,
         withSchema schema: JSONSchema,
+        components: OpenAPI.Components,
         inParent parent: TypeName
     ) throws -> TypeUsage {
         try _typeUsage(
             forPotentiallyInlinedValueNamed: originalName,
             withSchema: schema,
+            components: components,
             inParent: parent,
             subtype: .appendScope
         )
@@ -136,17 +141,20 @@ struct TypeAssigner {
     /// - Parameters:
     ///   - originalName: A hint for naming.
     ///   - schema: The OpenAPI schema provided for the property.
+    ///   - components: The components in which to look up references.
     ///   - parent: The parent type in which to name the type.
     /// - Returns: A type usage.
     func typeUsage(
         forAllOrAnyOrOneOfChildSchemaNamed originalName: String,
         withSchema schema: JSONSchema,
+        components: OpenAPI.Components,
         inParent parent: TypeName
     ) throws -> TypeUsage {
         try _typeUsage(
             forPotentiallyInlinedValueNamed: originalName.uppercasingFirstLetter,
             jsonReferenceComponentOverride: originalName,
             withSchema: schema,
+            components: components,
             inParent: parent,
             subtype: .appendScope
         )
@@ -155,15 +163,18 @@ struct TypeAssigner {
     /// Returns a type usage for an element schema of an array.
     /// - Parameters:
     ///   - schema: The OpenAPI schema provided for the array element type.
+    ///   - components: The components in which to look up references.
     ///   - parent: The parent type in which to name the type.
     /// - Returns: A type usage.
     func typeUsage(
         forArrayElementWithSchema schema: JSONSchema,
+        components: OpenAPI.Components,
         inParent parent: TypeName
     ) throws -> TypeUsage {
         try _typeUsage(
             forPotentiallyInlinedValueNamed: parent.shortSwiftName,
             withSchema: schema,
+            components: components,
             inParent: parent,
             subtype: .appendToLastPathComponent
         )
@@ -173,16 +184,19 @@ struct TypeAssigner {
     /// - Parameters:
     ///   - originalName: The name of the parameter in the OpenAPI document.
     ///   - schema: The OpenAPI schema provided for the parameter.
+    ///   - components: The components in which to look up references.
     ///   - parent: The parent type in which to name the type.
     /// - Returns: A type usage.
     func typeUsage(
         forParameterNamed originalName: String,
         withSchema schema: JSONSchema,
+        components: OpenAPI.Components,
         inParent parent: TypeName
     ) throws -> TypeUsage {
         try _typeUsage(
             forPotentiallyInlinedValueNamed: originalName,
             withSchema: schema,
+            components: components,
             inParent: parent,
             subtype: .appendScope
         )
@@ -254,18 +268,20 @@ struct TypeAssigner {
         jsonReferenceComponentOverride: String? = nil,
         suffix: String = Constants.Global.inlineTypeSuffix,
         withSchema schema: JSONSchema,
+        components: OpenAPI.Components,
         inParent parent: TypeName,
         subtype: SubtypeNamingMethod
     ) throws -> TypeUsage {
+        let typeMatcher = TypeMatcher(
+            asSwiftSafeName: asSwiftSafeName,
+            enableBase64EncodingDecoding: enableBase64EncodingDecoding
+        )
         // Check if this type can be simply referenced without
         // creating a new inline type.
-        if let referenceableType =
-            try TypeMatcher(
-                asSwiftSafeName: asSwiftSafeName,
-                supportNullableSchemas: supportNullableSchemas
-            )
-            .tryMatchReferenceableType(for: schema)
-        {
+        if let referenceableType = try typeMatcher.tryMatchReferenceableType(
+            for: schema,
+            components: components
+        ) {
             return referenceableType
         }
         // Otherwise it's an inline, non-referenceable type
@@ -282,7 +298,7 @@ struct TypeAssigner {
                 jsonComponent: jsonReferenceComponentOverride ?? originalName
             )
             .asUsage
-            .withOptional(!schema.required)
+            .withOptional(try typeMatcher.isOptional(schema, components: components))
     }
 
     /// Returns a type name for a reusable component.
@@ -461,7 +477,7 @@ extension FileTranslator {
     var typeAssigner: TypeAssigner {
         TypeAssigner(
             asSwiftSafeName: swiftSafeName,
-            supportNullableSchemas: supportNullableSchemas
+            enableBase64EncodingDecoding: config.featureFlags.contains(.base64DataEncodingDecoding)
         )
     }
 
@@ -469,7 +485,7 @@ extension FileTranslator {
     var typeMatcher: TypeMatcher {
         TypeMatcher(
             asSwiftSafeName: swiftSafeName,
-            supportNullableSchemas: supportNullableSchemas
+            enableBase64EncodingDecoding: config.featureFlags.contains(.base64DataEncodingDecoding)
         )
     }
 }
