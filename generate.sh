@@ -2,10 +2,10 @@
 
 # Define the output directory and the location of the openapi.yaml file
 
-#OUTPUT_DIRECTORY="/Users/coltonhillebrand/Documents/APIGeneratorTest/APIGeneratorTest"
-OUTPUT_DIRECTORY="/Users/coltonhillebrand/Documents/github/ERP-IOS/ERPProject/MTH Accounting/Utilities/APIServices/APIGenerated"
+OUTPUT_DIRECTORY="/Users/coltonhillebrand/Documents/github/MTHAccountingTest/MTHAccountingTest/Helpers/APIManager/ClientFiles"
+#OUTPUT_DIRECTORY="/Users/coltonhillebrand/Documents/github/ERP-IOS/ERPProject/MTH Accounting/Utilities/APIServices/APIGenerated"
 OPENAPI_YAML_PATH="$OUTPUT_DIRECTORY/openapi.yaml"
-#OPENAPI_YAML_PATH="$OUTPUT_DIRECTORY/openapi.yaml"
+
 
 # Check if openapi.yaml file exists
 if [ ! -f "$OPENAPI_YAML_PATH" ]; then

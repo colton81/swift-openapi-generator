@@ -3,7 +3,7 @@
 echo "Starting the watch-swagger script."
 
 # Define the path to the Swagger YAML file and the generate.sh script
-SWAGGER_PATH="/Users/coltonhillebrand/Documents/github/ERP-IOS/ERPProject/MTH Accounting/Utilities/APIServices/APIGenerated/openapi.yaml"
+SWAGGER_PATH="/Users/coltonhillebrand/Documents/github/MTHAccountingTest/GeneratedClient/ClientFiles/openapi.yaml"
 GENERATE_SCRIPT="/Users/coltonhillebrand/Documents/github/swift-openapi-generator/generate.sh"
 
 echo "Will watch for changes in $SWAGGER_PATH"
