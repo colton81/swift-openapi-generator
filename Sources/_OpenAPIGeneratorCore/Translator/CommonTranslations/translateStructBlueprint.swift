@@ -42,7 +42,7 @@ extension FileTranslator {
         let propertyDecls = allProperties.flatMap(self.translatePropertyBlueprint)
 
         let uuidFunctionCall = FunctionCallDescription(
-            calledExpression: .identifier(IdentifierDescription(name: "UUID")),
+            calledExpression: .identifier(.pattern("UUID")),
             arguments: [] as [FunctionArgumentDescription]
         )
         let idRightExpression = Expression.functionCall(uuidFunctionCall)
@@ -53,8 +53,9 @@ extension FileTranslator {
                 .init(
                     accessModifier: config.access,
                     kind: .var,
-                    left: "id",
-                    type: "UUID", right: idRightExpression
+                    left: .identifier(.pattern("id")),
+                    type: .init(TypeName.uuid),
+                    right: idRightExpression
                 )
             )
         )

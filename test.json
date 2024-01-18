@@ -1,0 +1,411 @@
+{
+    "status": true,
+    "data": {
+        "record": [
+            {
+                "IDNo": 62,
+                "InputUserName": "mike",
+                "InputDT": "2023-06-17T00:00:00",
+                "EditUserName": "Colton",
+                "EditDT": "2023-10-09T17:29:23.043",
+                "EntityType": "E",
+                "EntityName": "Hernandez, Juan C",
+                "FirstName": "Juan",
+                "LastName": "Hernandez",
+                "MiddleName": "C",
+                "LocCode": null,
+                "Address1": "12345 Maple Leaf St",
+                "Address2": null,
+                "City": "Dallas",
+                "State": "TX",
+                "Zip": "60428",
+                "Website": null,
+                "ShipAddress1": null,
+                "ShipAddress2": null,
+                "ShipCity": null,
+                "ShipSt": null,
+                "ShipZip": null,
+                "PrimaryContact": null,
+                "MainPhone": "(832)-350-6244",
+                "MobilePhone": null,
+                "OtherPhone": null,
+                "EmailMain": "michael_till@hotmail.com",
+                "TermsCodeID": null,
+                "Notes": null,
+                "TimeOpen": null,
+                "TimeClose": null,
+                "CreditHoldYN": false,
+                "CreditLimit": null,
+                "CreditReportingAgency": null,
+                "CreditRating": null,
+                "CreditApprovedBy": null,
+                "FID": null,
+                "DefExpAcct": "50005",
+                "AccountNo": null,
+                "W9YN": false,
+                "CPS": null,
+                "DefPayAcct": "",
+                "EmergencyName": null,
+                "EmergencyPhone": null,
+                "Department": null,
+                "DOB": "2023-02-17T00:00:00",
+                "HireDate": "2023-02-17T00:00:00",
+                "TermDate": "2023-02-17T00:00:00",
+                "Type1099": null,
+                "EmploymentType": null
+            }
+        ],
+        "fieldProperties": [
+            {
+                "columnName": "IDNo",
+                "dataType": "bigint",
+                "maxLength": 19,
+                "decimalPlaces": 0,
+                "required": true
+            },
+            {
+                "columnName": "InputUserName",
+                "dataType": "varchar",
+                "maxLength": 15,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "InputDT",
+                "dataType": "datetime",
+                "maxLength": 0,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "EditUserName",
+                "dataType": "varchar",
+                "maxLength": 15,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "EditDT",
+                "dataType": "datetime",
+                "maxLength": 0,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "LocCode",
+                "dataType": "varchar",
+                "maxLength": 15,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "EntityType",
+                "dataType": "char",
+                "maxLength": 1,
+                "decimalPlaces": 0,
+                "required": true
+            },
+            {
+                "columnName": "EntityName",
+                "dataType": "varchar",
+                "maxLength": 50,
+                "decimalPlaces": 0,
+                "required": true
+            },
+            {
+                "columnName": "LastName",
+                "dataType": "varchar",
+                "maxLength": 17,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "FirstName",
+                "dataType": "varchar",
+                "maxLength": 17,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "MiddleName",
+                "dataType": "varchar",
+                "maxLength": 16,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "Address1",
+                "dataType": "varchar",
+                "maxLength": 50,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "Address2",
+                "dataType": "varchar",
+                "maxLength": 50,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "City",
+                "dataType": "varchar",
+                "maxLength": 50,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "State",
+                "dataType": "varchar",
+                "maxLength": 2,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "Zip",
+                "dataType": "varchar",
+                "maxLength": 10,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "EmailMain",
+                "dataType": "varchar",
+                "maxLength": 50,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "MainPhone",
+                "dataType": "varchar",
+                "maxLength": 25,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "MobilePhone",
+                "dataType": "varchar",
+                "maxLength": 25,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "OtherPhone",
+                "dataType": "varchar",
+                "maxLength": 25,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "EmergencyName",
+                "dataType": "varchar",
+                "maxLength": 50,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "EmergencyPhone",
+                "dataType": "varchar",
+                "maxLength": 25,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "PrimaryContact",
+                "dataType": "varchar",
+                "maxLength": 50,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "Website",
+                "dataType": "varchar",
+                "maxLength": 50,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "CPS",
+                "dataType": "char",
+                "maxLength": 1,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "FID",
+                "dataType": "varchar",
+                "maxLength": 20,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "W9YN",
+                "dataType": "bit",
+                "maxLength": 0,
+                "decimalPlaces": 0,
+                "required": true
+            },
+            {
+                "columnName": "AccountNo",
+                "dataType": "varchar",
+                "maxLength": 50,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "TermsCodeID",
+                "dataType": "bigint",
+                "maxLength": 19,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "CreditHoldYN",
+                "dataType": "bit",
+                "maxLength": 0,
+                "decimalPlaces": 0,
+                "required": true
+            },
+            {
+                "columnName": "CreditLimit",
+                "dataType": "decimal",
+                "maxLength": 11,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "CreditReportingAgency",
+                "dataType": "varchar",
+                "maxLength": 50,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "CreditRating",
+                "dataType": "varchar",
+                "maxLength": 10,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "CreditApprovedBy",
+                "dataType": "bigint",
+                "maxLength": 19,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "ShipAddress1",
+                "dataType": "varchar",
+                "maxLength": 50,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "ShipAddress2",
+                "dataType": "varchar",
+                "maxLength": 50,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "ShipCity",
+                "dataType": "varchar",
+                "maxLength": 50,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "ShipSt",
+                "dataType": "char",
+                "maxLength": 2,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "ShipZip",
+                "dataType": "varchar",
+                "maxLength": 10,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "TimeOpen",
+                "dataType": "datetime",
+                "maxLength": 0,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "TimeClose",
+                "dataType": "datetime",
+                "maxLength": 0,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "Department",
+                "dataType": "varchar",
+                "maxLength": 25,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "DOB",
+                "dataType": "date",
+                "maxLength": 0,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "HireDate",
+                "dataType": "date",
+                "maxLength": 0,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "TermDate",
+                "dataType": "date",
+                "maxLength": 0,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "DefExpAcct",
+                "dataType": "varchar",
+                "maxLength": 25,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "DefPayAcct",
+                "dataType": "varchar",
+                "maxLength": 25,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "EmploymentType",
+                "dataType": "char",
+                "maxLength": 2,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "Type1099",
+                "dataType": "varchar",
+                "maxLength": 10,
+                "decimalPlaces": 0,
+                "required": false
+            },
+            {
+                "columnName": "Notes",
+                "dataType": "varchar",
+                "maxLength": 250,
+                "decimalPlaces": 0,
+                "required": false
+            }
+        ]
+    }
+}
