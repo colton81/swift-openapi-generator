@@ -1,3 +1,17 @@
+//
+//  translateStructBlueprint.swift
+//  MTH Accounting
+//
+//  Created by Colton Hillebrand on 1/18/24.
+//
+//  Copyright © 2024 MTill Holdings. All rights reserved.
+//
+//  Confidential and Proprietary. This source code is the exclusive property of MTill Holdings and
+//  may not be
+//  reproduced, disseminated or utilized without the express written consent of MTill Holdings.
+//  Use of this source code is governed by the license agreement entered into with MTill Holdings.
+
+import Foundation
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the SwiftOpenAPIGenerator open source project
@@ -12,29 +26,25 @@
 //
 //===----------------------------------------------------------------------===//
 import OpenAPIKit
-import Foundation
 
 extension FileTranslator {
 
     /// Returns a declaration of the specified blueprint.
     /// - Parameter blueprint: Structure blueprint containing the information
     /// required to generate the Swift structure.
-    func translateStructBlueprint(
-        _ blueprint: StructBlueprint
-    ) -> Declaration {
+    /// - Returns: A `Declaration` representing the generated Swift structure.
+    func translateStructBlueprint(_ blueprint: StructBlueprint) -> Declaration {
 
         let typeName = blueprint.typeName
         let allProperties = blueprint.properties
         let serializableProperties = allProperties.filter(\.isSerializedInTopLevelDictionary)
 
-        let propertyDecls =
-            allProperties
-            .flatMap(translatePropertyBlueprint)
+        let propertyDecls = allProperties.flatMap(self.translatePropertyBlueprint)
+
         let uuidFunctionCall = FunctionCallDescription(
             calledExpression: .identifier(IdentifierDescription(name: "UUID")),
             arguments: [] as [FunctionArgumentDescription]
         )
-
         let idRightExpression = Expression.functionCall(uuidFunctionCall)
 
         let idProperty = Declaration.commentable(
@@ -50,16 +60,15 @@ extension FileTranslator {
         )
         var members = propertyDecls
         members.append(idProperty)
-        let initDecl = translateStructBlueprintInitializer(
+        let initDecl = self.translateStructBlueprintInitializer(
             typeName: typeName,
             properties: allProperties
         )
         members.append(initDecl)
 
         if blueprint.shouldGenerateCodingKeys && !serializableProperties.isEmpty {
-            let codingKeysDecl = translateStructBlueprintCodingKeys(
-                properties: serializableProperties
-            )
+            let codingKeysDecl = self
+                .translateStructBlueprintCodingKeys(properties: serializableProperties)
             members.append(codingKeysDecl)
         }
 
@@ -84,46 +93,41 @@ extension FileTranslator {
             members: members
         )
 
-        return .commentable(blueprint.comment, .struct(structDesc).deprecate(if: blueprint.isDeprecated))
+        return .commentable(
+            blueprint.comment,
+            .struct(structDesc).deprecate(if: blueprint.isDeprecated)
+        )
     }
 
     /// Returns a declaration of an initializer declared in a structure.
     /// - Parameters:
     ///   - typeName: The type name of the structure.
     ///   - properties: The properties to include in the initializer.
+    /// - Returns: A `Declaration` representing the translated struct.
     func translateStructBlueprintInitializer(
         typeName: TypeName,
         properties: [PropertyBlueprint]
     ) -> Declaration {
 
-        let comment: Comment = .doc(
-            properties.initializerComment(
-                typeName: typeName.shortSwiftName
-            )
-        )
+        let comment: Comment = properties.initializerComment(typeName: typeName.shortSwiftName)
 
-        let decls: [(ParameterDescription, String)] =
-            properties
-            .map { property in
-                (
-                    ParameterDescription(
-                        label: property.swiftSafeName,
-                        type: property.renderedFullyQualifiedSwiftName,
-                        defaultValue: property.defaultValue?.asExpression
-                    ),
-                    property.swiftSafeName
-                )
-            }
+        let decls: [(ParameterDescription, String)] = properties.map { property in
+            (
+                ParameterDescription(
+                    label: property.swiftSafeName,
+                    type: .init(property.typeUsage),
+                    defaultValue: property.defaultValue?.asExpression
+                ), property.swiftSafeName
+            )
+        }
 
         let parameters = decls.map(\.0)
         let assignments: [CodeBlock] = decls.map(\.1)
             .map { variableName in
                 .expression(
                     .assignment(
-                        Expression
-                            .identifier("self")
-                            .dot(variableName)
-                            .equals(.identifier(variableName))
+                        Expression.identifierPattern("self").dot(variableName)
+                            .equals(.identifierPattern(variableName))
                     )
                 )
             }
@@ -145,19 +149,15 @@ extension FileTranslator {
     /// JSON schema, in which case a type declaration of that type is included
     /// in the returned array.
     /// - Parameter property: Information about the property.
-    func translatePropertyBlueprint(
-        _ property: PropertyBlueprint
-    ) -> [Declaration] {
-        let propertyTypeName = property.renderedFullyQualifiedSwiftName
+    /// - Returns: A list of Swift declarations representing the translated property.
+    func translatePropertyBlueprint(_ property: PropertyBlueprint) -> [Declaration] {
         let propertyDecl: Declaration = .commentable(
             property.comment,
             .variable(
-                .init(
-                    accessModifier: config.access,
-                    kind: .var,
-                    left: property.swiftSafeName,
-                    type: propertyTypeName
-                )
+                accessModifier: config.access,
+                kind: .var,
+                left: property.swiftSafeName,
+                type: .init(property.typeUsage)
             )
             .deprecate(if: property.isDeprecated)
         )
@@ -165,20 +165,18 @@ extension FileTranslator {
     }
 
     /// Returns a declaration of a coding keys enum.
-    /// - Parameter blueprint: Information about the structure.
-    func translateStructBlueprintCodingKeys(
-        properties: [PropertyBlueprint]
-    ) -> Declaration {
-        let members: [Declaration] =
-            properties
-            .map { property in
-                let swiftName = property.swiftSafeName
-                let rawName = property.originalName
-                return .enumCase(
-                    name: swiftName,
-                    kind: swiftName == rawName ? .nameOnly : .nameWithRawValue(.string(property.originalName))
-                )
-            }
+    /// - Parameter properties: The properties of the structure.
+    /// - Returns: A coding keys enum declaration.
+    func translateStructBlueprintCodingKeys(properties: [PropertyBlueprint]) -> Declaration {
+        let members: [Declaration] = properties.map { property in
+            let swiftName = property.swiftSafeName
+            let rawName = property.originalName
+            return .enumCase(
+                name: swiftName,
+                kind: swiftName == rawName ? .nameOnly :
+                    .nameWithRawValue(.string(property.originalName))
+            )
+        }
         return .enum(
             accessModifier: config.access,
             name: Constants.Codable.codingKeysName,
@@ -188,25 +186,17 @@ extension FileTranslator {
     }
 }
 
-fileprivate extension Array where Element == PropertyBlueprint {
+private extension Array where Element == PropertyBlueprint {
 
     /// Returns the comment string for an initializer of a structure with
     /// the properties contained in the current array.
-    func initializerComment(typeName: String) -> String {
-        var components: [String] = [
-            "Creates a new `\(typeName)`."
-        ]
-        if !isEmpty {
-            var parameterComponents: [String] = []
-            parameterComponents.append("- Parameters:")
-            for parameter in self {
-                parameterComponents.append(
-                    "  - \(parameter.swiftSafeName): \(parameter.comment?.firstLineOfContent ?? "")"
-                )
-            }
-            components.append("")
-            components.append(parameterComponents.joined(separator: "\n"))
-        }
-        return components.joined(separator: "\n")
+    /// - Parameter typeName: The name of the structure type.
+    /// - Returns: A comment string describing the initializer.
+    func initializerComment(typeName: String) -> Comment {
+        Comment.functionComment(
+            abstract: "Creates a new `\(typeName)`.",
+            parameters: map { ($0.swiftSafeName, $0.comment?.firstLineOfContent) }
+        )! // This force-unwrap is safe as the method never returns nil when
+        // a non-nil abstract is provided.
     }
 }

@@ -13,16 +13,19 @@
 //===----------------------------------------------------------------------===//
 import OpenAPIKit
 
-extension FileTranslator {
+extension TypesFileTranslator {
 
     /// Returns a declaration of an object schema.
     ///
     /// - Parameters:
     ///   - typeName: The name of the type to give to the declared structure.
     ///   - openAPIDescription: A user-specified description from the OpenAPI
-    ///   document.
+    ///     document.
     ///   - objectContext: The context for the object, including information
-    ///   such as the names and schemas of the object's properties.
+    ///     such as the names and schemas of the object's properties.
+    ///   - isDeprecated: A flag indicating whether the object is deprecated.
+    /// - Throws: An error if there is an issue during translation.
+    /// - Returns: A declaration representing the translated object schema.
     func translateObjectStruct(
         typeName: TypeName,
         openAPIDescription: String?,
@@ -30,12 +33,24 @@ extension FileTranslator {
         isDeprecated: Bool
     ) throws -> Declaration {
 
-        let documentedProperties: [PropertyBlueprint] =
-            try objectContext
-            .properties
+        let documentedProperties: [PropertyBlueprint] = try objectContext.properties
             .filter { key, value in
 
                 let foundIn = "\(typeName.description)/\(key)"
+
+                // Properties that are only defined in the `required` list but don't
+                // have a proper definition in the `properties` map are skipped, as they
+                // often imply a typo or a mistake in the document. So emit a diagnostic as well.
+                guard !value.inferred else {
+                    diagnostics.emit(
+                        .warning(
+                            message:
+                                "A property name only appears in the required list, but not in the properties map - this is likely a typo; skipping this property.",
+                            context: ["foundIn": foundIn]
+                        )
+                    )
+                    return false
+                }
 
                 // We need to catch a special case here:
                 // type: string + format: binary.
@@ -56,10 +71,7 @@ extension FileTranslator {
                     return false
                 }
 
-                return try validateSchemaIsSupported(
-                    value,
-                    foundIn: "\(typeName.description)/\(key)"
-                )
+                return try validateSchemaIsSupported(value, foundIn: "\(typeName.description)/\(key)")
             }
             .map { key, value in
                 let propertyType = try typeAssigner.typeUsage(
@@ -93,21 +105,12 @@ extension FileTranslator {
                 )
             }
 
-        let comment =
-            typeName
-            .docCommentWithUserDescription(openAPIDescription)
+        let comment = typeName.docCommentWithUserDescription(openAPIDescription)
 
-        let (codableStrategy, extraProperty) = try parseAdditionalProperties(
-            in: objectContext,
-            parent: typeName
-        )
+        let (codableStrategy, extraProperty) = try parseAdditionalProperties(in: objectContext, parent: typeName)
 
         let extraProperties: [PropertyBlueprint]
-        if let extraProperty {
-            extraProperties = [extraProperty]
-        } else {
-            extraProperties = []
-        }
+        if let extraProperty { extraProperties = [extraProperty] } else { extraProperties = [] }
 
         return translateStructBlueprint(
             StructBlueprint(
@@ -125,30 +128,28 @@ extension FileTranslator {
 
     /// Parses the appropriate information about additionalProperties for
     /// an object struct.
-    /// - Parameter objectContext: The context describing the object.
+    /// - Parameters:
+    ///   - objectContext: The context describing the object.
+    ///   - parent: The parent type name where this function is called from.
     /// - Returns: The kind of Codable implementation required for the struct,
-    /// and an extra property to be added to the struct, if needed.
-    func parseAdditionalProperties(
-        in objectContext: JSONSchema.ObjectContext,
-        parent: TypeName
-    ) throws -> (StructBlueprint.OpenAPICodableStrategy, PropertyBlueprint?) {
-        guard let additionalProperties = objectContext.additionalProperties else {
-            return (.synthesized, nil)
-        }
+    ///   and an extra property to be added to the struct, if needed.
+    /// - Throws: An error if there is an issue during parsing.
+    func parseAdditionalProperties(in objectContext: JSONSchema.ObjectContext, parent: TypeName) throws -> (
+        StructBlueprint.OpenAPICodableStrategy, PropertyBlueprint?
+    ) {
+        guard let additionalProperties = objectContext.additionalProperties else { return (.synthesized, nil) }
 
         let typeUsage: TypeUsage
         let associatedDeclarations: [Declaration]
 
         switch additionalProperties {
         case .a(let hasAdditionalProperties):
-            guard hasAdditionalProperties else {
-                return (.enforcingNoAdditionalProperties, nil)
-            }
+            guard hasAdditionalProperties else { return (.enforcingNoAdditionalProperties, nil) }
             typeUsage = TypeName.objectContainer.asUsage
             associatedDeclarations = []
         case .b(let schema):
             let valueTypeUsage = try typeAssigner.typeUsage(
-                forObjectPropertyNamed: "additionalProperties",
+                forObjectPropertyNamed: Constants.AdditionalProperties.variableName,
                 withSchema: schema,
                 components: components,
                 inParent: parent
@@ -170,7 +171,7 @@ extension FileTranslator {
 
         let extraProperty = PropertyBlueprint(
             comment: .doc("A container of undocumented properties."),
-            originalName: "additionalProperties",
+            originalName: Constants.AdditionalProperties.variableName,
             typeUsage: typeUsage,
             default: .emptyInit,
             isSerializedInTopLevelDictionary: false,

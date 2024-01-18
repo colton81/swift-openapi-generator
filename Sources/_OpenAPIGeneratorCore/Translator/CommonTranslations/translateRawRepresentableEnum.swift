@@ -27,6 +27,8 @@ extension FileTranslator {
     ///   - unknownCaseDescription: The contents of the documentation comment
     ///     for the unknown case.
     ///   - customSwitchedExpression: A closure
+    /// - Throws: An error if there's an issue generating the declaration.
+    /// - Returns: The generated declaration.
     func translateRawRepresentableEnum(
         typeName: TypeName,
         conformances: [String],
@@ -38,42 +40,22 @@ extension FileTranslator {
     ) throws -> Declaration {
 
         let generateUnknownCases = unknownCaseName != nil
-        let knownCases: [Declaration] =
-            cases
-            .map { caseName, rawExpr in
-                .enumCase(
-                    name: caseName,
-                    kind: generateUnknownCases ? .nameOnly : .nameWithRawValue(rawExpr)
-                )
-            }
+        let knownCases: [Declaration] = cases.map { caseName, rawExpr in
+            .enumCase(name: caseName, kind: generateUnknownCases ? .nameOnly : .nameWithRawValue(rawExpr))
+        }
 
         let otherMembers: [Declaration]
         if let unknownCaseName {
             let undocumentedCase: Declaration = .commentable(
                 unknownCaseDescription.flatMap { .doc($0) },
-                .enumCase(
-                    name: unknownCaseName,
-                    kind: .nameWithAssociatedValues([
-                        .init(type: "String")
-                    ])
-                )
+                .enumCase(name: unknownCaseName, kind: .nameWithAssociatedValues([.init(type: .init(TypeName.string))]))
             )
             let rawRepresentableInitializer: Declaration
             do {
                 let knownCases: [SwitchCaseDescription] = cases.map { caseName, rawValue in
                     .init(
                         kind: .case(.literal(rawValue)),
-                        body: [
-                            .expression(
-                                .assignment(
-                                    Expression
-                                        .identifier("self")
-                                        .equals(
-                                            .dot(caseName)
-                                        )
-                                )
-                            )
-                        ]
+                        body: [.expression(.assignment(Expression.identifierPattern("self").equals(.dot(caseName))))]
                     )
                 }
                 let unknownCase = SwitchCaseDescription(
@@ -81,16 +63,11 @@ extension FileTranslator {
                     body: [
                         .expression(
                             .assignment(
-                                Expression
-                                    .identifier("self")
+                                Expression.identifierPattern("self")
                                     .equals(
                                         .functionCall(
-                                            calledExpression: .dot(
-                                                unknownCaseName
-                                            ),
-                                            arguments: [
-                                                .identifier("rawValue")
-                                            ]
+                                            calledExpression: .dot(unknownCaseName),
+                                            arguments: [.identifierPattern("rawValue")]
                                         )
                                     )
                             )
@@ -101,15 +78,11 @@ extension FileTranslator {
                     .init(
                         accessModifier: config.access,
                         kind: .initializer(failable: true),
-                        parameters: [
-                            .init(label: "rawValue", type: "String")
-                        ],
+                        parameters: [.init(label: "rawValue", type: .init(TypeName.string))],
                         body: [
                             .expression(
                                 .switch(
-                                    switchedExpression: customSwitchedExpression(
-                                        .identifier("rawValue")
-                                    ),
+                                    switchedExpression: customSwitchedExpression(.identifierPattern("rawValue")),
                                     cases: knownCases + [unknownCase]
                                 )
                             )
@@ -121,80 +94,47 @@ extension FileTranslator {
             let rawValueGetter: Declaration
             do {
                 let knownCases: [SwitchCaseDescription] = cases.map { caseName, rawValue in
-                    .init(
-                        kind: .case(.dot(caseName)),
-                        body: [
-                            .expression(
-                                .return(.literal(rawValue))
-                            )
-                        ]
-                    )
+                    .init(kind: .case(.dot(caseName)), body: [.expression(.return(.literal(rawValue)))])
                 }
                 let unknownCase = SwitchCaseDescription(
                     kind: .case(
                         .valueBinding(
                             kind: .let,
                             value: .init(
-                                calledExpression: .dot(
-                                    unknownCaseName
-                                ),
-                                arguments: [
-                                    .identifier("string")
-                                ]
+                                calledExpression: .dot(unknownCaseName),
+                                arguments: [.identifierPattern("string")]
                             )
                         )
                     ),
-                    body: [
-                        .expression(
-                            .return(.identifier("string"))
-                        )
-                    ]
-                )
-
-                let variableDescription = VariableDescription(
-                    accessModifier: config.access,
-                    kind: .var,
-                    left: "rawValue",
-                    type: "String",
-                    getter: [
-                        .expression(
-                            .switch(
-                                switchedExpression: .identifier("self"),
-                                cases: [unknownCase] + knownCases
-                            )
-                        )
-                    ]
+                    body: [.expression(.return(.identifierPattern("string")))]
                 )
 
                 rawValueGetter = .variable(
-                    variableDescription
+                    accessModifier: config.access,
+                    kind: .var,
+                    left: "rawValue",
+                    type: .init(TypeName.string),
+                    getter: [
+                        .expression(
+                            .switch(switchedExpression: .identifierPattern("self"), cases: [unknownCase] + knownCases)
+                        )
+                    ]
                 )
             }
 
             let allCasesGetter: Declaration
             do {
-                let caseExpressions: [Expression] = cases.map { caseName, _ in
-                    .memberAccess(.init(right: caseName))
-                }
+                let caseExpressions: [Expression] = cases.map { caseName, _ in .memberAccess(.init(right: caseName)) }
                 allCasesGetter = .variable(
-                    .init(
-                        accessModifier: config.access,
-                        isStatic: true,
-                        kind: .var,
-                        left: "allCases",
-                        type: "[Self]",
-                        getter: [
-                            .expression(.literal(.array(caseExpressions)))
-                        ]
-                    )
+                    accessModifier: config.access,
+                    isStatic: true,
+                    kind: .var,
+                    left: "allCases",
+                    type: .array(.member("Self")),
+                    getter: [.expression(.literal(.array(caseExpressions)))]
                 )
             }
-            otherMembers = [
-                undocumentedCase,
-                rawRepresentableInitializer,
-                rawValueGetter,
-                allCasesGetter,
-            ]
+            otherMembers = [undocumentedCase, rawRepresentableInitializer, rawValueGetter, allCasesGetter]
         } else {
             otherMembers = []
         }
@@ -206,12 +146,7 @@ extension FileTranslator {
             conformances: conformances,
             members: knownCases + otherMembers
         )
-        let comment: Comment? =
-            typeName
-            .docCommentWithUserDescription(userDescription)
-        return .commentable(
-            comment,
-            .enum(enumDescription)
-        )
+        let comment: Comment? = typeName.docCommentWithUserDescription(userDescription)
+        return .commentable(comment, .enum(enumDescription))
     }
 }

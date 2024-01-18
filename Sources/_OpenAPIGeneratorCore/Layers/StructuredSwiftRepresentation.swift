@@ -50,10 +50,13 @@ struct ImportDescription: Equatable, Codable {
 /// A description of an access modifier.
 ///
 /// For example: `public`.
-enum AccessModifier: String, Equatable, Codable {
+public enum AccessModifier: String, Sendable, Equatable, Codable {
 
     /// A declaration accessible outside of the module.
     case `public`
+
+    /// A declaration accessible outside of the module but only inside the containing package or project.
+    case `package`
 
     /// A declaration only accessible inside of the module.
     case `internal`
@@ -119,12 +122,17 @@ enum LiteralDescription: Equatable, Codable {
 /// A description of an identifier, such as a variable name.
 ///
 /// For example, in `let foo = 42`, `foo` is an identifier.
-struct IdentifierDescription: Equatable, Codable {
+enum IdentifierDescription: Equatable, Codable {
 
-    /// The name of the identifier.
+    /// A pattern identifier.
     ///
     /// For example, `foo` in `let foo = 42`.
-    var name: String
+    case pattern(String)
+
+    /// A type identifier.
+    ///
+    /// For example, `Swift.String` in `let foo: Swift.String = "hi"`.
+    case type(ExistingTypeDescription)
 }
 
 /// A description of a member access expression.
@@ -170,25 +178,36 @@ struct FunctionCallDescription: Equatable, Codable {
     var calledExpression: Expression
 
     /// The arguments to be passed to the function.
-    var arguments: [FunctionArgumentDescription] = []
+    var arguments: [FunctionArgumentDescription]
+
+    /// A trailing closure.
+    var trailingClosure: ClosureInvocationDescription?
 
     /// Creates a new function call description.
     /// - Parameters:
     ///   - calledExpression: An expression that returns the function to be called.
     ///   - arguments: Arguments to be passed to the function.
-    init(calledExpression: Expression, arguments: [FunctionArgumentDescription] = []) {
+    ///   - trailingClosure: A trailing closure.
+    init(
+        calledExpression: Expression,
+        arguments: [FunctionArgumentDescription] = [],
+        trailingClosure: ClosureInvocationDescription? = nil
+    ) {
         self.calledExpression = calledExpression
         self.arguments = arguments
+        self.trailingClosure = trailingClosure
     }
 
     /// Creates a new function call description.
     /// - Parameters:
     ///   - calledExpression: An expression that returns the function to be called.
     ///   - arguments: Arguments to be passed to the function.
-    init(calledExpression: Expression, arguments: [Expression]) {
+    ///   - trailingClosure: A trailing closure.
+    init(calledExpression: Expression, arguments: [Expression], trailingClosure: ClosureInvocationDescription? = nil) {
         self.init(
             calledExpression: calledExpression,
-            arguments: arguments.map { .init(label: nil, expression: $0) }
+            arguments: arguments.map { .init(label: nil, expression: $0) },
+            trailingClosure: trailingClosure
         )
     }
 }
@@ -220,12 +239,12 @@ struct VariableDescription: Equatable, Codable {
     /// The name of the variable.
     ///
     /// For example, in `let foo = 42`, `left` is `foo`.
-    var left: String
+    var left: Expression
 
     /// The type of the variable.
     ///
     /// For example, in `let foo: Int = 42`, `type` is `Int`.
-    var type: String?
+    var type: ExistingTypeDescription?
 
     /// The expression to be assigned to the variable.
     ///
@@ -241,6 +260,18 @@ struct VariableDescription: Equatable, Codable {
     ///
     /// For example, in `var foo: Int { get throws { 42 } }`, effects are `[.throws]`.
     var getterEffects: [FunctionKeyword] = []
+
+    /// Body code for the setter.
+    ///
+    /// For example, in `var foo: Int { set { _foo = newValue } }`, `body`
+    /// represents `{ _foo = newValue }`.
+    var setter: [CodeBlock]? = nil
+
+    /// Body code for the `_modify` accessor.
+    ///
+    /// For example, in `var foo: Int { _modify { yield &_foo } }`, `body`
+    /// represents `{ yield &_foo }`.
+    var modify: [CodeBlock]? = nil
 }
 
 /// A requirement of a where clause.
@@ -317,6 +348,10 @@ struct EnumDescription: Equatable, Codable {
     /// attribute.
     var isFrozen: Bool = false
 
+    /// A Boolean value that indicates whether the enum has the `indirect`
+    /// keyword.
+    var isIndirect: Bool = false
+
     /// An access modifier.
     var accessModifier: AccessModifier? = nil
 
@@ -332,6 +367,41 @@ struct EnumDescription: Equatable, Codable {
 
     /// The declarations that make up the enum body.
     var members: [Declaration] = []
+}
+
+/// A description of a type reference.
+indirect enum ExistingTypeDescription: Equatable, Codable {
+
+    /// A type with the `any` keyword in front of it.
+    ///
+    /// For example, `any Foo`.
+    case any(ExistingTypeDescription)
+
+    /// An optional type.
+    ///
+    /// For example, `Foo?`.
+    case optional(ExistingTypeDescription)
+
+    /// A wrapper type generic over a wrapped type.
+    ///
+    /// For example, `Wrapper<Wrapped>`.
+    case generic(wrapper: ExistingTypeDescription, wrapped: ExistingTypeDescription)
+
+    /// A type reference represented by the components.
+    ///
+    /// For example, `MyModule.Foo`.
+    case member([String])
+
+    /// An array with an element type.
+    ///
+    /// For example, `[Foo]`.
+    case array(ExistingTypeDescription)
+
+    /// A dictionary where the key is `Swift.String` and the value is
+    /// the provided type.
+    ///
+    /// For example, `[String: Foo]`.
+    case dictionaryValue(ExistingTypeDescription)
 }
 
 /// A description of a typealias declaration.
@@ -350,7 +420,7 @@ struct TypealiasDescription: Equatable, Codable {
     /// The existing type that serves as the underlying type of the alias.
     ///
     /// For example, in `typealias Foo = Int`, `existingType` is `Int`.
-    var existingType: String
+    var existingType: ExistingTypeDescription
 }
 
 /// A description of a protocol declaration.
@@ -395,7 +465,7 @@ struct ParameterDescription: Equatable, Codable {
     /// The type name of the parameter.
     ///
     /// For example, in `bar baz: String = "hi"`, `type` is `String`.
-    var type: String
+    var type: ExistingTypeDescription
 
     /// A default value of the parameter.
     ///
@@ -538,7 +608,7 @@ struct EnumCaseAssociatedValueDescription: Equatable, Codable {
     /// A variable type name.
     ///
     /// For example, in `bar: String`, `type` is `String`.
-    var type: String
+    var type: ExistingTypeDescription
 }
 
 /// An enum case kind.
@@ -767,6 +837,9 @@ enum KeywordKind: Equatable, Codable {
 
     /// The throw keyword.
     case `throw`
+
+    /// The yield keyword.
+    case `yield`
 }
 
 /// A description of an expression that places a keyword before an expression.
@@ -1021,16 +1094,64 @@ extension Declaration {
     ///   - right: The expression to be assigned to the variable.
     ///   - getter: Body code for the getter of the variable.
     ///   - getterEffects: Effects of the getter.
+    ///   - setter: Body code for the setter of the variable.
+    ///   - modify: Body code for the `_modify` accessor.
     /// - Returns: Variable declaration.
     static func variable(
         accessModifier: AccessModifier? = nil,
         isStatic: Bool = false,
         kind: BindingKind,
         left: String,
-        type: String? = nil,
+        type: ExistingTypeDescription? = nil,
         right: Expression? = nil,
         getter: [CodeBlock]? = nil,
-        getterEffects: [FunctionKeyword] = []
+        getterEffects: [FunctionKeyword] = [],
+        setter: [CodeBlock]? = nil,
+        modify: [CodeBlock]? = nil
+
+    ) -> Self {
+        .variable(
+            accessModifier: accessModifier,
+            isStatic: isStatic,
+            kind: kind,
+            left: .identifierPattern(left),
+            type: type,
+            right: right,
+            getter: getter,
+            getterEffects: getterEffects,
+            setter: setter,
+            modify: modify
+        )
+    }
+
+    /// A variable declaration.
+    ///
+    /// For example: `let foo = 42`.
+    /// - Parameters:
+    ///   - accessModifier: An access modifier.
+    ///   - isStatic: A Boolean value that indicates whether the variable
+    ///   is static.
+    ///   - kind: The variable binding kind.
+    ///   - left: The name of the variable.
+    ///   - type: The type of the variable.
+    ///   - right: The expression to be assigned to the variable.
+    ///   - getter: Body code for the getter of the variable.
+    ///   - getterEffects: Effects of the getter.
+    ///   - setter: Body code for the setter of the variable.
+    ///   - modify: Body code for the `_modify` accessor.
+    /// - Returns: Variable declaration.
+    static func variable(
+        accessModifier: AccessModifier? = nil,
+        isStatic: Bool = false,
+        kind: BindingKind,
+        left: Expression,
+        type: ExistingTypeDescription? = nil,
+        right: Expression? = nil,
+        getter: [CodeBlock]? = nil,
+        getterEffects: [FunctionKeyword] = [],
+        setter: [CodeBlock]? = nil,
+        modify: [CodeBlock]? = nil
+
     ) -> Self {
         .variable(
             .init(
@@ -1041,7 +1162,9 @@ extension Declaration {
                 type: type,
                 right: right,
                 getter: getter,
-                getterEffects: getterEffects
+                getterEffects: getterEffects,
+                setter: setter,
+                modify: modify
             )
         )
     }
@@ -1053,10 +1176,7 @@ extension Declaration {
     ///   - name: The name of the enum case.
     ///   - kind: The kind of the enum case.
     /// - Returns: An enum case declaration.
-    static func enumCase(
-        name: String,
-        kind: EnumCaseKind = .nameOnly
-    ) -> Self {
+    static func enumCase(name: String, kind: EnumCaseKind = .nameOnly) -> Self {
         .enumCase(.init(name: name, kind: kind))
     }
 
@@ -1069,19 +1189,9 @@ extension Declaration {
     ///   - existingType: The existing type that serves as the
     ///   underlying type of the alias.
     /// - Returns: A typealias declaration.
-    static func `typealias`(
-        accessModifier: AccessModifier? = nil,
-        name: String,
-        existingType: String
-    ) -> Self {
-        .typealias(
-            .init(
-                accessModifier: accessModifier,
-                name: name,
-                existingType: existingType
-            )
-        )
-    }
+    static func `typealias`(accessModifier: AccessModifier? = nil, name: String, existingType: ExistingTypeDescription)
+        -> Self
+    { .typealias(.init(accessModifier: accessModifier, name: name, existingType: existingType)) }
 
     /// A description of a function definition.
     ///
@@ -1122,16 +1232,8 @@ extension Declaration {
     ///   - signature: The signature of the function.
     ///   - body: The body definition of the function.
     /// - Returns: A function declaration.
-    static func function(
-        signature: FunctionSignatureDescription,
-        body: [CodeBlock]? = nil
-    ) -> Self {
-        .function(
-            .init(
-                signature: signature,
-                body: body
-            )
-        )
+    static func function(signature: FunctionSignatureDescription, body: [CodeBlock]? = nil) -> Self {
+        .function(.init(signature: signature, body: body))
     }
 
     /// A description of an enum declaration.
@@ -1193,37 +1295,25 @@ extension Declaration {
     }
 }
 
-extension IdentifierDescription: ExpressibleByStringLiteral {
-    init(stringLiteral value: String) {
-        self.init(name: value)
-    }
-}
-
 extension FunctionKind {
     /// Returns a non-failable initializer, for example `init()`.
-    static var initializer: Self {
-        return .initializer(failable: false)
-    }
+    static var initializer: Self { .initializer(failable: false) }
 
     /// Returns a non-static function kind.
-    static func function(name: String) -> Self {
-        .function(name: name, isStatic: false)
-    }
+    static func function(name: String) -> Self { .function(name: name, isStatic: false) }
 }
 
 extension CodeBlock {
 
     /// Returns a new declaration code block wrapping the provided declaration.
     /// - Parameter declaration: The declaration to wrap.
-    static func declaration(_ declaration: Declaration) -> Self {
-        return CodeBlock(item: .declaration(declaration))
-    }
+    /// - Returns: A new `CodeBlock` instance containing the provided declaration.
+    static func declaration(_ declaration: Declaration) -> Self { CodeBlock(item: .declaration(declaration)) }
 
     /// Returns a new expression code block wrapping the provided expression.
     /// - Parameter expression: The expression to wrap.
-    static func expression(_ expression: Expression) -> Self {
-        return CodeBlock(item: .expression(expression))
-    }
+    /// - Returns: A new `CodeBlock` instance containing the provided declaration.
+    static func expression(_ expression: Expression) -> Self { CodeBlock(item: .expression(expression)) }
 }
 
 extension Expression {
@@ -1232,28 +1322,26 @@ extension Expression {
     ///
     /// For example: `"hello"`.
     /// - Parameter value: The string value of the literal.
-    static func literal(_ value: String) -> Self {
-        .literal(.string(value))
-    }
+    /// - Returns: A new `Expression` representing a string  literal.
+    static func literal(_ value: String) -> Self { .literal(.string(value)) }
 
     /// An integer literal.
     ///
     /// For example `42`.
     /// - Parameter value: The integer value of the literal.
-    static func literal(_ value: Int) -> Self {
-        .literal(.int(value))
-    }
+    /// - Returns: A new `Expression` representing an integer literal.
+    static func literal(_ value: Int) -> Self { .literal(.int(value)) }
 
     /// Returns a new expression that accesses the member on the current
     /// expression.
     /// - Parameter member: The name of the member to access on the expression.
-    func dot(_ member: String) -> Expression {
-        return .memberAccess(.init(left: self, right: member))
-    }
+    /// - Returns: A new expression representing member access.
+    func dot(_ member: String) -> Expression { .memberAccess(.init(left: self, right: member)) }
 
     /// Returns a new expression that calls the current expression as a function
     /// with the specified arguments.
     /// - Parameter arguments: The arguments used to call the expression.
+    /// - Returns: A new expression representing a function call.
     func call(_ arguments: [FunctionArgumentDescription]) -> Expression {
         .functionCall(.init(calledExpression: self, arguments: arguments))
     }
@@ -1263,31 +1351,42 @@ extension Expression {
     ///
     /// For example: `.foo`, where `member` is `foo`.
     /// - Parameter member: The name of the member to access.
-    static func dot(_ member: String) -> Self {
-        return Self.memberAccess(.init(right: member))
-    }
+    /// - Returns: A new expression representing member access with a dot prefix.
+    static func dot(_ member: String) -> Self { Self.memberAccess(.init(right: member)) }
 
-    /// Returns a new identifier expression for the provided name.
+    /// Returns a new identifier expression for the provided pattern, such
+    /// as a variable or function name.
     /// - Parameter name: The name of the identifier.
-    static func identifier(_ name: String) -> Self {
-        .identifier(.init(name: name))
-    }
+    /// - Returns: A new expression representing an identifier with
+    ///   the specified name.
+    static func identifierPattern(_ name: String) -> Self { .identifier(.pattern(name)) }
+
+    /// Returns a new identifier expression for the provided type name.
+    /// - Parameter type: The description of the type.
+    /// - Returns: A new expression representing an identifier with
+    ///   the specified name.
+    static func identifierType(_ type: ExistingTypeDescription) -> Self { .identifier(.type(type)) }
+
+    /// Returns a new identifier expression for the provided type name.
+    /// - Parameter type: The name of the type.
+    /// - Returns: A new expression representing an identifier with
+    ///   the specified name.
+    static func identifierType(_ type: TypeName) -> Self { .identifier(.type(.init(type))) }
+
+    /// Returns a new identifier expression for the provided type name.
+    /// - Parameter type: The usage of the type.
+    /// - Returns: A new expression representing an identifier with
+    ///   the specified name.
+    static func identifierType(_ type: TypeUsage) -> Self { .identifier(.type(.init(type))) }
 
     /// Returns a new switch statement expression.
     /// - Parameters:
     ///   - switchedExpression: The expression evaluated by the switch
     ///    statement.
     ///   - cases: The cases defined in the switch statement.
-    static func `switch`(
-        switchedExpression: Expression,
-        cases: [SwitchCaseDescription]
-    ) -> Self {
-        .`switch`(
-            .init(
-                switchedExpression: switchedExpression,
-                cases: cases
-            )
-        )
+    /// - Returns: A new expression representing a switch statement with the specified switched expression and cases
+    static func `switch`(switchedExpression: Expression, cases: [SwitchCaseDescription]) -> Self {
+        .`switch`(.init(switchedExpression: switchedExpression, cases: cases))
     }
 
     /// Returns an if statement, with optional else if's and an else
@@ -1296,18 +1395,9 @@ extension Expression {
     ///   - ifBranch: The primary `if` branch.
     ///   - elseIfBranches: Additional `else if` branches.
     ///   - elseBody: The body of an else block.
-    static func ifStatement(
-        ifBranch: IfBranch,
-        elseIfBranches: [IfBranch] = [],
-        elseBody: [CodeBlock]? = nil
-    ) -> Self {
-        .ifStatement(
-            .init(
-                ifBranch: ifBranch,
-                elseIfBranches: elseIfBranches,
-                elseBody: elseBody
-            )
-        )
+    /// - Returns: A new expression representing an `if` statement with the specified branches and blocks.
+    static func ifStatement(ifBranch: IfBranch, elseIfBranches: [IfBranch] = [], elseBody: [CodeBlock]? = nil) -> Self {
+        .ifStatement(.init(ifBranch: ifBranch, elseIfBranches: elseIfBranches, elseBody: elseBody))
     }
 
     /// Returns a new function call expression.
@@ -1316,16 +1406,14 @@ extension Expression {
     /// - Parameters:
     ///   - calledExpression: The expression to be called as a function.
     ///   - arguments: The arguments to be passed to the function call.
+    ///   - trailingClosure: A trailing closure.
+    /// - Returns: A new expression representing a function call with the specified called expression and arguments.
     static func functionCall(
         calledExpression: Expression,
-        arguments: [FunctionArgumentDescription] = []
+        arguments: [FunctionArgumentDescription] = [],
+        trailingClosure: ClosureInvocationDescription? = nil
     ) -> Self {
-        .functionCall(
-            .init(
-                calledExpression: calledExpression,
-                arguments: arguments
-            )
-        )
+        .functionCall(.init(calledExpression: calledExpression, arguments: arguments, trailingClosure: trailingClosure))
     }
 
     /// Returns a new function call expression.
@@ -1334,14 +1422,18 @@ extension Expression {
     /// - Parameters:
     ///   - calledExpression: The expression called as a function.
     ///   - arguments: The arguments passed to the function call.
+    ///   - trailingClosure: A trailing closure.
+    /// - Returns: A new expression representing a function call with the specified called expression and arguments.
     static func functionCall(
         calledExpression: Expression,
-        arguments: [Expression]
+        arguments: [Expression],
+        trailingClosure: ClosureInvocationDescription? = nil
     ) -> Self {
         .functionCall(
             .init(
                 calledExpression: calledExpression,
-                arguments: arguments.map { .init(label: nil, expression: $0) }
+                arguments: arguments.map { .init(label: nil, expression: $0) },
+                trailingClosure: trailingClosure
             )
         )
     }
@@ -1350,16 +1442,15 @@ extension Expression {
     /// - Parameters:
     ///   - kind: The keyword to place before the expression.
     ///   - expression: The expression prefixed by the keyword.
-    static func unaryKeyword(
-        kind: KeywordKind,
-        expression: Expression? = nil
-    ) -> Self {
+    /// - Returns: A new expression with the specified keyword placed before the expression.
+    static func unaryKeyword(kind: KeywordKind, expression: Expression? = nil) -> Self {
         .unaryKeyword(.init(kind: kind, expression: expression))
     }
 
     /// Returns a new expression that puts the return keyword before
     /// an expression.
     /// - Parameter expression: The expression to prepend.
+    /// - Returns: A new expression with the `return` keyword placed before the expression.
     static func `return`(_ expression: Expression? = nil) -> Self {
         .unaryKeyword(kind: .return, expression: expression)
     }
@@ -1367,25 +1458,37 @@ extension Expression {
     /// Returns a new expression that puts the try keyword before
     /// an expression.
     /// - Parameter expression: The expression to prepend.
-    static func `try`(_ expression: Expression) -> Self {
-        .unaryKeyword(kind: .try, expression: expression)
-    }
+    /// - Returns: A new expression with the `try` keyword placed before the expression.
+    static func `try`(_ expression: Expression) -> Self { .unaryKeyword(kind: .try, expression: expression) }
 
     /// Returns a new expression that puts the try? keyword before
     /// an expression.
     /// - Parameter expression: The expression to prepend.
+    /// - Returns: A new expression with the `try?` keyword placed before the expression.
     static func optionalTry(_ expression: Expression) -> Self {
-        .unaryKeyword(
-            kind: .try(hasPostfixQuestionMark: true),
-            expression: expression
-        )
+        .unaryKeyword(kind: .try(hasPostfixQuestionMark: true), expression: expression)
     }
 
     /// Returns a new expression that puts the await keyword before
     /// an expression.
     /// - Parameter expression: The expression to prepend.
-    static func `await`(_ expression: Expression) -> Self {
-        .unaryKeyword(kind: .await, expression: expression)
+    /// - Returns: A new expression with the `await` keyword placed before the expression.
+    static func `await`(_ expression: Expression) -> Self { .unaryKeyword(kind: .await, expression: expression) }
+
+    /// Returns a new expression that puts the yield keyword before
+    /// an expression.
+    /// - Parameter expression: The expression to prepend.
+    /// - Returns: A new expression with the `yield` keyword placed before the expression.
+    static func `yield`(_ expression: Expression) -> Self { .unaryKeyword(kind: .yield, expression: expression) }
+
+    /// Returns a new expression that puts the provided code blocks into
+    /// a do/catch block.
+    /// - Parameter:
+    ///   - doStatement: The code blocks in the `do` statement body.
+    ///   - catchBody: The code blocks in the `catch` statement.
+    /// - Returns: The expression.
+    static func `do`(_ doStatement: [CodeBlock], catchBody: [CodeBlock]? = nil) -> Self {
+        .doStatement(.init(doStatement: doStatement, catchBody: catchBody))
     }
 
     /// Returns a new value binding used in enums with associated values.
@@ -1394,10 +1497,8 @@ extension Expression {
     /// - Parameters:
     ///   - kind: The binding kind: `let` or `var`.
     ///   - value: The bound values in a function call expression syntax.
-    static func valueBinding(
-        kind: BindingKind,
-        value: FunctionCallDescription
-    ) -> Self {
+    /// - Returns: A new expression representing the value binding.
+    static func valueBinding(kind: BindingKind, value: FunctionCallDescription) -> Self {
         .valueBinding(.init(kind: kind, value: value))
     }
 
@@ -1407,10 +1508,8 @@ extension Expression {
     /// - Parameters:
     ///   - argumentNames: The names of the arguments taken by the closure.
     ///   - body: The code blocks of the closure body.
-    static func `closureInvocation`(
-        argumentNames: [String] = [],
-        body: [CodeBlock]? = nil
-    ) -> Self {
+    /// - Returns: A new expression representing the closure invocation
+    static func `closureInvocation`(argumentNames: [String] = [], body: [CodeBlock]? = nil) -> Self {
         .closureInvocation(.init(argumentNames: argumentNames, body: body))
     }
 
@@ -1421,11 +1520,8 @@ extension Expression {
     ///   - left: The left-hand side expression of the operation.
     ///   - operation: The binary operator tying the two expressions together.
     ///   - right: The right-hand side expression of the operation.
-    static func `binaryOperation`(
-        left: Expression,
-        operation: BinaryOperator,
-        right: Expression
-    ) -> Self {
+    /// - Returns: A new expression representing the binary operation.
+    static func `binaryOperation`(left: Expression, operation: BinaryOperator, right: Expression) -> Self {
         .binaryOperation(.init(left: left, operation: operation, right: right))
     }
 
@@ -1434,9 +1530,8 @@ extension Expression {
     ///
     /// For example, `&foo` passes a reference to the `foo` variable.
     /// - Parameter referencedExpr: The referenced expression.
-    static func inOut(_ referencedExpr: Expression) -> Self {
-        .inOut(.init(referencedExpr: referencedExpr))
-    }
+    /// - Returns: A new expression representing the inout expression.
+    static func inOut(_ referencedExpr: Expression) -> Self { .inOut(.init(referencedExpr: referencedExpr)) }
 
     /// Creates a new assignment expression.
     ///
@@ -1445,26 +1540,21 @@ extension Expression {
     ///   - left: The left-hand side expression, the variable to assign to.
     ///   - right: The right-hand side expression, the value to assign.
     /// - Returns: Assignment expression.
-    static func assignment(left: Expression, right: Expression) -> Self {
-        .assignment(.init(left: left, right: right))
-    }
+    static func assignment(left: Expression, right: Expression) -> Self { .assignment(.init(left: left, right: right)) }
 
     /// Returns a new optional chaining expression wrapping the current
     /// expression.
     ///
     /// For example, for the current expression `foo`, returns `foo?`.
-    func optionallyChained() -> Self {
-        .optionalChaining(.init(referencedExpr: self))
-    }
+    /// - Returns: A new expression representing the optional chaining operation.
+    func optionallyChained() -> Self { .optionalChaining(.init(referencedExpr: self)) }
 
     /// Returns a new tuple expression.
     ///
     /// For example, in `(foo, bar)`, `members` is `[foo, bar]`.
     /// - Parameter expressions: The member expressions.
     /// - Returns: A tuple expression.
-    static func tuple(_ expressions: [Expression]) -> Self {
-        .tuple(.init(members: expressions))
-    }
+    static func tuple(_ expressions: [Expression]) -> Self { .tuple(.init(members: expressions)) }
 }
 
 extension MemberAccessDescription {
@@ -1473,37 +1563,16 @@ extension MemberAccessDescription {
     ///
     /// For example, `.foo`, where `member` is `foo`.
     /// - Parameter member: The name of the member to access.
-    static func dot(_ member: String) -> Self {
-        .init(right: member)
-    }
-}
-
-extension Expression: ExpressibleByStringLiteral, ExpressibleByNilLiteral, ExpressibleByArrayLiteral {
-    init(arrayLiteral elements: Expression...) {
-        self = .literal(.array(elements))
-    }
-
-    init(stringLiteral value: String) {
-        self = .literal(.string(value))
-    }
-
-    init(nilLiteral: ()) {
-        self = .literal(.nil)
-    }
+    /// - Returns: A new member access expression.
+    static func dot(_ member: String) -> Self { .init(right: member) }
 }
 
 extension LiteralDescription: ExpressibleByStringLiteral, ExpressibleByNilLiteral, ExpressibleByArrayLiteral {
-    init(arrayLiteral elements: Expression...) {
-        self = .array(elements)
-    }
+    init(arrayLiteral elements: Expression...) { self = .array(elements) }
 
-    init(stringLiteral value: String) {
-        self = .string(value)
-    }
+    init(stringLiteral value: String) { self = .string(value) }
 
-    init(nilLiteral: ()) {
-        self = .nil
-    }
+    init(nilLiteral: ()) { self = .nil }
 }
 
 extension VariableDescription {
@@ -1512,17 +1581,15 @@ extension VariableDescription {
     ///
     /// For example `var foo = 42`.
     /// - Parameter name: The name of the variable.
-    static func `var`(_ name: String) -> Self {
-        Self.init(kind: .var, left: name)
-    }
+    /// - Returns: A new mutable variable declaration.
+    static func `var`(_ name: String) -> Self { Self.init(kind: .var, left: .identifierPattern(name)) }
 
     /// Returns a new immutable variable declaration.
     ///
     /// For example `let foo = 42`.
     /// - Parameter name: The name of the variable.
-    static func `let`(_ name: String) -> Self {
-        Self.init(kind: .let, left: name)
-    }
+    /// - Returns: A new immutable variable declaration.
+    static func `let`(_ name: String) -> Self { Self.init(kind: .let, left: .identifierPattern(name)) }
 }
 
 extension Expression {
@@ -1530,21 +1597,15 @@ extension Expression {
     /// Creates a new assignment description where the called expression is
     /// assigned the value of the specified expression.
     /// - Parameter rhs: The right-hand side of the assignment expression.
-    func equals(_ rhs: Expression) -> AssignmentDescription {
-        .init(left: self, right: rhs)
-    }
-}
-
-extension FunctionArgumentDescription: ExpressibleByStringLiteral {
-    init(stringLiteral value: String) {
-        self = .init(expression: .literal(.string(value)))
-    }
+    /// - Returns: An assignment description representing the assignment.
+    func equals(_ rhs: Expression) -> AssignmentDescription { .init(left: self, right: rhs) }
 }
 
 extension FunctionSignatureDescription {
     /// Returns a new function signature description that has the access
     /// modifier updated to the specified one.
     /// - Parameter accessModifier: The access modifier to use.
+    /// - Returns: A function signature description with the specified access modifier.
     func withAccessModifier(_ accessModifier: AccessModifier?) -> Self {
         var value = self
         value.accessModifier = accessModifier
@@ -1556,25 +1617,88 @@ extension SwitchCaseKind {
     /// Returns a new switch case kind with no argument names, only the
     /// specified expression as the name.
     /// - Parameter expression: The expression for the switch case label.
-    static func `case`(_ expression: Expression) -> Self {
-        .case(expression, [])
-    }
+    /// - Returns: A switch case kind with the specified expression as the label.
+    static func `case`(_ expression: Expression) -> Self { .case(expression, []) }
 }
 
 extension KeywordKind {
 
     /// Returns the try keyword without the postfix question mark.
-    static var `try`: Self {
-        .try(hasPostfixQuestionMark: false)
-    }
+    static var `try`: Self { .try(hasPostfixQuestionMark: false) }
 }
 
 extension Declaration {
     /// Returns a new deprecated variant of the declaration if `shouldDeprecate` is true.
     func deprecate(if shouldDeprecate: Bool) -> Self {
-        if shouldDeprecate {
-            return .deprecated(.init(), self)
-        }
+        if shouldDeprecate { return .deprecated(.init(), self) }
         return self
     }
+
+    /// Returns the declaration one level deeper, nested inside the commentable
+    /// declaration, if present.
+    var strippingTopComment: Self {
+        guard case let .commentable(_, underlyingDecl) = self else { return self }
+        return underlyingDecl
+    }
+}
+
+extension Declaration {
+
+    /// An access modifier.
+    var accessModifier: AccessModifier? {
+        get {
+            switch self {
+            case .commentable(_, let declaration): return declaration.accessModifier
+            case .deprecated(_, let declaration): return declaration.accessModifier
+            case .variable(let variableDescription): return variableDescription.accessModifier
+            case .extension(let extensionDescription): return extensionDescription.accessModifier
+            case .struct(let structDescription): return structDescription.accessModifier
+            case .enum(let enumDescription): return enumDescription.accessModifier
+            case .typealias(let typealiasDescription): return typealiasDescription.accessModifier
+            case .protocol(let protocolDescription): return protocolDescription.accessModifier
+            case .function(let functionDescription): return functionDescription.signature.accessModifier
+            case .enumCase: return nil
+            }
+        }
+        set {
+            switch self {
+            case .commentable(let comment, var declaration):
+                declaration.accessModifier = newValue
+                self = .commentable(comment, declaration)
+            case .deprecated(let deprecationDescription, var declaration):
+                declaration.accessModifier = newValue
+                self = .deprecated(deprecationDescription, declaration)
+            case .variable(var variableDescription):
+                variableDescription.accessModifier = newValue
+                self = .variable(variableDescription)
+            case .extension(var extensionDescription):
+                extensionDescription.accessModifier = newValue
+                self = .extension(extensionDescription)
+            case .struct(var structDescription):
+                structDescription.accessModifier = newValue
+                self = .struct(structDescription)
+            case .enum(var enumDescription):
+                enumDescription.accessModifier = newValue
+                self = .enum(enumDescription)
+            case .typealias(var typealiasDescription):
+                typealiasDescription.accessModifier = newValue
+                self = .typealias(typealiasDescription)
+            case .protocol(var protocolDescription):
+                protocolDescription.accessModifier = newValue
+                self = .protocol(protocolDescription)
+            case .function(var functionDescription):
+                functionDescription.signature.accessModifier = newValue
+                self = .function(functionDescription)
+            case .enumCase: break
+            }
+        }
+    }
+}
+
+extension ExistingTypeDescription {
+
+    /// Creates a member type description with the provided single component.
+    /// - Parameter singleComponent: A single component of the name.
+    /// - Returns: The new type description.
+    static func member(_ singleComponent: String) -> Self { .member([singleComponent]) }
 }

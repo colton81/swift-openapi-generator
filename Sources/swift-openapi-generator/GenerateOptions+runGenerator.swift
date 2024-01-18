@@ -25,19 +25,20 @@ extension _GenerateOptions {
     ///   - isDryRun: A Boolean value that indicates whether this invocation should
     ///   be run in a testing mode to preview all the operations being carried out without
     ///   making any actual changes.
-    func runGenerator(
-        outputDirectory: URL,
-        pluginSource: PluginSource?,
-        isDryRun: Bool
-    ) async throws {
+    /// - Throws: An error if any part of the generator execution encounters an issue, including loading configuration,
+    /// resolving options, generating code, and handling diagnostics.
+    func runGenerator(outputDirectory: URL, pluginSource: PluginSource?, isDryRun: Bool) async throws {
         let config = try loadedConfig()
         let sortedModes = try resolvedModes(config)
+        let resolvedAccessModifier = resolvedAccessModifier(config) ?? Config.defaultAccessModifier
         let resolvedAdditionalImports = resolvedAdditionalImports(config)
         let resolvedFeatureFlags = resolvedFeatureFlags(config)
         let configs: [Config] = sortedModes.map {
             .init(
                 mode: $0,
+                access: resolvedAccessModifier,
                 additionalImports: resolvedAdditionalImports,
+                filter: config?.filter,
                 featureFlags: resolvedFeatureFlags
             )
         }
@@ -59,6 +60,7 @@ extension _GenerateOptions {
             - OpenAPI document path: \(doc.path)
             - Configuration path: \(self.config?.path ?? "<none>")
             - Generator modes: \(sortedModes.map(\.rawValue).joined(separator: ", "))
+            - Access modifier: \(resolvedAccessModifier.rawValue)
             - Feature flags: \(resolvedFeatureFlags.isEmpty ? "<none>" : resolvedFeatureFlags.map(\.rawValue).joined(separator: ", "))
             - Output file names: \(sortedModes.map(\.outputFileName).joined(separator: ", "))
             - Output directory: \(outputDirectory.path)

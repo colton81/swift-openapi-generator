@@ -18,6 +18,8 @@ import OpenAPIKit
 @testable import _OpenAPIGeneratorCore
 
 class Test_Core: XCTestCase {
+
+    /// Setup method called before the invocation of each test method in the class.
     override func setUp() async throws {
         try await super.setUp()
         continueAfterFailure = false
@@ -27,12 +29,8 @@ class Test_Core: XCTestCase {
         components: OpenAPI.Components = .noComponents,
         diagnostics: any DiagnosticCollector = PrintingDiagnosticCollector(),
         featureFlags: FeatureFlags = []
-    ) -> any FileTranslator {
-        makeTypesTranslator(
-            components: components,
-            diagnostics: diagnostics,
-            featureFlags: featureFlags
-        )
+    ) -> TypesFileTranslator {
+        makeTypesTranslator(components: components, diagnostics: diagnostics, featureFlags: featureFlags)
     }
 
     func makeTypesTranslator(
@@ -48,31 +46,20 @@ class Test_Core: XCTestCase {
     }
 
     func makeConfig(featureFlags: FeatureFlags = []) -> Config {
-        .init(
-            mode: .types,
-            featureFlags: featureFlags
-        )
+        .init(mode: .types, access: Config.defaultAccessModifier, featureFlags: featureFlags)
     }
 
     func loadSchemaFromYAML(_ yamlString: String) throws -> JSONSchema {
         try YAMLDecoder().decode(JSONSchema.self, from: yamlString)
     }
 
-    static var testTypeName: TypeName {
-        .init(swiftKeyPath: ["Foo"])
-    }
+    static var testTypeName: TypeName { .init(swiftKeyPath: ["Foo"]) }
 
-    var typeAssigner: TypeAssigner {
-        makeTranslator().typeAssigner
-    }
+    var typeAssigner: TypeAssigner { makeTranslator().typeAssigner }
 
-    var typeMatcher: TypeMatcher {
-        makeTranslator().typeMatcher
-    }
+    var typeMatcher: TypeMatcher { makeTranslator().typeMatcher }
 
-    var asSwiftSafeName: (String) -> String {
-        makeTranslator().swiftSafeName
-    }
+    var asSwiftSafeName: (String) -> String { makeTranslator().swiftSafeName }
 
     func makeProperty(originalName: String, typeUsage: TypeUsage) -> PropertyBlueprint {
         .init(originalName: originalName, typeUsage: typeUsage, asSwiftSafeName: asSwiftSafeName)
@@ -102,9 +89,7 @@ func XCTAssertEqualCodable<T>(
     }
 
     // If objects aren't equal, convert both into Yaml and diff them in that representation
-    if value1 == value2 {
-        return
-    }
+    if value1 == value2 { return }
 
     let encoder = YAMLEncoder()
     encoder.options.sortKeys = true
@@ -157,41 +142,35 @@ func XCTAssertEqualCodable<T>(
     XCTFail(messageLines.joined(separator: "\n"), file: file, line: line)
 }
 
+func XCTAssertUnsortedEqual<T>(
+    _ expression1: @autoclosure () throws -> [T],
+    _ expression2: @autoclosure () throws -> [T],
+    _ message: @autoclosure () -> String = "",
+    file: StaticString = #filePath,
+    line: UInt = #line
+) where T: Comparable {
+    XCTAssertEqual(try expression1().sorted(), try expression2().sorted(), message(), file: file, line: line)
+}
+
 /// Both names must have the same number of components, throws otherwise.
 func newTypeName(swiftFQName: String, jsonFQName: String) throws -> TypeName {
     var jsonComponents = jsonFQName.split(separator: "/").map(String.init)
     let swiftComponents = swiftFQName.split(separator: ".").map(String.init)
-    guard !jsonComponents.isEmpty else {
-        throw TypeCreationError(swift: swiftFQName, json: jsonFQName)
-    }
+    guard !jsonComponents.isEmpty else { throw TypeCreationError(swift: swiftFQName, json: jsonFQName) }
     let hadJSONRoot = jsonComponents[0] == "#"
-    if hadJSONRoot {
-        jsonComponents.removeFirst()
-    }
+    if hadJSONRoot { jsonComponents.removeFirst() }
     struct TypeCreationError: Error, CustomStringConvertible, LocalizedError {
         var swift: String
         var json: String
-        var description: String {
-            "swift: \(swift), json: \(json)"
-        }
-        var errorDescription: String? {
-            description
-        }
+        var description: String { "swift: \(swift), json: \(json)" }
+        var errorDescription: String? { description }
     }
     guard swiftComponents.count == jsonComponents.count else {
         throw TypeCreationError(swift: swiftFQName, json: jsonFQName)
     }
     let jsonRoot: [TypeName.Component]
-    if hadJSONRoot {
-        jsonRoot = [.init(swift: nil, json: "#")]
-    } else {
-        jsonRoot = []
-    }
-    return .init(
-        components: jsonRoot
-            + zip(swiftComponents, jsonComponents)
-            .map(TypeName.Component.init)
-    )
+    if hadJSONRoot { jsonRoot = [.init(swift: nil, json: "#")] } else { jsonRoot = [] }
+    return .init(components: jsonRoot + zip(swiftComponents, jsonComponents).map(TypeName.Component.init))
 }
 
 /// A diagnostic collector that accumulates all received diagnostics into
@@ -200,7 +179,5 @@ final class AccumulatingDiagnosticCollector: DiagnosticCollector {
 
     private(set) var diagnostics: [Diagnostic] = []
 
-    func emit(_ diagnostic: Diagnostic) {
-        diagnostics.append(diagnostic)
-    }
+    func emit(_ diagnostic: Diagnostic) { diagnostics.append(diagnostic) }
 }

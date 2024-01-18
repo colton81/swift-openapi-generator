@@ -16,14 +16,14 @@ Supported features are always provided on _both_ client and server.
 
 For the checked serialization formats below, the generator emits types conforming to `Codable`, structured based on the provided JSON Schema.
 
-For any other formats, the payload is provided as raw bytes, leaving it up to the adopter to decode as needed.
+For any other formats, the payload is provided as raw bytes (using the `HTTPBody` streaming body type), leaving it up to the adopter to decode as needed.
 
 - [x] JSON
     - when content type is `application/json` or ends with `+json`
 - [x] URL-encoded form request bodies
     - when content type is `application/x-www-form-urlencoded`
-- [ ] multipart
-    - tracked by [#36](https://github.com/apple/swift-openapi-generator/issues/36)
+- [x] multipart
+    - for details, see [SOAR-0009](https://swiftpackageindex.com/apple/swift-openapi-generator/main/documentation/swift-openapi-generator/soar-0009)
 - [ ] XML
 
 ### OpenAPI specification features
@@ -63,13 +63,13 @@ For any other formats, the payload is provided as raw bytes, leaving it up to th
 
 - [x] url
 - [x] description
-- [ ] variables
+- [x] variables
 
 #### Server Variable Object
 
-- [ ] enum
-- [ ] default
-- [ ] description
+- [x] enum
+- [x] default
+- [x] description
 
 #### Paths Object
 
@@ -77,7 +77,7 @@ For any other formats, the payload is provided as raw bytes, leaving it up to th
 
 #### Path Item Object
 
-- [ ] $ref
+- [x] $ref
 - [x] summary
 - [x] description
 - [x] get/put/post/delete/options/head/patch/trace
@@ -110,7 +110,7 @@ For any other formats, the payload is provided as raw bytes, leaving it up to th
 - [x] schema
 - [ ] example
 - [ ] examples
-- [ ] encoding
+- [x] encoding (in multipart only)
 
 #### Security Requirement Object
 
@@ -198,8 +198,8 @@ For any other formats, the payload is provided as raw bytes, leaving it up to th
 
 #### Encoding Object
 
-- [ ] contentType
-- [ ] headers
+- [x] contentType
+- [x] headers
 - [ ] style
 - [ ] explode
 - [ ] allowReserved

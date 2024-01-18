@@ -28,8 +28,7 @@ public protocol APIProtocol: Sendable {
     ///
     /// - Remark: HTTP `POST /pets/create`.
     /// - Remark: Generated from `#/paths//pets/create/post(createPetWithForm)`.
-    func createPetWithForm(_ input: Operations.createPetWithForm.Input) async throws
-        -> Operations.createPetWithForm.Output
+    func createPetWithForm(_ input: Operations.createPetWithForm.Input) async throws -> Operations.createPetWithForm.Output
     /// - Remark: HTTP `GET /pets/stats`.
     /// - Remark: Generated from `#/paths//pets/stats/get(getStats)`.
     func getStats(_ input: Operations.getStats.Input) async throws -> Operations.getStats.Output
@@ -48,9 +47,15 @@ public protocol APIProtocol: Sendable {
     ///
     /// - Remark: HTTP `PUT /pets/{petId}/avatar`.
     /// - Remark: Generated from `#/paths//pets/{petId}/avatar/put(uploadAvatarForPet)`.
-    func uploadAvatarForPet(_ input: Operations.uploadAvatarForPet.Input) async throws
-        -> Operations.uploadAvatarForPet.Output
+    func uploadAvatarForPet(_ input: Operations.uploadAvatarForPet.Input) async throws -> Operations.uploadAvatarForPet.Output
+    /// - Remark: HTTP `GET /pets/multipart-typed`.
+    /// - Remark: Generated from `#/paths//pets/multipart-typed/get(multipartDownloadTyped)`.
+    func multipartDownloadTyped(_ input: Operations.multipartDownloadTyped.Input) async throws -> Operations.multipartDownloadTyped.Output
+    /// - Remark: HTTP `POST /pets/multipart-typed`.
+    /// - Remark: Generated from `#/paths//pets/multipart-typed/post(multipartUploadTyped)`.
+    func multipartUploadTyped(_ input: Operations.multipartUploadTyped.Input) async throws -> Operations.multipartUploadTyped.Output
 }
+
 /// Convenience overloads for operation inputs.
 extension APIProtocol {
     /// List all pets
@@ -64,27 +69,36 @@ extension APIProtocol {
         query: Operations.listPets.Input.Query = .init(),
         headers: Operations.listPets.Input.Headers = .init()
     ) async throws -> Operations.listPets.Output {
-        try await listPets(Operations.listPets.Input(query: query, headers: headers))
+        try await listPets(Operations.listPets.Input(
+            query: query,
+            headers: headers
+        ))
     }
     /// Create a pet
     ///
     /// - Remark: HTTP `POST /pets`.
     /// - Remark: Generated from `#/paths//pets/post(createPet)`.
-    public func createPet(headers: Operations.createPet.Input.Headers = .init(), body: Operations.createPet.Input.Body)
-        async throws -> Operations.createPet.Output
-    { try await createPet(Operations.createPet.Input(headers: headers, body: body)) }
+    public func createPet(
+        headers: Operations.createPet.Input.Headers = .init(),
+        body: Operations.createPet.Input.Body
+    ) async throws -> Operations.createPet.Output {
+        try await createPet(Operations.createPet.Input(
+            headers: headers,
+            body: body
+        ))
+    }
     /// Create a pet using a url form
     ///
     /// - Remark: HTTP `POST /pets/create`.
     /// - Remark: Generated from `#/paths//pets/create/post(createPetWithForm)`.
-    public func createPetWithForm(body: Operations.createPetWithForm.Input.Body) async throws
-        -> Operations.createPetWithForm.Output
-    { try await createPetWithForm(Operations.createPetWithForm.Input(body: body)) }
+    public func createPetWithForm(body: Operations.createPetWithForm.Input.Body) async throws -> Operations.createPetWithForm.Output {
+        try await createPetWithForm(Operations.createPetWithForm.Input(body: body))
+    }
     /// - Remark: HTTP `GET /pets/stats`.
     /// - Remark: Generated from `#/paths//pets/stats/get(getStats)`.
-    public func getStats(headers: Operations.getStats.Input.Headers = .init()) async throws
-        -> Operations.getStats.Output
-    { try await getStats(Operations.getStats.Input(headers: headers)) }
+    public func getStats(headers: Operations.getStats.Input.Headers = .init()) async throws -> Operations.getStats.Output {
+        try await getStats(Operations.getStats.Input(headers: headers))
+    }
     /// - Remark: HTTP `POST /pets/stats`.
     /// - Remark: Generated from `#/paths//pets/stats/post(postStats)`.
     public func postStats(body: Operations.postStats.Input.Body) async throws -> Operations.postStats.Output {
@@ -92,7 +106,9 @@ extension APIProtocol {
     }
     /// - Remark: HTTP `POST /probe/`.
     /// - Remark: Generated from `#/paths//probe//post(probe)`.
-    public func probe() async throws -> Operations.probe.Output { try await probe(Operations.probe.Input()) }
+    public func probe() async throws -> Operations.probe.Output {
+        try await probe(Operations.probe.Input())
+    }
     /// Update just a specific property of an existing pet. Nothing is updated if no request body is provided.
     ///
     /// - Remark: HTTP `PATCH /pets/{petId}`.
@@ -102,7 +118,11 @@ extension APIProtocol {
         headers: Operations.updatePet.Input.Headers = .init(),
         body: Components.RequestBodies.UpdatePetRequest? = nil
     ) async throws -> Operations.updatePet.Output {
-        try await updatePet(Operations.updatePet.Input(path: path, headers: headers, body: body))
+        try await updatePet(Operations.updatePet.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
     }
     /// Upload an avatar
     ///
@@ -113,15 +133,80 @@ extension APIProtocol {
         headers: Operations.uploadAvatarForPet.Input.Headers = .init(),
         body: Operations.uploadAvatarForPet.Input.Body
     ) async throws -> Operations.uploadAvatarForPet.Output {
-        try await uploadAvatarForPet(Operations.uploadAvatarForPet.Input(path: path, headers: headers, body: body))
+        try await uploadAvatarForPet(Operations.uploadAvatarForPet.Input(
+            path: path,
+            headers: headers,
+            body: body
+        ))
+    }
+    /// - Remark: HTTP `GET /pets/multipart-typed`.
+    /// - Remark: Generated from `#/paths//pets/multipart-typed/get(multipartDownloadTyped)`.
+    public func multipartDownloadTyped(headers: Operations.multipartDownloadTyped.Input.Headers = .init()) async throws -> Operations.multipartDownloadTyped.Output {
+        try await multipartDownloadTyped(Operations.multipartDownloadTyped.Input(headers: headers))
+    }
+    /// - Remark: HTTP `POST /pets/multipart-typed`.
+    /// - Remark: Generated from `#/paths//pets/multipart-typed/post(multipartUploadTyped)`.
+    public func multipartUploadTyped(body: Components.RequestBodies.MultipartUploadTypedRequest) async throws -> Operations.multipartUploadTyped.Output {
+        try await multipartUploadTyped(Operations.multipartUploadTyped.Input(body: body))
     }
 }
+
 /// Server URLs defined in the OpenAPI document.
 public enum Servers {
     /// Example Petstore implementation service
-    public static func server1() throws -> URL { try URL(validatingOpenAPIServerURL: "https://example.com/api") }
-    public static func server2() throws -> URL { try URL(validatingOpenAPIServerURL: "/api") }
+    public static func server1() throws -> Foundation.URL {
+        try Foundation.URL(
+            validatingOpenAPIServerURL: "https://example.com/api",
+            variables: []
+        )
+    }
+    public static func server2() throws -> Foundation.URL {
+        try Foundation.URL(
+            validatingOpenAPIServerURL: "/api",
+            variables: []
+        )
+    }
+    /// A custom domain.
+    ///
+    /// - Parameters:
+    ///   - _protocol:
+    ///   - subdomain: A subdomain name.
+    ///   - port:
+    ///   - basePath: The base API path.
+    public static func server3(
+        _protocol: Swift.String = "https",
+        subdomain: Swift.String = "test",
+        port: Swift.String = "443",
+        basePath: Swift.String = "v1"
+    ) throws -> Foundation.URL {
+        try Foundation.URL(
+            validatingOpenAPIServerURL: "{protocol}://{subdomain}.example.com:{port}/{basePath}",
+            variables: [
+                .init(
+                    name: "protocol",
+                    value: _protocol
+                ),
+                .init(
+                    name: "subdomain",
+                    value: subdomain
+                ),
+                .init(
+                    name: "port",
+                    value: port,
+                    allowedValues: [
+                        "443",
+                        "8443"
+                    ]
+                ),
+                .init(
+                    name: "basePath",
+                    value: basePath
+                )
+            ]
+        )
+    }
 }
+
 /// Types generated from the components section of the OpenAPI document.
 public enum Components {
     /// Types generated from the `#/components/schemas` section of the OpenAPI document.
@@ -204,18 +289,45 @@ public enum Components {
                 self.value4 = value4
             }
             public init(from decoder: any Decoder) throws {
-                value1 = try? decoder.decodeFromSingleValueContainer()
-                value2 = try? decoder.decodeFromSingleValueContainer()
-                value3 = try? .init(from: decoder)
-                value4 = try? decoder.decodeFromSingleValueContainer()
-                try DecodingError.verifyAtLeastOneSchemaIsNotNil(
-                    [value1, value2, value3, value4],
+                var errors: [any Error] = []
+                do {
+                    value1 = try decoder.decodeFromSingleValueContainer()
+                } catch {
+                    errors.append(error)
+                }
+                do {
+                    value2 = try decoder.decodeFromSingleValueContainer()
+                } catch {
+                    errors.append(error)
+                }
+                do {
+                    value3 = try .init(from: decoder)
+                } catch {
+                    errors.append(error)
+                }
+                do {
+                    value4 = try decoder.decodeFromSingleValueContainer()
+                } catch {
+                    errors.append(error)
+                }
+                try Swift.DecodingError.verifyAtLeastOneSchemaIsNotNil(
+                    [
+                        value1,
+                        value2,
+                        value3,
+                        value4
+                    ],
                     type: Self.self,
-                    codingPath: decoder.codingPath
+                    codingPath: decoder.codingPath,
+                    errors: errors
                 )
             }
             public func encode(to encoder: any Encoder) throws {
-                try encoder.encodeFirstNonNilValueToSingleValueContainer([value1, value2, value4])
+                try encoder.encodeFirstNonNilValueToSingleValueContainer([
+                    value1,
+                    value2,
+                    value4
+                ])
                 try value3?.encode(to: encoder)
             }
         }
@@ -228,25 +340,39 @@ public enum Components {
             /// - Remark: Generated from `#/components/schemas/MixedOneOf/case3`.
             case Pet(Components.Schemas.Pet)
             public init(from decoder: any Decoder) throws {
+                var errors: [any Error] = []
                 do {
                     self = .case1(try decoder.decodeFromSingleValueContainer())
                     return
-                } catch {}
+                } catch {
+                    errors.append(error)
+                }
                 do {
                     self = .PetKind(try decoder.decodeFromSingleValueContainer())
                     return
-                } catch {}
+                } catch {
+                    errors.append(error)
+                }
                 do {
                     self = .Pet(try .init(from: decoder))
                     return
-                } catch {}
-                throw DecodingError.failedToDecodeOneOfSchema(type: Self.self, codingPath: decoder.codingPath)
+                } catch {
+                    errors.append(error)
+                }
+                throw Swift.DecodingError.failedToDecodeOneOfSchema(
+                    type: Self.self,
+                    codingPath: decoder.codingPath,
+                    errors: errors
+                )
             }
             public func encode(to encoder: any Encoder) throws {
                 switch self {
-                case let .case1(value): try encoder.encodeToSingleValueContainer(value)
-                case let .PetKind(value): try encoder.encodeToSingleValueContainer(value)
-                case let .Pet(value): try value.encode(to: encoder)
+                case let .case1(value):
+                    try encoder.encodeToSingleValueContainer(value)
+                case let .PetKind(value):
+                    try encoder.encodeToSingleValueContainer(value)
+                case let .Pet(value):
+                    try value.encode(to: encoder)
                 }
             }
         }
@@ -261,7 +387,10 @@ public enum Components {
             /// - Parameters:
             ///   - value1:
             ///   - value2:
-            public init(value1: Foundation.Date, value2: Swift.String) {
+            public init(
+                value1: Foundation.Date,
+                value2: Swift.String
+            ) {
                 self.value1 = value1
                 self.value2 = value2
             }
@@ -269,7 +398,9 @@ public enum Components {
                 value1 = try decoder.decodeFromSingleValueContainer()
                 value2 = try decoder.decodeFromSingleValueContainer()
             }
-            public func encode(to encoder: any Encoder) throws { try encoder.encodeToSingleValueContainer(value1) }
+            public func encode(to encoder: any Encoder) throws {
+                try encoder.encodeToSingleValueContainer(value1)
+            }
         }
         /// Kind of pet
         ///
@@ -372,8 +503,12 @@ public enum Components {
             ///
             /// - Parameters:
             ///   - schedule:
-            public init(schedule: Components.Schemas.PetFeeding.schedulePayload? = nil) { self.schedule = schedule }
-            public enum CodingKeys: String, CodingKey { case schedule }
+            public init(schedule: Components.Schemas.PetFeeding.schedulePayload? = nil) {
+                self.schedule = schedule
+            }
+            public enum CodingKeys: String, CodingKey {
+                case schedule
+            }
         }
         /// - Remark: Generated from `#/components/schemas/DOB`.
         public typealias DOB = Foundation.Date
@@ -387,12 +522,21 @@ public enum Components {
             ///
             /// - Parameters:
             ///   - foo:
-            public init(foo: Swift.String? = nil) { self.foo = foo }
-            public enum CodingKeys: String, CodingKey { case foo }
+            public init(foo: Swift.String? = nil) {
+                self.foo = foo
+            }
+            public enum CodingKeys: String, CodingKey {
+                case foo
+            }
             public init(from decoder: any Decoder) throws {
                 let container = try decoder.container(keyedBy: CodingKeys.self)
-                foo = try container.decodeIfPresent(Swift.String.self, forKey: .foo)
-                try decoder.ensureNoAdditionalProperties(knownKeys: ["foo"])
+                foo = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .foo
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "foo"
+                ])
             }
         }
         /// - Remark: Generated from `#/components/schemas/AnyAdditionalProperties`.
@@ -406,20 +550,32 @@ public enum Components {
             /// - Parameters:
             ///   - foo:
             ///   - additionalProperties: A container of undocumented properties.
-            public init(foo: Swift.String? = nil, additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init())
-            {
+            public init(
+                foo: Swift.String? = nil,
+                additionalProperties: OpenAPIRuntime.OpenAPIObjectContainer = .init()
+            ) {
                 self.foo = foo
                 self.additionalProperties = additionalProperties
             }
-            public enum CodingKeys: String, CodingKey { case foo }
+            public enum CodingKeys: String, CodingKey {
+                case foo
+            }
             public init(from decoder: any Decoder) throws {
                 let container = try decoder.container(keyedBy: CodingKeys.self)
-                foo = try container.decodeIfPresent(Swift.String.self, forKey: .foo)
-                additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: ["foo"])
+                foo = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .foo
+                )
+                additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [
+                    "foo"
+                ])
             }
             public func encode(to encoder: any Encoder) throws {
                 var container = encoder.container(keyedBy: CodingKeys.self)
-                try container.encodeIfPresent(foo, forKey: .foo)
+                try container.encodeIfPresent(
+                    foo,
+                    forKey: .foo
+                )
                 try encoder.encodeAdditionalProperties(additionalProperties)
             }
         }
@@ -434,20 +590,48 @@ public enum Components {
             /// - Parameters:
             ///   - foo:
             ///   - additionalProperties: A container of undocumented properties.
-            public init(foo: Swift.String? = nil, additionalProperties: [String: Swift.Int] = .init()) {
+            public init(
+                foo: Swift.String? = nil,
+                additionalProperties: [String: Swift.Int] = .init()
+            ) {
                 self.foo = foo
                 self.additionalProperties = additionalProperties
             }
-            public enum CodingKeys: String, CodingKey { case foo }
+            public enum CodingKeys: String, CodingKey {
+                case foo
+            }
             public init(from decoder: any Decoder) throws {
                 let container = try decoder.container(keyedBy: CodingKeys.self)
-                foo = try container.decodeIfPresent(Swift.String.self, forKey: .foo)
-                additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: ["foo"])
+                foo = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .foo
+                )
+                additionalProperties = try decoder.decodeAdditionalProperties(knownKeys: [
+                    "foo"
+                ])
             }
             public func encode(to encoder: any Encoder) throws {
                 var container = encoder.container(keyedBy: CodingKeys.self)
-                try container.encodeIfPresent(foo, forKey: .foo)
+                try container.encodeIfPresent(
+                    foo,
+                    forKey: .foo
+                )
                 try encoder.encodeAdditionalProperties(additionalProperties)
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/ObjectWithOptionalNullableArrayOfNullableItems`.
+        public struct ObjectWithOptionalNullableArrayOfNullableItems: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/ObjectWithOptionalNullableArrayOfNullableItems/foo`.
+            public var foo: [Swift.String?]?
+            /// Creates a new `ObjectWithOptionalNullableArrayOfNullableItems`.
+            ///
+            /// - Parameters:
+            ///   - foo:
+            public init(foo: [Swift.String?]? = nil) {
+                self.foo = foo
+            }
+            public enum CodingKeys: String, CodingKey {
+                case foo
             }
         }
         /// - Remark: Generated from `#/components/schemas/CodeError`.
@@ -458,8 +642,12 @@ public enum Components {
             ///
             /// - Parameters:
             ///   - code:
-            public init(code: Swift.Int) { self.code = code }
-            public enum CodingKeys: String, CodingKey { case code }
+            public init(code: Swift.Int) {
+                self.code = code
+            }
+            public enum CodingKeys: String, CodingKey {
+                case code
+            }
         }
         /// - Remark: Generated from `#/components/schemas/AllOfObjects`.
         public struct AllOfObjects: Codable, Hashable, Sendable {
@@ -471,8 +659,12 @@ public enum Components {
                 ///
                 /// - Parameters:
                 ///   - message:
-                public init(message: Swift.String) { self.message = message }
-                public enum CodingKeys: String, CodingKey { case message }
+                public init(message: Swift.String) {
+                    self.message = message
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case message
+                }
             }
             /// - Remark: Generated from `#/components/schemas/AllOfObjects/value1`.
             public var value1: Components.Schemas.AllOfObjects.Value1Payload
@@ -483,7 +675,10 @@ public enum Components {
             /// - Parameters:
             ///   - value1:
             ///   - value2:
-            public init(value1: Components.Schemas.AllOfObjects.Value1Payload, value2: Components.Schemas.CodeError) {
+            public init(
+                value1: Components.Schemas.AllOfObjects.Value1Payload,
+                value2: Components.Schemas.CodeError
+            ) {
                 self.value1 = value1
                 self.value2 = value2
             }
@@ -506,8 +701,12 @@ public enum Components {
                 ///
                 /// - Parameters:
                 ///   - message:
-                public init(message: Swift.String) { self.message = message }
-                public enum CodingKeys: String, CodingKey { case message }
+                public init(message: Swift.String) {
+                    self.message = message
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case message
+                }
             }
             /// - Remark: Generated from `#/components/schemas/AnyOfObjects/value1`.
             public var value1: Components.Schemas.AnyOfObjects.Value1Payload?
@@ -526,12 +725,25 @@ public enum Components {
                 self.value2 = value2
             }
             public init(from decoder: any Decoder) throws {
-                value1 = try? .init(from: decoder)
-                value2 = try? .init(from: decoder)
-                try DecodingError.verifyAtLeastOneSchemaIsNotNil(
-                    [value1, value2],
+                var errors: [any Error] = []
+                do {
+                    value1 = try .init(from: decoder)
+                } catch {
+                    errors.append(error)
+                }
+                do {
+                    value2 = try .init(from: decoder)
+                } catch {
+                    errors.append(error)
+                }
+                try Swift.DecodingError.verifyAtLeastOneSchemaIsNotNil(
+                    [
+                        value1,
+                        value2
+                    ],
                     type: Self.self,
-                    codingPath: decoder.codingPath
+                    codingPath: decoder.codingPath,
+                    errors: errors
                 )
             }
             public func encode(to encoder: any Encoder) throws {
@@ -555,36 +767,57 @@ public enum Components {
                 ///
                 /// - Parameters:
                 ///   - message:
-                public init(message: Swift.String) { self.message = message }
-                public enum CodingKeys: String, CodingKey { case message }
+                public init(message: Swift.String) {
+                    self.message = message
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case message
+                }
             }
             /// - Remark: Generated from `#/components/schemas/OneOfAny/case4`.
             case case4(Components.Schemas.OneOfAny.Case4Payload)
             public init(from decoder: any Decoder) throws {
+                var errors: [any Error] = []
                 do {
                     self = .case1(try decoder.decodeFromSingleValueContainer())
                     return
-                } catch {}
+                } catch {
+                    errors.append(error)
+                }
                 do {
                     self = .case2(try decoder.decodeFromSingleValueContainer())
                     return
-                } catch {}
+                } catch {
+                    errors.append(error)
+                }
                 do {
                     self = .CodeError(try .init(from: decoder))
                     return
-                } catch {}
+                } catch {
+                    errors.append(error)
+                }
                 do {
                     self = .case4(try .init(from: decoder))
                     return
-                } catch {}
-                throw DecodingError.failedToDecodeOneOfSchema(type: Self.self, codingPath: decoder.codingPath)
+                } catch {
+                    errors.append(error)
+                }
+                throw Swift.DecodingError.failedToDecodeOneOfSchema(
+                    type: Self.self,
+                    codingPath: decoder.codingPath,
+                    errors: errors
+                )
             }
             public func encode(to encoder: any Encoder) throws {
                 switch self {
-                case let .case1(value): try encoder.encodeToSingleValueContainer(value)
-                case let .case2(value): try encoder.encodeToSingleValueContainer(value)
-                case let .CodeError(value): try value.encode(to: encoder)
-                case let .case4(value): try value.encode(to: encoder)
+                case let .case1(value):
+                    try encoder.encodeToSingleValueContainer(value)
+                case let .case2(value):
+                    try encoder.encodeToSingleValueContainer(value)
+                case let .CodeError(value):
+                    try value.encode(to: encoder)
+                case let .case4(value):
+                    try value.encode(to: encoder)
                 }
             }
         }
@@ -596,8 +829,12 @@ public enum Components {
             ///
             /// - Parameters:
             ///   - kind:
-            public init(kind: Swift.String) { self.kind = kind }
-            public enum CodingKeys: String, CodingKey { case kind }
+            public init(kind: Swift.String) {
+                self.kind = kind
+            }
+            public enum CodingKeys: String, CodingKey {
+                case kind
+            }
         }
         /// - Remark: Generated from `#/components/schemas/Walk`.
         public struct Walk: Codable, Hashable, Sendable {
@@ -610,7 +847,10 @@ public enum Components {
             /// - Parameters:
             ///   - kind:
             ///   - length:
-            public init(kind: Swift.String, length: Swift.Int) {
+            public init(
+                kind: Swift.String,
+                length: Swift.Int
+            ) {
                 self.kind = kind
                 self.length = length
             }
@@ -631,8 +871,12 @@ public enum Components {
                 ///
                 /// - Parameters:
                 ///   - message:
-                public init(message: Swift.String) { self.message = message }
-                public enum CodingKeys: String, CodingKey { case message }
+                public init(message: Swift.String) {
+                    self.message = message
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case message
+                }
             }
             /// - Remark: Generated from `#/components/schemas/MessagedExercise/value2`.
             public var value2: Components.Schemas.MessagedExercise.Value2Payload
@@ -663,21 +907,34 @@ public enum Components {
             case Walk(Components.Schemas.Walk)
             /// - Remark: Generated from `#/components/schemas/OneOfObjectsWithDiscriminator/MessagedExercise`.
             case MessagedExercise(Components.Schemas.MessagedExercise)
-            public enum CodingKeys: String, CodingKey { case kind }
+            public enum CodingKeys: String, CodingKey {
+                case kind
+            }
             public init(from decoder: any Decoder) throws {
                 let container = try decoder.container(keyedBy: CodingKeys.self)
-                let discriminator = try container.decode(String.self, forKey: .kind)
+                let discriminator = try container.decode(
+                    Swift.String.self,
+                    forKey: .kind
+                )
                 switch discriminator {
-                case "Walk", "#/components/schemas/Walk": self = .Walk(try .init(from: decoder))
+                case "Walk", "#/components/schemas/Walk":
+                    self = .Walk(try .init(from: decoder))
                 case "MessagedExercise", "#/components/schemas/MessagedExercise":
                     self = .MessagedExercise(try .init(from: decoder))
-                default: throw DecodingError.failedToDecodeOneOfSchema(type: Self.self, codingPath: decoder.codingPath)
+                default:
+                    throw Swift.DecodingError.unknownOneOfDiscriminator(
+                        discriminatorKey: CodingKeys.kind,
+                        discriminatorValue: discriminator,
+                        codingPath: decoder.codingPath
+                    )
                 }
             }
             public func encode(to encoder: any Encoder) throws {
                 switch self {
-                case let .Walk(value): try value.encode(to: encoder)
-                case let .MessagedExercise(value): try value.encode(to: encoder)
+                case let .Walk(value):
+                    try value.encode(to: encoder)
+                case let .MessagedExercise(value):
+                    try value.encode(to: encoder)
                 }
             }
         }
@@ -689,8 +946,491 @@ public enum Components {
             ///
             /// - Parameters:
             ///   - count:
-            public init(count: Swift.Int) { self.count = count }
-            public enum CodingKeys: String, CodingKey { case count }
+            public init(count: Swift.Int) {
+                self.count = count
+            }
+            public enum CodingKeys: String, CodingKey {
+                case count
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/RecursivePet`.
+        public struct RecursivePet: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/RecursivePet/name`.
+            public var name: Swift.String {
+                get  {
+                    storage.value.name
+                }
+                _modify {
+                    yield &storage.value.name
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/RecursivePet/parent`.
+            public var parent: Components.Schemas.RecursivePet? {
+                get  {
+                    storage.value.parent
+                }
+                _modify {
+                    yield &storage.value.parent
+                }
+            }
+            /// Creates a new `RecursivePet`.
+            ///
+            /// - Parameters:
+            ///   - name:
+            ///   - parent:
+            public init(
+                name: Swift.String,
+                parent: Components.Schemas.RecursivePet? = nil
+            ) {
+                storage = .init(value: .init(
+                    name: name,
+                    parent: parent
+                ))
+            }
+            public enum CodingKeys: String, CodingKey {
+                case name
+                case parent
+            }
+            public init(from decoder: any Decoder) throws {
+                storage = try .init(from: decoder)
+            }
+            public func encode(to encoder: any Encoder) throws {
+                try storage.encode(to: encoder)
+            }
+            /// Internal reference storage to allow type recursion.
+            private var storage: OpenAPIRuntime.CopyOnWriteBox<Storage>
+            private struct Storage: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/RecursivePet/name`.
+                var name: Swift.String
+                /// - Remark: Generated from `#/components/schemas/RecursivePet/parent`.
+                var parent: Components.Schemas.RecursivePet?
+                init(
+                    name: Swift.String,
+                    parent: Components.Schemas.RecursivePet? = nil
+                ) {
+                    self.name = name
+                    self.parent = parent
+                }
+                typealias CodingKeys = Components.Schemas.RecursivePet.CodingKeys
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/RecursivePetNested`.
+        public struct RecursivePetNested: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/RecursivePetNested/name`.
+            public var name: Swift.String {
+                get  {
+                    storage.value.name
+                }
+                _modify {
+                    yield &storage.value.name
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/RecursivePetNested/parent`.
+            public struct parentPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/RecursivePetNested/parent/nested`.
+                public var nested: Components.Schemas.RecursivePetNested
+                /// Creates a new `parentPayload`.
+                ///
+                /// - Parameters:
+                ///   - nested:
+                public init(nested: Components.Schemas.RecursivePetNested) {
+                    self.nested = nested
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case nested
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/RecursivePetNested/parent`.
+            public var parent: Components.Schemas.RecursivePetNested.parentPayload? {
+                get  {
+                    storage.value.parent
+                }
+                _modify {
+                    yield &storage.value.parent
+                }
+            }
+            /// Creates a new `RecursivePetNested`.
+            ///
+            /// - Parameters:
+            ///   - name:
+            ///   - parent:
+            public init(
+                name: Swift.String,
+                parent: Components.Schemas.RecursivePetNested.parentPayload? = nil
+            ) {
+                storage = .init(value: .init(
+                    name: name,
+                    parent: parent
+                ))
+            }
+            public enum CodingKeys: String, CodingKey {
+                case name
+                case parent
+            }
+            public init(from decoder: any Decoder) throws {
+                storage = try .init(from: decoder)
+            }
+            public func encode(to encoder: any Encoder) throws {
+                try storage.encode(to: encoder)
+            }
+            /// Internal reference storage to allow type recursion.
+            private var storage: OpenAPIRuntime.CopyOnWriteBox<Storage>
+            private struct Storage: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/RecursivePetNested/name`.
+                var name: Swift.String
+                /// - Remark: Generated from `#/components/schemas/RecursivePetNested/parent`.
+                struct parentPayload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/RecursivePetNested/parent/nested`.
+                    public var nested: Components.Schemas.RecursivePetNested
+                    /// Creates a new `parentPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - nested:
+                    public init(nested: Components.Schemas.RecursivePetNested) {
+                        self.nested = nested
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case nested
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/RecursivePetNested/parent`.
+                var parent: Components.Schemas.RecursivePetNested.parentPayload?
+                init(
+                    name: Swift.String,
+                    parent: Components.Schemas.RecursivePetNested.parentPayload? = nil
+                ) {
+                    self.name = name
+                    self.parent = parent
+                }
+                typealias CodingKeys = Components.Schemas.RecursivePetNested.CodingKeys
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/RecursivePetOneOfFirst`.
+        public struct RecursivePetOneOfFirst: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/RecursivePetOneOfFirst/value1`.
+            public var value1: Components.Schemas.RecursivePetOneOf {
+                get  {
+                    storage.value.value1
+                }
+                _modify {
+                    yield &storage.value.value1
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/RecursivePetOneOfFirst/value2`.
+            public struct Value2Payload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/RecursivePetOneOfFirst/value2/type`.
+                public var _type: Swift.String
+                /// Creates a new `Value2Payload`.
+                ///
+                /// - Parameters:
+                ///   - _type:
+                public init(_type: Swift.String) {
+                    self._type = _type
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case _type = "type"
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/RecursivePetOneOfFirst/value2`.
+            public var value2: Components.Schemas.RecursivePetOneOfFirst.Value2Payload {
+                get  {
+                    storage.value.value2
+                }
+                _modify {
+                    yield &storage.value.value2
+                }
+            }
+            /// Creates a new `RecursivePetOneOfFirst`.
+            ///
+            /// - Parameters:
+            ///   - value1:
+            ///   - value2:
+            public init(
+                value1: Components.Schemas.RecursivePetOneOf,
+                value2: Components.Schemas.RecursivePetOneOfFirst.Value2Payload
+            ) {
+                storage = .init(value: .init(
+                    value1: value1,
+                    value2: value2
+                ))
+            }
+            public init(from decoder: any Decoder) throws {
+                storage = try .init(from: decoder)
+            }
+            public func encode(to encoder: any Encoder) throws {
+                try storage.encode(to: encoder)
+            }
+            /// Internal reference storage to allow type recursion.
+            private var storage: OpenAPIRuntime.CopyOnWriteBox<Storage>
+            private struct Storage: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/RecursivePetOneOfFirst/value1`.
+                var value1: Components.Schemas.RecursivePetOneOf
+                /// - Remark: Generated from `#/components/schemas/RecursivePetOneOfFirst/value2`.
+                struct Value2Payload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/RecursivePetOneOfFirst/value2/type`.
+                    public var _type: Swift.String
+                    /// Creates a new `Value2Payload`.
+                    ///
+                    /// - Parameters:
+                    ///   - _type:
+                    public init(_type: Swift.String) {
+                        self._type = _type
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case _type = "type"
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/RecursivePetOneOfFirst/value2`.
+                var value2: Components.Schemas.RecursivePetOneOfFirst.Value2Payload
+                init(
+                    value1: Components.Schemas.RecursivePetOneOf,
+                    value2: Components.Schemas.RecursivePetOneOfFirst.Value2Payload
+                ) {
+                    self.value1 = value1
+                    self.value2 = value2
+                }
+                init(from decoder: any Decoder) throws {
+                    value1 = try .init(from: decoder)
+                    value2 = try .init(from: decoder)
+                }
+                func encode(to encoder: any Encoder) throws {
+                    try value1.encode(to: encoder)
+                    try value2.encode(to: encoder)
+                }
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/RecursivePetOneOfSecond`.
+        public struct RecursivePetOneOfSecond: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/RecursivePetOneOfSecond/value1`.
+            public var value1: Components.Schemas.Pet
+            /// - Remark: Generated from `#/components/schemas/RecursivePetOneOfSecond/value2`.
+            public struct Value2Payload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/RecursivePetOneOfSecond/value2/type`.
+                public var _type: Swift.String
+                /// Creates a new `Value2Payload`.
+                ///
+                /// - Parameters:
+                ///   - _type:
+                public init(_type: Swift.String) {
+                    self._type = _type
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case _type = "type"
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/RecursivePetOneOfSecond/value2`.
+            public var value2: Components.Schemas.RecursivePetOneOfSecond.Value2Payload
+            /// Creates a new `RecursivePetOneOfSecond`.
+            ///
+            /// - Parameters:
+            ///   - value1:
+            ///   - value2:
+            public init(
+                value1: Components.Schemas.Pet,
+                value2: Components.Schemas.RecursivePetOneOfSecond.Value2Payload
+            ) {
+                self.value1 = value1
+                self.value2 = value2
+            }
+            public init(from decoder: any Decoder) throws {
+                value1 = try .init(from: decoder)
+                value2 = try .init(from: decoder)
+            }
+            public func encode(to encoder: any Encoder) throws {
+                try value1.encode(to: encoder)
+                try value2.encode(to: encoder)
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/RecursivePetOneOf`.
+        @frozen public enum RecursivePetOneOf: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/RecursivePetOneOf/RecursivePetOneOfFirst`.
+            case RecursivePetOneOfFirst(Components.Schemas.RecursivePetOneOfFirst)
+            /// - Remark: Generated from `#/components/schemas/RecursivePetOneOf/RecursivePetOneOfSecond`.
+            case RecursivePetOneOfSecond(Components.Schemas.RecursivePetOneOfSecond)
+            public enum CodingKeys: String, CodingKey {
+                case _type = "type"
+            }
+            public init(from decoder: any Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                let discriminator = try container.decode(
+                    Swift.String.self,
+                    forKey: ._type
+                )
+                switch discriminator {
+                case "RecursivePetOneOfFirst", "#/components/schemas/RecursivePetOneOfFirst":
+                    self = .RecursivePetOneOfFirst(try .init(from: decoder))
+                case "RecursivePetOneOfSecond", "#/components/schemas/RecursivePetOneOfSecond":
+                    self = .RecursivePetOneOfSecond(try .init(from: decoder))
+                default:
+                    throw Swift.DecodingError.unknownOneOfDiscriminator(
+                        discriminatorKey: CodingKeys._type,
+                        discriminatorValue: discriminator,
+                        codingPath: decoder.codingPath
+                    )
+                }
+            }
+            public func encode(to encoder: any Encoder) throws {
+                switch self {
+                case let .RecursivePetOneOfFirst(value):
+                    try value.encode(to: encoder)
+                case let .RecursivePetOneOfSecond(value):
+                    try value.encode(to: encoder)
+                }
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/RecursivePetAnyOf`.
+        public struct RecursivePetAnyOf: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/RecursivePetAnyOf/value1`.
+            public var value1: Components.Schemas.RecursivePetAnyOf? {
+                get  {
+                    storage.value.value1
+                }
+                _modify {
+                    yield &storage.value.value1
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/RecursivePetAnyOf/value2`.
+            public var value2: Swift.String? {
+                get  {
+                    storage.value.value2
+                }
+                _modify {
+                    yield &storage.value.value2
+                }
+            }
+            /// Creates a new `RecursivePetAnyOf`.
+            ///
+            /// - Parameters:
+            ///   - value1:
+            ///   - value2:
+            public init(
+                value1: Components.Schemas.RecursivePetAnyOf? = nil,
+                value2: Swift.String? = nil
+            ) {
+                storage = .init(value: .init(
+                    value1: value1,
+                    value2: value2
+                ))
+            }
+            public init(from decoder: any Decoder) throws {
+                storage = try .init(from: decoder)
+            }
+            public func encode(to encoder: any Encoder) throws {
+                try storage.encode(to: encoder)
+            }
+            /// Internal reference storage to allow type recursion.
+            private var storage: OpenAPIRuntime.CopyOnWriteBox<Storage>
+            private struct Storage: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/RecursivePetAnyOf/value1`.
+                var value1: Components.Schemas.RecursivePetAnyOf?
+                /// - Remark: Generated from `#/components/schemas/RecursivePetAnyOf/value2`.
+                var value2: Swift.String?
+                init(
+                    value1: Components.Schemas.RecursivePetAnyOf? = nil,
+                    value2: Swift.String? = nil
+                ) {
+                    self.value1 = value1
+                    self.value2 = value2
+                }
+                init(from decoder: any Decoder) throws {
+                    var errors: [any Error] = []
+                    do {
+                        value1 = try .init(from: decoder)
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        value2 = try decoder.decodeFromSingleValueContainer()
+                    } catch {
+                        errors.append(error)
+                    }
+                    try Swift.DecodingError.verifyAtLeastOneSchemaIsNotNil(
+                        [
+                            value1,
+                            value2
+                        ],
+                        type: Self.self,
+                        codingPath: decoder.codingPath,
+                        errors: errors
+                    )
+                }
+                func encode(to encoder: any Encoder) throws {
+                    try encoder.encodeFirstNonNilValueToSingleValueContainer([
+                        value2
+                    ])
+                    try value1?.encode(to: encoder)
+                }
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/RecursivePetAllOf`.
+        public struct RecursivePetAllOf: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/RecursivePetAllOf/value1`.
+            public struct Value1Payload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/RecursivePetAllOf/value1/parent`.
+                public var parent: Components.Schemas.RecursivePetAllOf?
+                /// Creates a new `Value1Payload`.
+                ///
+                /// - Parameters:
+                ///   - parent:
+                public init(parent: Components.Schemas.RecursivePetAllOf? = nil) {
+                    self.parent = parent
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case parent
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/RecursivePetAllOf/value1`.
+            public var value1: Components.Schemas.RecursivePetAllOf.Value1Payload {
+                get  {
+                    storage.value.value1
+                }
+                _modify {
+                    yield &storage.value.value1
+                }
+            }
+            /// Creates a new `RecursivePetAllOf`.
+            ///
+            /// - Parameters:
+            ///   - value1:
+            public init(value1: Components.Schemas.RecursivePetAllOf.Value1Payload) {
+                storage = .init(value: .init(value1: value1))
+            }
+            public init(from decoder: any Decoder) throws {
+                storage = try .init(from: decoder)
+            }
+            public func encode(to encoder: any Encoder) throws {
+                try storage.encode(to: encoder)
+            }
+            /// Internal reference storage to allow type recursion.
+            private var storage: OpenAPIRuntime.CopyOnWriteBox<Storage>
+            private struct Storage: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/RecursivePetAllOf/value1`.
+                struct Value1Payload: Codable, Hashable, Sendable {
+                    /// - Remark: Generated from `#/components/schemas/RecursivePetAllOf/value1/parent`.
+                    public var parent: Components.Schemas.RecursivePetAllOf?
+                    /// Creates a new `Value1Payload`.
+                    ///
+                    /// - Parameters:
+                    ///   - parent:
+                    public init(parent: Components.Schemas.RecursivePetAllOf? = nil) {
+                        self.parent = parent
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case parent
+                    }
+                }
+                /// - Remark: Generated from `#/components/schemas/RecursivePetAllOf/value1`.
+                var value1: Components.Schemas.RecursivePetAllOf.Value1Payload
+                init(value1: Components.Schemas.RecursivePetAllOf.Value1Payload) {
+                    self.value1 = value1
+                }
+                init(from decoder: any Decoder) throws {
+                    value1 = try .init(from: decoder)
+                }
+                func encode(to encoder: any Encoder) throws {
+                    try value1.encode(to: encoder)
+                }
+            }
         }
     }
     /// Types generated from the `#/components/parameters` section of the OpenAPI document.
@@ -742,6 +1482,92 @@ public enum Components {
             /// - Remark: Generated from `#/components/requestBodies/UpdatePetRequest/content/application\/json`.
             case json(Components.RequestBodies.UpdatePetRequest.jsonPayload)
         }
+        /// - Remark: Generated from `#/components/requestBodies/MultipartUploadTypedRequest`.
+        @frozen public enum MultipartUploadTypedRequest: Sendable, Hashable {
+            /// - Remark: Generated from `#/components/requestBodies/MultipartUploadTypedRequest/multipartForm`.
+            @frozen public enum multipartFormPayload: Sendable, Hashable {
+                /// - Remark: Generated from `#/components/requestBodies/MultipartUploadTypedRequest/multipartForm/log`.
+                public struct logPayload: Sendable, Hashable {
+                    /// - Remark: Generated from `#/components/requestBodies/MultipartUploadTypedRequest/multipartForm/log/headers`.
+                    public struct Headers: Sendable, Hashable {
+                        /// - Remark: Generated from `#/components/requestBodies/MultipartUploadTypedRequest/multipartForm/log/headers/x-log-type`.
+                        @frozen public enum x_hyphen_log_hyphen_typePayload: String, Codable, Hashable, Sendable {
+                            case structured = "structured"
+                            case unstructured = "unstructured"
+                        }
+                        /// The type of the log.
+                        ///
+                        /// - Remark: Generated from `#/components/requestBodies/MultipartUploadTypedRequest/multipartForm/log/headers/x-log-type`.
+                        public var x_hyphen_log_hyphen_type: Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload.logPayload.Headers.x_hyphen_log_hyphen_typePayload?
+                        /// Creates a new `Headers`.
+                        ///
+                        /// - Parameters:
+                        ///   - x_hyphen_log_hyphen_type: The type of the log.
+                        public init(x_hyphen_log_hyphen_type: Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload.logPayload.Headers.x_hyphen_log_hyphen_typePayload? = nil) {
+                            self.x_hyphen_log_hyphen_type = x_hyphen_log_hyphen_type
+                        }
+                    }
+                    /// Received HTTP response headers
+                    public var headers: Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload.logPayload.Headers
+                    public var body: OpenAPIRuntime.HTTPBody
+                    /// Creates a new `logPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - headers: Received HTTP response headers
+                    ///   - body:
+                    public init(
+                        headers: Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload.logPayload.Headers = .init(),
+                        body: OpenAPIRuntime.HTTPBody
+                    ) {
+                        self.headers = headers
+                        self.body = body
+                    }
+                }
+                case log(OpenAPIRuntime.MultipartPart<Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload.logPayload>)
+                /// - Remark: Generated from `#/components/requestBodies/MultipartUploadTypedRequest/multipartForm/metadata`.
+                public struct metadataPayload: Sendable, Hashable {
+                    /// - Remark: Generated from `#/components/requestBodies/MultipartUploadTypedRequest/multipartForm/metadata/content/body`.
+                    public struct bodyPayload: Codable, Hashable, Sendable {
+                        /// - Remark: Generated from `#/components/requestBodies/MultipartUploadTypedRequest/multipartForm/metadata/content/body/createdAt`.
+                        public var createdAt: Foundation.Date
+                        /// Creates a new `bodyPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - createdAt:
+                        public init(createdAt: Foundation.Date) {
+                            self.createdAt = createdAt
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case createdAt
+                        }
+                    }
+                    public var body: Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload.metadataPayload.bodyPayload
+                    /// Creates a new `metadataPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - body:
+                    public init(body: Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload.metadataPayload.bodyPayload) {
+                        self.body = body
+                    }
+                }
+                case metadata(OpenAPIRuntime.MultipartPart<Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload.metadataPayload>)
+                /// - Remark: Generated from `#/components/requestBodies/MultipartUploadTypedRequest/multipartForm/keyword`.
+                public struct keywordPayload: Sendable, Hashable {
+                    public var body: OpenAPIRuntime.HTTPBody
+                    /// Creates a new `keywordPayload`.
+                    ///
+                    /// - Parameters:
+                    ///   - body:
+                    public init(body: OpenAPIRuntime.HTTPBody) {
+                        self.body = body
+                    }
+                }
+                case keyword(OpenAPIRuntime.MultipartPart<Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload.keywordPayload>)
+                case undocumented(OpenAPIRuntime.MultipartRawPart)
+            }
+            /// - Remark: Generated from `#/components/requestBodies/MultipartUploadTypedRequest/content/multipart\/form-data`.
+            case multipartForm(OpenAPIRuntime.MultipartBody<Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload>)
+        }
     }
     /// Types generated from the `#/components/responses` section of the OpenAPI document.
     public enum Responses {
@@ -756,7 +1582,9 @@ public enum Components {
                 ///
                 /// - Parameters:
                 ///   - X_hyphen_Reason: A description here.
-                public init(X_hyphen_Reason: Swift.String? = nil) { self.X_hyphen_Reason = X_hyphen_Reason }
+                public init(X_hyphen_Reason: Swift.String? = nil) {
+                    self.X_hyphen_Reason = X_hyphen_Reason
+                }
             }
             /// Received HTTP response headers
             public var headers: Components.Responses.ErrorBadRequest.Headers
@@ -770,8 +1598,12 @@ public enum Components {
                     ///
                     /// - Parameters:
                     ///   - code:
-                    public init(code: Swift.Int) { self.code = code }
-                    public enum CodingKeys: String, CodingKey { case code }
+                    public init(code: Swift.Int) {
+                        self.code = code
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case code
+                    }
                 }
                 /// - Remark: Generated from `#/components/responses/ErrorBadRequest/content/application\/json`.
                 case json(Components.Responses.ErrorBadRequest.Body.jsonPayload)
@@ -782,7 +1614,8 @@ public enum Components {
                 public var json: Components.Responses.ErrorBadRequest.Body.jsonPayload {
                     get throws {
                         switch self {
-                        case let .json(body): return body
+                        case let .json(body):
+                            return body
                         }
                     }
                 }
@@ -802,6 +1635,115 @@ public enum Components {
                 self.body = body
             }
         }
+        public struct MultipartDownloadTypedResponse: Sendable, Hashable {
+            /// - Remark: Generated from `#/components/responses/MultipartDownloadTypedResponse/content`.
+            @frozen public enum Body: Sendable, Hashable {
+                /// - Remark: Generated from `#/components/responses/MultipartDownloadTypedResponse/content/multipartForm`.
+                @frozen public enum multipartFormPayload: Sendable, Hashable {
+                    /// - Remark: Generated from `#/components/responses/MultipartDownloadTypedResponse/content/multipartForm/log`.
+                    public struct logPayload: Sendable, Hashable {
+                        /// - Remark: Generated from `#/components/responses/MultipartDownloadTypedResponse/content/multipartForm/log/headers`.
+                        public struct Headers: Sendable, Hashable {
+                            /// - Remark: Generated from `#/components/responses/MultipartDownloadTypedResponse/content/multipartForm/log/headers/x-log-type`.
+                            @frozen public enum x_hyphen_log_hyphen_typePayload: String, Codable, Hashable, Sendable {
+                                case structured = "structured"
+                                case unstructured = "unstructured"
+                            }
+                            /// The type of the log.
+                            ///
+                            /// - Remark: Generated from `#/components/responses/MultipartDownloadTypedResponse/content/multipartForm/log/headers/x-log-type`.
+                            public var x_hyphen_log_hyphen_type: Components.Responses.MultipartDownloadTypedResponse.Body.multipartFormPayload.logPayload.Headers.x_hyphen_log_hyphen_typePayload?
+                            /// Creates a new `Headers`.
+                            ///
+                            /// - Parameters:
+                            ///   - x_hyphen_log_hyphen_type: The type of the log.
+                            public init(x_hyphen_log_hyphen_type: Components.Responses.MultipartDownloadTypedResponse.Body.multipartFormPayload.logPayload.Headers.x_hyphen_log_hyphen_typePayload? = nil) {
+                                self.x_hyphen_log_hyphen_type = x_hyphen_log_hyphen_type
+                            }
+                        }
+                        /// Received HTTP response headers
+                        public var headers: Components.Responses.MultipartDownloadTypedResponse.Body.multipartFormPayload.logPayload.Headers
+                        public var body: OpenAPIRuntime.HTTPBody
+                        /// Creates a new `logPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - headers: Received HTTP response headers
+                        ///   - body:
+                        public init(
+                            headers: Components.Responses.MultipartDownloadTypedResponse.Body.multipartFormPayload.logPayload.Headers = .init(),
+                            body: OpenAPIRuntime.HTTPBody
+                        ) {
+                            self.headers = headers
+                            self.body = body
+                        }
+                    }
+                    case log(OpenAPIRuntime.MultipartPart<Components.Responses.MultipartDownloadTypedResponse.Body.multipartFormPayload.logPayload>)
+                    /// - Remark: Generated from `#/components/responses/MultipartDownloadTypedResponse/content/multipartForm/metadata`.
+                    public struct metadataPayload: Sendable, Hashable {
+                        /// - Remark: Generated from `#/components/responses/MultipartDownloadTypedResponse/content/multipartForm/metadata/content/body`.
+                        public struct bodyPayload: Codable, Hashable, Sendable {
+                            /// - Remark: Generated from `#/components/responses/MultipartDownloadTypedResponse/content/multipartForm/metadata/content/body/createdAt`.
+                            public var createdAt: Foundation.Date
+                            /// Creates a new `bodyPayload`.
+                            ///
+                            /// - Parameters:
+                            ///   - createdAt:
+                            public init(createdAt: Foundation.Date) {
+                                self.createdAt = createdAt
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case createdAt
+                            }
+                        }
+                        public var body: Components.Responses.MultipartDownloadTypedResponse.Body.multipartFormPayload.metadataPayload.bodyPayload
+                        /// Creates a new `metadataPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - body:
+                        public init(body: Components.Responses.MultipartDownloadTypedResponse.Body.multipartFormPayload.metadataPayload.bodyPayload) {
+                            self.body = body
+                        }
+                    }
+                    case metadata(OpenAPIRuntime.MultipartPart<Components.Responses.MultipartDownloadTypedResponse.Body.multipartFormPayload.metadataPayload>)
+                    /// - Remark: Generated from `#/components/responses/MultipartDownloadTypedResponse/content/multipartForm/keyword`.
+                    public struct keywordPayload: Sendable, Hashable {
+                        public var body: OpenAPIRuntime.HTTPBody
+                        /// Creates a new `keywordPayload`.
+                        ///
+                        /// - Parameters:
+                        ///   - body:
+                        public init(body: OpenAPIRuntime.HTTPBody) {
+                            self.body = body
+                        }
+                    }
+                    case keyword(OpenAPIRuntime.MultipartPart<Components.Responses.MultipartDownloadTypedResponse.Body.multipartFormPayload.keywordPayload>)
+                    case undocumented(OpenAPIRuntime.MultipartRawPart)
+                }
+                /// - Remark: Generated from `#/components/responses/MultipartDownloadTypedResponse/content/multipart\/form-data`.
+                case multipartForm(OpenAPIRuntime.MultipartBody<Components.Responses.MultipartDownloadTypedResponse.Body.multipartFormPayload>)
+                /// The associated value of the enum case if `self` is `.multipartForm`.
+                ///
+                /// - Throws: An error if `self` is not `.multipartForm`.
+                /// - SeeAlso: `.multipartForm`.
+                public var multipartForm: OpenAPIRuntime.MultipartBody<Components.Responses.MultipartDownloadTypedResponse.Body.multipartFormPayload> {
+                    get throws {
+                        switch self {
+                        case let .multipartForm(body):
+                            return body
+                        }
+                    }
+                }
+            }
+            /// Received HTTP response body
+            public var body: Components.Responses.MultipartDownloadTypedResponse.Body
+            /// Creates a new `MultipartDownloadTypedResponse`.
+            ///
+            /// - Parameters:
+            ///   - body: Received HTTP response body
+            public init(body: Components.Responses.MultipartDownloadTypedResponse.Body) {
+                self.body = body
+            }
+        }
     }
     /// Types generated from the `#/components/headers` section of the OpenAPI document.
     public enum Headers {
@@ -811,6 +1753,7 @@ public enum Components {
         public typealias TracingHeader = Swift.String
     }
 }
+
 /// API operations, with input and output types, generated from `#/paths` in the OpenAPI document.
 public enum Operations {
     /// List all pets
@@ -821,7 +1764,7 @@ public enum Operations {
     /// - Remark: HTTP `GET /pets`.
     /// - Remark: Generated from `#/paths//pets/get(listPets)`.
     public enum listPets {
-        public static let id: String = "listPets"
+        public static let id: Swift.String = "listPets"
         public struct Input: Sendable, Hashable {
             /// - Remark: Generated from `#/paths/pets/GET/query`.
             public struct Query: Sendable, Hashable {
@@ -886,8 +1829,7 @@ public enum Operations {
                 ///   - accept:
                 public init(
                     My_hyphen_Request_hyphen_UUID: Swift.String? = nil,
-                    accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listPets.AcceptableContentType>] =
-                        .defaultValues()
+                    accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listPets.AcceptableContentType>] = .defaultValues()
                 ) {
                     self.My_hyphen_Request_hyphen_UUID = My_hyphen_Request_hyphen_UUID
                     self.accept = accept
@@ -945,7 +1887,8 @@ public enum Operations {
                     public var json: Components.Schemas.Pets {
                         get throws {
                             switch self {
-                            case let .json(body): return body
+                            case let .json(body):
+                                return body
                             }
                         }
                     }
@@ -957,7 +1900,10 @@ public enum Operations {
                 /// - Parameters:
                 ///   - headers: Received HTTP response headers
                 ///   - body: Received HTTP response body
-                public init(headers: Operations.listPets.Output.Ok.Headers, body: Operations.listPets.Output.Ok.Body) {
+                public init(
+                    headers: Operations.listPets.Output.Ok.Headers,
+                    body: Operations.listPets.Output.Ok.Body
+                ) {
                     self.headers = headers
                     self.body = body
                 }
@@ -975,8 +1921,13 @@ public enum Operations {
             public var ok: Operations.listPets.Output.Ok {
                 get throws {
                     switch self {
-                    case let .ok(response): return response
-                    default: try throwUnexpectedResponseStatus(expectedStatus: "ok", response: self)
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
                     }
                 }
             }
@@ -992,7 +1943,8 @@ public enum Operations {
                     public var json: Components.Schemas._Error {
                         get throws {
                             switch self {
-                            case let .json(body): return body
+                            case let .json(body):
+                                return body
                             }
                         }
                     }
@@ -1003,14 +1955,16 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.listPets.Output.Default.Body) { self.body = body }
+                public init(body: Operations.listPets.Output.Default.Body) {
+                    self.body = body
+                }
             }
             /// Unexpected error
             ///
             /// - Remark: Generated from `#/paths//pets/get(listPets)/responses/default`.
             ///
             /// HTTP response code: `default`.
-            case `default`(statusCode: Int, Operations.listPets.Output.Default)
+            case `default`(statusCode: Swift.Int, Operations.listPets.Output.Default)
             /// The associated value of the enum case if `self` is `.`default``.
             ///
             /// - Throws: An error if `self` is not `.`default``.
@@ -1018,28 +1972,41 @@ public enum Operations {
             public var `default`: Operations.listPets.Output.Default {
                 get throws {
                     switch self {
-                    case let .`default`(_, response): return response
-                    default: try throwUnexpectedResponseStatus(expectedStatus: "default", response: self)
+                    case let .`default`(_, response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "default",
+                            response: self
+                        )
                     }
                 }
             }
         }
         @frozen public enum AcceptableContentType: AcceptableProtocol {
             case json
-            case other(String)
-            public init?(rawValue: String) {
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
                 switch rawValue.lowercased() {
-                case "application/json": self = .json
-                default: self = .other(rawValue)
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
                 }
             }
-            public var rawValue: String {
+            public var rawValue: Swift.String {
                 switch self {
-                case let .other(string): return string
-                case .json: return "application/json"
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
                 }
             }
-            public static var allCases: [Self] { [.json] }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
         }
     }
     /// Create a pet
@@ -1047,7 +2014,7 @@ public enum Operations {
     /// - Remark: HTTP `POST /pets`.
     /// - Remark: Generated from `#/paths//pets/post(createPet)`.
     public enum createPet {
-        public static let id: String = "createPet"
+        public static let id: Swift.String = "createPet"
         public struct Input: Sendable, Hashable {
             /// - Remark: Generated from `#/paths/pets/POST/header`.
             public struct Headers: Sendable, Hashable {
@@ -1063,8 +2030,7 @@ public enum Operations {
                 ///   - accept:
                 public init(
                     X_hyphen_Extra_hyphen_Arguments: Components.Schemas.CodeError? = nil,
-                    accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.createPet.AcceptableContentType>] =
-                        .defaultValues()
+                    accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.createPet.AcceptableContentType>] = .defaultValues()
                 ) {
                     self.X_hyphen_Extra_hyphen_Arguments = X_hyphen_Extra_hyphen_Arguments
                     self.accept = accept
@@ -1082,7 +2048,10 @@ public enum Operations {
             /// - Parameters:
             ///   - headers:
             ///   - body:
-            public init(headers: Operations.createPet.Input.Headers = .init(), body: Operations.createPet.Input.Body) {
+            public init(
+                headers: Operations.createPet.Input.Headers = .init(),
+                body: Operations.createPet.Input.Body
+            ) {
                 self.headers = headers
                 self.body = body
             }
@@ -1116,7 +2085,8 @@ public enum Operations {
                     public var json: Components.Schemas.Pet {
                         get throws {
                             switch self {
-                            case let .json(body): return body
+                            case let .json(body):
+                                return body
                             }
                         }
                     }
@@ -1149,8 +2119,13 @@ public enum Operations {
             public var created: Operations.createPet.Output.Created {
                 get throws {
                     switch self {
-                    case let .created(response): return response
-                    default: try throwUnexpectedResponseStatus(expectedStatus: "created", response: self)
+                    case let .created(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "created",
+                            response: self
+                        )
                     }
                 }
             }
@@ -1159,7 +2134,7 @@ public enum Operations {
             /// - Remark: Generated from `#/paths//pets/post(createPet)/responses/4XX`.
             ///
             /// HTTP response code: `400...499 clientError`.
-            case clientError(statusCode: Int, Components.Responses.ErrorBadRequest)
+            case clientError(statusCode: Swift.Int, Components.Responses.ErrorBadRequest)
             /// The associated value of the enum case if `self` is `.clientError`.
             ///
             /// - Throws: An error if `self` is not `.clientError`.
@@ -1167,32 +2142,45 @@ public enum Operations {
             public var clientError: Components.Responses.ErrorBadRequest {
                 get throws {
                     switch self {
-                    case let .clientError(_, response): return response
-                    default: try throwUnexpectedResponseStatus(expectedStatus: "clientError", response: self)
+                    case let .clientError(_, response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "clientError",
+                            response: self
+                        )
                     }
                 }
             }
             /// Undocumented response.
             ///
             /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Int, OpenAPIRuntime.UndocumentedPayload)
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
         }
         @frozen public enum AcceptableContentType: AcceptableProtocol {
             case json
-            case other(String)
-            public init?(rawValue: String) {
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
                 switch rawValue.lowercased() {
-                case "application/json": self = .json
-                default: self = .other(rawValue)
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
                 }
             }
-            public var rawValue: String {
+            public var rawValue: Swift.String {
                 switch self {
-                case let .other(string): return string
-                case .json: return "application/json"
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
                 }
             }
-            public static var allCases: [Self] { [.json] }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
         }
     }
     /// Create a pet using a url form
@@ -1200,7 +2188,7 @@ public enum Operations {
     /// - Remark: HTTP `POST /pets/create`.
     /// - Remark: Generated from `#/paths//pets/create/post(createPetWithForm)`.
     public enum createPetWithForm {
-        public static let id: String = "createPetWithForm"
+        public static let id: Swift.String = "createPetWithForm"
         public struct Input: Sendable, Hashable {
             /// - Remark: Generated from `#/paths/pets/create/POST/requestBody`.
             @frozen public enum Body: Sendable, Hashable {
@@ -1212,7 +2200,9 @@ public enum Operations {
             ///
             /// - Parameters:
             ///   - body:
-            public init(body: Operations.createPetWithForm.Input.Body) { self.body = body }
+            public init(body: Operations.createPetWithForm.Input.Body) {
+                self.body = body
+            }
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct NoContent: Sendable, Hashable {
@@ -1232,21 +2222,26 @@ public enum Operations {
             public var noContent: Operations.createPetWithForm.Output.NoContent {
                 get throws {
                     switch self {
-                    case let .noContent(response): return response
-                    default: try throwUnexpectedResponseStatus(expectedStatus: "noContent", response: self)
+                    case let .noContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "noContent",
+                            response: self
+                        )
                     }
                 }
             }
             /// Undocumented response.
             ///
             /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Int, OpenAPIRuntime.UndocumentedPayload)
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
         }
     }
     /// - Remark: HTTP `GET /pets/stats`.
     /// - Remark: Generated from `#/paths//pets/stats/get(getStats)`.
     public enum getStats {
-        public static let id: String = "getStats"
+        public static let id: Swift.String = "getStats"
         public struct Input: Sendable, Hashable {
             /// - Remark: Generated from `#/paths/pets/stats/GET/header`.
             public struct Headers: Sendable, Hashable {
@@ -1255,17 +2250,18 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(
-                    accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getStats.AcceptableContentType>] =
-                        .defaultValues()
-                ) { self.accept = accept }
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.getStats.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
             }
             public var headers: Operations.getStats.Input.Headers
             /// Creates a new `Input`.
             ///
             /// - Parameters:
             ///   - headers:
-            public init(headers: Operations.getStats.Input.Headers = .init()) { self.headers = headers }
+            public init(headers: Operations.getStats.Input.Headers = .init()) {
+                self.headers = headers
+            }
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Ok: Sendable, Hashable {
@@ -1280,8 +2276,13 @@ public enum Operations {
                     public var json: Components.Schemas.PetStats {
                         get throws {
                             switch self {
-                            case let .json(body): return body
-                            default: try throwUnexpectedResponseBody(expectedContent: "application/json", body: self)
+                            case let .json(body):
+                                return body
+                            default:
+                                try throwUnexpectedResponseBody(
+                                    expectedContent: "application/json",
+                                    body: self
+                                )
                             }
                         }
                     }
@@ -1294,8 +2295,13 @@ public enum Operations {
                     public var plainText: OpenAPIRuntime.HTTPBody {
                         get throws {
                             switch self {
-                            case let .plainText(body): return body
-                            default: try throwUnexpectedResponseBody(expectedContent: "text/plain", body: self)
+                            case let .plainText(body):
+                                return body
+                            default:
+                                try throwUnexpectedResponseBody(
+                                    expectedContent: "text/plain",
+                                    body: self
+                                )
                             }
                         }
                     }
@@ -1308,9 +2314,13 @@ public enum Operations {
                     public var binary: OpenAPIRuntime.HTTPBody {
                         get throws {
                             switch self {
-                            case let .binary(body): return body
+                            case let .binary(body):
+                                return body
                             default:
-                                try throwUnexpectedResponseBody(expectedContent: "application/octet-stream", body: self)
+                                try throwUnexpectedResponseBody(
+                                    expectedContent: "application/octet-stream",
+                                    body: self
+                                )
                             }
                         }
                     }
@@ -1321,7 +2331,9 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.getStats.Output.Ok.Body) { self.body = body }
+                public init(body: Operations.getStats.Output.Ok.Body) {
+                    self.body = body
+                }
             }
             /// A successful response.
             ///
@@ -1336,44 +2348,63 @@ public enum Operations {
             public var ok: Operations.getStats.Output.Ok {
                 get throws {
                     switch self {
-                    case let .ok(response): return response
-                    default: try throwUnexpectedResponseStatus(expectedStatus: "ok", response: self)
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
                     }
                 }
             }
             /// Undocumented response.
             ///
             /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Int, OpenAPIRuntime.UndocumentedPayload)
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
         }
         @frozen public enum AcceptableContentType: AcceptableProtocol {
             case json
             case plainText
             case binary
-            case other(String)
-            public init?(rawValue: String) {
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
                 switch rawValue.lowercased() {
-                case "application/json": self = .json
-                case "text/plain": self = .plainText
-                case "application/octet-stream": self = .binary
-                default: self = .other(rawValue)
+                case "application/json":
+                    self = .json
+                case "text/plain":
+                    self = .plainText
+                case "application/octet-stream":
+                    self = .binary
+                default:
+                    self = .other(rawValue)
                 }
             }
-            public var rawValue: String {
+            public var rawValue: Swift.String {
                 switch self {
-                case let .other(string): return string
-                case .json: return "application/json"
-                case .plainText: return "text/plain"
-                case .binary: return "application/octet-stream"
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                case .plainText:
+                    return "text/plain"
+                case .binary:
+                    return "application/octet-stream"
                 }
             }
-            public static var allCases: [Self] { [.json, .plainText, .binary] }
+            public static var allCases: [Self] {
+                [
+                    .json,
+                    .plainText,
+                    .binary
+                ]
+            }
         }
     }
     /// - Remark: HTTP `POST /pets/stats`.
     /// - Remark: Generated from `#/paths//pets/stats/post(postStats)`.
     public enum postStats {
-        public static let id: String = "postStats"
+        public static let id: Swift.String = "postStats"
         public struct Input: Sendable, Hashable {
             /// - Remark: Generated from `#/paths/pets/stats/POST/requestBody`.
             @frozen public enum Body: Sendable, Hashable {
@@ -1389,7 +2420,9 @@ public enum Operations {
             ///
             /// - Parameters:
             ///   - body:
-            public init(body: Operations.postStats.Input.Body) { self.body = body }
+            public init(body: Operations.postStats.Input.Body) {
+                self.body = body
+            }
         }
         @frozen public enum Output: Sendable, Hashable {
             public struct Accepted: Sendable, Hashable {
@@ -1409,21 +2442,26 @@ public enum Operations {
             public var accepted: Operations.postStats.Output.Accepted {
                 get throws {
                     switch self {
-                    case let .accepted(response): return response
-                    default: try throwUnexpectedResponseStatus(expectedStatus: "accepted", response: self)
+                    case let .accepted(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "accepted",
+                            response: self
+                        )
                     }
                 }
             }
             /// Undocumented response.
             ///
             /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Int, OpenAPIRuntime.UndocumentedPayload)
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
         }
     }
     /// - Remark: HTTP `POST /probe/`.
     /// - Remark: Generated from `#/paths//probe//post(probe)`.
     public enum probe {
-        public static let id: String = "probe"
+        public static let id: Swift.String = "probe"
         public struct Input: Sendable, Hashable {
             /// Creates a new `Input`.
             public init() {}
@@ -1446,15 +2484,20 @@ public enum Operations {
             public var noContent: Operations.probe.Output.NoContent {
                 get throws {
                     switch self {
-                    case let .noContent(response): return response
-                    default: try throwUnexpectedResponseStatus(expectedStatus: "noContent", response: self)
+                    case let .noContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "noContent",
+                            response: self
+                        )
                     }
                 }
             }
             /// Undocumented response.
             ///
             /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Int, OpenAPIRuntime.UndocumentedPayload)
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
         }
     }
     /// Update just a specific property of an existing pet. Nothing is updated if no request body is provided.
@@ -1462,7 +2505,7 @@ public enum Operations {
     /// - Remark: HTTP `PATCH /pets/{petId}`.
     /// - Remark: Generated from `#/paths//pets/{petId}/patch(updatePet)`.
     public enum updatePet {
-        public static let id: String = "updatePet"
+        public static let id: Swift.String = "updatePet"
         public struct Input: Sendable, Hashable {
             /// - Remark: Generated from `#/paths/pets/{petId}/PATCH/path`.
             public struct Path: Sendable, Hashable {
@@ -1474,7 +2517,9 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - petId: Id of the pet
-                public init(petId: Swift.Int64) { self.petId = petId }
+                public init(petId: Swift.Int64) {
+                    self.petId = petId
+                }
             }
             public var path: Operations.updatePet.Input.Path
             /// - Remark: Generated from `#/paths/pets/{petId}/PATCH/header`.
@@ -1484,10 +2529,9 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(
-                    accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.updatePet.AcceptableContentType>] =
-                        .defaultValues()
-                ) { self.accept = accept }
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.updatePet.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
             }
             public var headers: Operations.updatePet.Input.Headers
             public var body: Components.RequestBodies.UpdatePetRequest?
@@ -1525,8 +2569,13 @@ public enum Operations {
             public var noContent: Operations.updatePet.Output.NoContent {
                 get throws {
                     switch self {
-                    case let .noContent(response): return response
-                    default: try throwUnexpectedResponseStatus(expectedStatus: "noContent", response: self)
+                    case let .noContent(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "noContent",
+                            response: self
+                        )
                     }
                 }
             }
@@ -1541,8 +2590,12 @@ public enum Operations {
                         ///
                         /// - Parameters:
                         ///   - message:
-                        public init(message: Swift.String) { self.message = message }
-                        public enum CodingKeys: String, CodingKey { case message }
+                        public init(message: Swift.String) {
+                            self.message = message
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case message
+                        }
                     }
                     /// - Remark: Generated from `#/paths/pets/{petId}/PATCH/responses/400/content/application\/json`.
                     case json(Operations.updatePet.Output.BadRequest.Body.jsonPayload)
@@ -1553,7 +2606,8 @@ public enum Operations {
                     public var json: Operations.updatePet.Output.BadRequest.Body.jsonPayload {
                         get throws {
                             switch self {
-                            case let .json(body): return body
+                            case let .json(body):
+                                return body
                             }
                         }
                     }
@@ -1564,7 +2618,9 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.updatePet.Output.BadRequest.Body) { self.body = body }
+                public init(body: Operations.updatePet.Output.BadRequest.Body) {
+                    self.body = body
+                }
             }
             /// Update input error
             ///
@@ -1579,32 +2635,45 @@ public enum Operations {
             public var badRequest: Operations.updatePet.Output.BadRequest {
                 get throws {
                     switch self {
-                    case let .badRequest(response): return response
-                    default: try throwUnexpectedResponseStatus(expectedStatus: "badRequest", response: self)
+                    case let .badRequest(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "badRequest",
+                            response: self
+                        )
                     }
                 }
             }
             /// Undocumented response.
             ///
             /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Int, OpenAPIRuntime.UndocumentedPayload)
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
         }
         @frozen public enum AcceptableContentType: AcceptableProtocol {
             case json
-            case other(String)
-            public init?(rawValue: String) {
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
                 switch rawValue.lowercased() {
-                case "application/json": self = .json
-                default: self = .other(rawValue)
+                case "application/json":
+                    self = .json
+                default:
+                    self = .other(rawValue)
                 }
             }
-            public var rawValue: String {
+            public var rawValue: Swift.String {
                 switch self {
-                case let .other(string): return string
-                case .json: return "application/json"
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
                 }
             }
-            public static var allCases: [Self] { [.json] }
+            public static var allCases: [Self] {
+                [
+                    .json
+                ]
+            }
         }
     }
     /// Upload an avatar
@@ -1612,7 +2681,7 @@ public enum Operations {
     /// - Remark: HTTP `PUT /pets/{petId}/avatar`.
     /// - Remark: Generated from `#/paths//pets/{petId}/avatar/put(uploadAvatarForPet)`.
     public enum uploadAvatarForPet {
-        public static let id: String = "uploadAvatarForPet"
+        public static let id: Swift.String = "uploadAvatarForPet"
         public struct Input: Sendable, Hashable {
             /// - Remark: Generated from `#/paths/pets/{petId}/avatar/PUT/path`.
             public struct Path: Sendable, Hashable {
@@ -1624,22 +2693,21 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - petId: The id of the pet to retrieve
-                public init(petId: Components.Parameters.path_period_petId) { self.petId = petId }
+                public init(petId: Components.Parameters.path_period_petId) {
+                    self.petId = petId
+                }
             }
             public var path: Operations.uploadAvatarForPet.Input.Path
             /// - Remark: Generated from `#/paths/pets/{petId}/avatar/PUT/header`.
             public struct Headers: Sendable, Hashable {
-                public var accept:
-                    [OpenAPIRuntime.AcceptHeaderContentType<Operations.uploadAvatarForPet.AcceptableContentType>]
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.uploadAvatarForPet.AcceptableContentType>]
                 /// Creates a new `Headers`.
                 ///
                 /// - Parameters:
                 ///   - accept:
-                public init(
-                    accept: [OpenAPIRuntime.AcceptHeaderContentType<
-                        Operations.uploadAvatarForPet.AcceptableContentType
-                    >] = .defaultValues()
-                ) { self.accept = accept }
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.uploadAvatarForPet.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
             }
             public var headers: Operations.uploadAvatarForPet.Input.Headers
             /// - Remark: Generated from `#/paths/pets/{petId}/avatar/PUT/requestBody`.
@@ -1677,7 +2745,8 @@ public enum Operations {
                     public var binary: OpenAPIRuntime.HTTPBody {
                         get throws {
                             switch self {
-                            case let .binary(body): return body
+                            case let .binary(body):
+                                return body
                             }
                         }
                     }
@@ -1688,7 +2757,9 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.uploadAvatarForPet.Output.Ok.Body) { self.body = body }
+                public init(body: Operations.uploadAvatarForPet.Output.Ok.Body) {
+                    self.body = body
+                }
             }
             /// Echoes avatar back
             ///
@@ -1703,8 +2774,13 @@ public enum Operations {
             public var ok: Operations.uploadAvatarForPet.Output.Ok {
                 get throws {
                     switch self {
-                    case let .ok(response): return response
-                    default: try throwUnexpectedResponseStatus(expectedStatus: "ok", response: self)
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
                     }
                 }
             }
@@ -1720,7 +2796,8 @@ public enum Operations {
                     public var json: Swift.String {
                         get throws {
                             switch self {
-                            case let .json(body): return body
+                            case let .json(body):
+                                return body
                             }
                         }
                     }
@@ -1731,7 +2808,9 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.uploadAvatarForPet.Output.PreconditionFailed.Body) { self.body = body }
+                public init(body: Operations.uploadAvatarForPet.Output.PreconditionFailed.Body) {
+                    self.body = body
+                }
             }
             /// Avatar is not acceptable
             ///
@@ -1746,8 +2825,13 @@ public enum Operations {
             public var preconditionFailed: Operations.uploadAvatarForPet.Output.PreconditionFailed {
                 get throws {
                     switch self {
-                    case let .preconditionFailed(response): return response
-                    default: try throwUnexpectedResponseStatus(expectedStatus: "preconditionFailed", response: self)
+                    case let .preconditionFailed(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "preconditionFailed",
+                            response: self
+                        )
                     }
                 }
             }
@@ -1763,7 +2847,8 @@ public enum Operations {
                     public var plainText: OpenAPIRuntime.HTTPBody {
                         get throws {
                             switch self {
-                            case let .plainText(body): return body
+                            case let .plainText(body):
+                                return body
                             }
                         }
                     }
@@ -1774,7 +2859,9 @@ public enum Operations {
                 ///
                 /// - Parameters:
                 ///   - body: Received HTTP response body
-                public init(body: Operations.uploadAvatarForPet.Output.InternalServerError.Body) { self.body = body }
+                public init(body: Operations.uploadAvatarForPet.Output.InternalServerError.Body) {
+                    self.body = body
+                }
             }
             /// Server error
             ///
@@ -1789,38 +2876,185 @@ public enum Operations {
             public var internalServerError: Operations.uploadAvatarForPet.Output.InternalServerError {
                 get throws {
                     switch self {
-                    case let .internalServerError(response): return response
-                    default: try throwUnexpectedResponseStatus(expectedStatus: "internalServerError", response: self)
+                    case let .internalServerError(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "internalServerError",
+                            response: self
+                        )
                     }
                 }
             }
             /// Undocumented response.
             ///
             /// A response with a code that is not documented in the OpenAPI document.
-            case undocumented(statusCode: Int, OpenAPIRuntime.UndocumentedPayload)
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
         }
         @frozen public enum AcceptableContentType: AcceptableProtocol {
             case binary
             case json
             case plainText
-            case other(String)
-            public init?(rawValue: String) {
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
                 switch rawValue.lowercased() {
-                case "application/octet-stream": self = .binary
-                case "application/json": self = .json
-                case "text/plain": self = .plainText
-                default: self = .other(rawValue)
+                case "application/octet-stream":
+                    self = .binary
+                case "application/json":
+                    self = .json
+                case "text/plain":
+                    self = .plainText
+                default:
+                    self = .other(rawValue)
                 }
             }
-            public var rawValue: String {
+            public var rawValue: Swift.String {
                 switch self {
-                case let .other(string): return string
-                case .binary: return "application/octet-stream"
-                case .json: return "application/json"
-                case .plainText: return "text/plain"
+                case let .other(string):
+                    return string
+                case .binary:
+                    return "application/octet-stream"
+                case .json:
+                    return "application/json"
+                case .plainText:
+                    return "text/plain"
                 }
             }
-            public static var allCases: [Self] { [.binary, .json, .plainText] }
+            public static var allCases: [Self] {
+                [
+                    .binary,
+                    .json,
+                    .plainText
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `GET /pets/multipart-typed`.
+    /// - Remark: Generated from `#/paths//pets/multipart-typed/get(multipartDownloadTyped)`.
+    public enum multipartDownloadTyped {
+        public static let id: Swift.String = "multipartDownloadTyped"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/pets/multipart-typed/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.multipartDownloadTyped.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.multipartDownloadTyped.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.multipartDownloadTyped.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            public init(headers: Operations.multipartDownloadTyped.Input.Headers = .init()) {
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            /// A typed multipart response.
+            ///
+            /// - Remark: Generated from `#/paths//pets/multipart-typed/get(multipartDownloadTyped)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Components.Responses.MultipartDownloadTypedResponse)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Components.Responses.MultipartDownloadTypedResponse {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case multipartForm
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "multipart/form-data":
+                    self = .multipartForm
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .multipartForm:
+                    return "multipart/form-data"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .multipartForm
+                ]
+            }
+        }
+    }
+    /// - Remark: HTTP `POST /pets/multipart-typed`.
+    /// - Remark: Generated from `#/paths//pets/multipart-typed/post(multipartUploadTyped)`.
+    public enum multipartUploadTyped {
+        public static let id: Swift.String = "multipartUploadTyped"
+        public struct Input: Sendable, Hashable {
+            public var body: Components.RequestBodies.MultipartUploadTypedRequest
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - body:
+            public init(body: Components.RequestBodies.MultipartUploadTypedRequest) {
+                self.body = body
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Accepted: Sendable, Hashable {
+                /// Creates a new `Accepted`.
+                public init() {}
+            }
+            /// Successfully accepted the data.
+            ///
+            /// - Remark: Generated from `#/paths//pets/multipart-typed/post(multipartUploadTyped)/responses/202`.
+            ///
+            /// HTTP response code: `202 accepted`.
+            case accepted(Operations.multipartUploadTyped.Output.Accepted)
+            /// The associated value of the enum case if `self` is `.accepted`.
+            ///
+            /// - Throws: An error if `self` is not `.accepted`.
+            /// - SeeAlso: `.accepted`.
+            public var accepted: Operations.multipartUploadTyped.Output.Accepted {
+                get throws {
+                    switch self {
+                    case let .accepted(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "accepted",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
         }
     }
 }

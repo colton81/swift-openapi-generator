@@ -45,9 +45,6 @@ struct TypeAssigner {
     /// safe to be used as a Swift identifier.
     var asSwiftSafeName: (String) -> String
 
-    ///Enable decoding and encoding of as base64-encoded data strings.
-    var enableBase64EncodingDecoding: Bool
-
     /// Returns a type name for an OpenAPI-named component type.
     ///
     /// A component type is any type in `#/components` in the OpenAPI document.
@@ -60,25 +57,19 @@ struct TypeAssigner {
     ///   - originalName: The original type name (component key) from
     ///   the OpenAPI document.
     ///   - location: The location of the type in the OpenAPI document.
-    func typeName(
-        forComponentOriginallyNamed originalName: String,
-        in location: TypeLocation
-    ) -> TypeName {
+    /// - Returns: A Swift type name for the specified component type.
+    func typeName(forComponentOriginallyNamed originalName: String, in location: TypeLocation) -> TypeName {
         typeName(forLocation: location)
-            .appending(
-                swiftComponent: asSwiftSafeName(originalName),
-                jsonComponent: originalName
-            )
+            .appending(swiftComponent: asSwiftSafeName(originalName), jsonComponent: originalName)
     }
 
     /// Returns the type name for an OpenAPI-named component namespace.
     /// - Parameter location: The location of the type in the OpenAPI document.
+    /// - Returns: A Swift type name representing the specified component namespace.
     func typeName(forLocation location: TypeLocation) -> TypeName {
         switch location {
-        case .schemas:
-            return typeName(for: JSONSchema.self)
-        case .parameters:
-            return typeName(for: OpenAPI.Parameter.self)
+        case .schemas: return typeName(for: JSONSchema.self)
+        case .parameters: return typeName(for: OpenAPI.Parameter.self)
         }
     }
 
@@ -89,6 +80,7 @@ struct TypeAssigner {
     ///   - components: The components in which to look up references.
     ///   - parent: The parent type in which to name the type.
     /// - Returns: A type usage; or nil if the schema is nil or unsupported.
+    /// - Throws: An error if there's an issue while computing the type usage, such as when resolving a type name or checking compatibility.
     func typeUsage(
         usingNamingHint hint: String,
         withSchema schema: UnresolvedSchema?,
@@ -98,8 +90,7 @@ struct TypeAssigner {
         let associatedType: TypeUsage?
         if let schema {
             switch schema {
-            case let .a(reference):
-                associatedType = try typeName(for: reference).asUsage
+            case let .a(reference): associatedType = try typeName(for: reference).asUsage
             case let .b(schema):
                 associatedType = try _typeUsage(
                     forPotentiallyInlinedValueNamed: hint,
@@ -115,6 +106,65 @@ struct TypeAssigner {
         return associatedType
     }
 
+    /// Returns a type usage for an unresolved multipart schema.
+    /// - Parameters:
+    ///   - hint: A hint string used when computing a name for an inline type.
+    ///   - schema: The OpenAPI schema.
+    ///   - encoding: The encoding mapping refining the schema.
+    ///   - components: The components in which to look up references.
+    ///   - parent: The parent type in which to name the type.
+    /// - Returns: A type usage.
+    /// - Throws: An error if there's an issue while computing the type usage, such as when resolving a type name or checking compatibility.
+    func typeUsage(
+        usingNamingHint hint: String,
+        withMultipartSchema schema: UnresolvedSchema?,
+        encoding: OrderedDictionary<String, OpenAPI.Content.Encoding>?,
+        components: OpenAPI.Components,
+        inParent parent: TypeName
+    ) throws -> TypeUsage {
+        let multipartBodyElementTypeName: TypeName
+        if let ref = TypeMatcher.multipartElementTypeReferenceIfReferenceable(schema: schema, encoding: encoding) {
+            multipartBodyElementTypeName = try typeName(for: ref)
+        } else {
+            let swiftSafeName = asSwiftSafeName(hint)
+            multipartBodyElementTypeName = parent.appending(
+                swiftComponent: swiftSafeName + Constants.Global.inlineTypeSuffix,
+                jsonComponent: hint
+            )
+        }
+        let bodyUsage = multipartBodyElementTypeName.asUsage.asWrapped(in: .multipartBody)
+        return bodyUsage
+    }
+
+    /// Returns a type usage for an unresolved schema.
+    /// - Parameters:
+    ///   - content: The OpenAPI content.
+    ///   - components: The components in which to look up references.
+    ///   - parent: The parent type in which to name the type.
+    /// - Returns: A type usage; or nil if the schema is nil or unsupported.
+    /// - Throws: An error if there's an issue while computing the type usage, such as when resolving a type name or checking compatibility.
+    func typeUsage(withContent content: SchemaContent, components: OpenAPI.Components, inParent parent: TypeName) throws
+        -> TypeUsage?
+    {
+        let identifier = contentSwiftName(content.contentType)
+        if content.contentType.isMultipart {
+            return try typeUsage(
+                usingNamingHint: identifier,
+                withMultipartSchema: content.schema,
+                encoding: content.encoding,
+                components: components,
+                inParent: parent
+            )
+        } else {
+            return try typeUsage(
+                usingNamingHint: identifier,
+                withSchema: content.schema,
+                components: components,
+                inParent: parent
+            )
+        }
+    }
+
     /// Returns a type usage for a property.
     /// - Parameters:
     ///   - originalName: The name of the property in the OpenAPI document.
@@ -122,6 +172,7 @@ struct TypeAssigner {
     ///   - components: The components in which to look up references.
     ///   - parent: The parent type in which to name the type.
     /// - Returns: A type usage.
+    /// - Throws: An error if there's an issue while processing the schema or generating the type usage.
     func typeUsage(
         forObjectPropertyNamed originalName: String,
         withSchema schema: JSONSchema,
@@ -144,6 +195,7 @@ struct TypeAssigner {
     ///   - components: The components in which to look up references.
     ///   - parent: The parent type in which to name the type.
     /// - Returns: A type usage.
+    /// - Throws: An error if there's an issue while processing the schema or generating the type usage.
     func typeUsage(
         forAllOrAnyOrOneOfChildSchemaNamed originalName: String,
         withSchema schema: JSONSchema,
@@ -166,6 +218,7 @@ struct TypeAssigner {
     ///   - components: The components in which to look up references.
     ///   - parent: The parent type in which to name the type.
     /// - Returns: A type usage.
+    /// - Throws: An error if there's an issue while processing the schema or generating the type usage.
     func typeUsage(
         forArrayElementWithSchema schema: JSONSchema,
         components: OpenAPI.Components,
@@ -187,6 +240,7 @@ struct TypeAssigner {
     ///   - components: The components in which to look up references.
     ///   - parent: The parent type in which to name the type.
     /// - Returns: A type usage.
+    /// - Throws: An error if there's an issue while processing the schema or generating the type usage.
     func typeUsage(
         forParameterNamed originalName: String,
         withSchema schema: JSONSchema,
@@ -260,9 +314,11 @@ struct TypeAssigner {
     ///   reference component.
     ///   - suffix: The string to append to the name for inline types.
     ///   - schema: The schema describing the content of the type.
+    ///   - components: The components from the OpenAPI document.
     ///   - parent: The name of the parent type in which to name the type.
     ///   - subtype: The naming method used by the type assigner.
     /// - Returns: A type usage.
+    /// - Throws: An error if there's an issue while processing the schema or generating the type usage.
     private func _typeUsage(
         forPotentiallyInlinedValueNamed originalName: String,
         jsonReferenceComponentOverride: String? = nil,
@@ -272,33 +328,24 @@ struct TypeAssigner {
         inParent parent: TypeName,
         subtype: SubtypeNamingMethod
     ) throws -> TypeUsage {
-        let typeMatcher = TypeMatcher(
-            asSwiftSafeName: asSwiftSafeName,
-            enableBase64EncodingDecoding: enableBase64EncodingDecoding
-        )
+        let typeMatcher = TypeMatcher(asSwiftSafeName: asSwiftSafeName)
         // Check if this type can be simply referenced without
         // creating a new inline type.
-        if let referenceableType = try typeMatcher.tryMatchReferenceableType(
-            for: schema,
-            components: components
-        ) {
+        if let referenceableType = try typeMatcher.tryMatchReferenceableType(for: schema, components: components) {
             return referenceableType
         }
         // Otherwise it's an inline, non-referenceable type
         let baseType: TypeName
         switch subtype {
-        case .appendScope:
-            baseType = parent
-        case .appendToLastPathComponent:
-            baseType = parent.parent
+        case .appendScope: baseType = parent
+        case .appendToLastPathComponent: baseType = parent.parent
         }
         return
             baseType.appending(
                 swiftComponent: asSwiftSafeName(originalName) + suffix,
                 jsonComponent: jsonReferenceComponentOverride ?? originalName
             )
-            .asUsage
-            .withOptional(try typeMatcher.isOptional(schema, components: components))
+            .asUsage.withOptional(try typeMatcher.isOptional(schema, components: components))
     }
 
     /// Returns a type name for a reusable component.
@@ -323,11 +370,10 @@ struct TypeAssigner {
     ///
     /// - NOTE: Only internal references are currently supported; throws an error for external references.
     /// - Parameter component: The component for which to compute a name.
+    /// - Returns: A type name for a reusable component.
     func typeName<Component: ComponentDictionaryLocatable>(
         for component: OpenAPI.ComponentDictionary<Component>.Element
-    ) -> TypeName {
-        typeName(for: component.key, of: Component.self)
-    }
+    ) -> TypeName { typeName(for: component.key, of: Component.self) }
 
     /// Returns a type name for a reusable component key.
     ///
@@ -353,15 +399,13 @@ struct TypeAssigner {
     /// - Parameters:
     ///   - key: The key for the component in the OpenAPI document.
     ///   - componentType: The type of the component.
+    /// - Returns: A type name for a reusable component key.
     func typeName<Component: ComponentDictionaryLocatable>(
         for key: OpenAPI.ComponentKey,
         of componentType: Component.Type
     ) -> TypeName {
         typeName(for: Component.self)
-            .appending(
-                swiftComponent: asSwiftSafeName(key.rawValue),
-                jsonComponent: key.rawValue
-            )
+            .appending(swiftComponent: asSwiftSafeName(key.rawValue), jsonComponent: key.rawValue)
     }
 
     /// Returns a type name for a JSON reference.
@@ -381,6 +425,8 @@ struct TypeAssigner {
     ///   - reference: The reference to compute a type name for.
     ///   - componentType: The type of the component to which the reference
     ///   points.
+    /// - Returns: A type name for a JSON reference.
+    /// - Throws: An error if the provided reference is an external reference or if there's an issue while computing the type name.
     func typeName<Component: ComponentDictionaryLocatable>(
         for reference: JSONReference<Component>,
         in componentType: Component.Type = Component.self
@@ -400,15 +446,12 @@ struct TypeAssigner {
     ///   - reference: The reference to compute a type name for.
     ///   - componentType: The type of the component to which the reference
     ///   points.
+    /// - Throws: An error if there's an issue while computing the type name, or if the reference is external.
+    /// - Returns: A TypeName representing the computed type name for the reference.
     func typeName<Component: ComponentDictionaryLocatable>(
         for reference: OpenAPI.Reference<Component>,
         in componentType: Component.Type = Component.self
-    ) throws -> TypeName {
-        try typeName(
-            for: reference.jsonReference,
-            in: componentType
-        )
-    }
+    ) throws -> TypeName { try typeName(for: reference.jsonReference, in: componentType) }
 
     /// Returns a type name for an internal reference to a component.
     ///
@@ -417,20 +460,16 @@ struct TypeAssigner {
     ///   - reference: The internal reference to compute a type name for.
     ///   - componentType: The type of the component to which the reference
     ///   points.
+    /// - Returns: A type name for an internal reference to a component.
+    /// - Throws: An error if the provided reference is not a component reference or if there's an issue while computing the type name.
     func typeName<Component: ComponentDictionaryLocatable>(
         for reference: JSONReference<Component>.InternalReference,
         in componentType: Component.Type = Component.self
     ) throws -> TypeName {
         guard case let .component(name) = reference else {
-            throw
-                JSONReferenceParsingError
-                .nonComponentPathsUnsupported(reference.name)
+            throw JSONReferenceParsingError.nonComponentPathsUnsupported(reference.name)
         }
-        return typeName(for: componentType)
-            .appending(
-                swiftComponent: asSwiftSafeName(name),
-                jsonComponent: name
-            )
+        return typeName(for: componentType).appending(swiftComponent: asSwiftSafeName(name), jsonComponent: name)
     }
 
     /// Returns a type name for the namespace for the specified component type.
@@ -448,46 +487,68 @@ struct TypeAssigner {
     /// - `#/components/links` -> `OpenAPI.Link`
     ///
     /// - Parameter componentType: The type of the component.
-    func typeName<Component: ComponentDictionaryLocatable>(
-        for componentType: Component.Type = Component.self
-    ) -> TypeName {
+    /// - Returns: A type name for the namespace for the specified component type.
+    func typeName<Component: ComponentDictionaryLocatable>(for componentType: Component.Type = Component.self)
+        -> TypeName
+    {
         typeNameForComponents()
             .appending(
-                swiftComponent: asSwiftSafeName(
-                    componentType
-                        .openAPIComponentsKey
-                )
-                .uppercasingFirstLetter,
+                swiftComponent: asSwiftSafeName(componentType.openAPIComponentsKey).uppercasingFirstLetter,
                 jsonComponent: componentType.openAPIComponentsKey
             )
     }
 
     /// Returns the root namespace for all OpenAPI components.
+    /// - Returns: The root namespace for all OpenAPI components.
     func typeNameForComponents() -> TypeName {
-        TypeName(components: [
-            .root,
-            .init(swift: Constants.Components.namespace, json: "components"),
-        ])
+        TypeName(components: [.root, .init(swift: Constants.Components.namespace, json: "components")])
     }
+
+    /// Returns a Swift-safe identifier used as the name of the content
+    /// enum case.
+    ///
+    /// - Parameter contentType: The content type for which to compute the name.
+    /// - Returns: A Swift-safe identifier representing the name of the content enum case.
+    func contentSwiftName(_ contentType: ContentType) -> String {
+        let rawContentType = contentType.lowercasedTypeSubtypeAndParameters
+        switch rawContentType {
+        case "application/json": return "json"
+        case "application/x-www-form-urlencoded": return "urlEncodedForm"
+        case "multipart/form-data": return "multipartForm"
+        case "text/plain": return "plainText"
+        case "*/*": return "any"
+        case "application/xml": return "xml"
+        case "application/octet-stream": return "binary"
+        case "text/html": return "html"
+        case "application/yaml": return "yaml"
+        case "text/csv": return "csv"
+        case "image/png": return "png"
+        case "application/pdf": return "pdf"
+        case "image/jpeg": return "jpeg"
+        default:
+            let safedType = asSwiftSafeName(contentType.originallyCasedType)
+            let safedSubtype = asSwiftSafeName(contentType.originallyCasedSubtype)
+            let prefix = "\(safedType)_\(safedSubtype)"
+            let params = contentType.lowercasedParameterPairs
+            guard !params.isEmpty else { return prefix }
+            let safedParams =
+                params.map { pair in
+                    pair.split(separator: "=").map { asSwiftSafeName(String($0)) }.joined(separator: "_")
+                }
+                .joined(separator: "_")
+            return prefix + "_" + safedParams
+        }
+    }
+
 }
 
 extension FileTranslator {
 
     /// A configured type assigner.
-    var typeAssigner: TypeAssigner {
-        TypeAssigner(
-            asSwiftSafeName: swiftSafeName,
-            enableBase64EncodingDecoding: config.featureFlags.contains(.base64DataEncodingDecoding)
-        )
-    }
+    var typeAssigner: TypeAssigner { TypeAssigner(asSwiftSafeName: swiftSafeName) }
 
     /// A configured type matcher.
-    var typeMatcher: TypeMatcher {
-        TypeMatcher(
-            asSwiftSafeName: swiftSafeName,
-            enableBase64EncodingDecoding: config.featureFlags.contains(.base64DataEncodingDecoding)
-        )
-    }
+    var typeMatcher: TypeMatcher { TypeMatcher(asSwiftSafeName: swiftSafeName) }
 }
 
 /// An error used during the parsing of JSON references specified in an
@@ -514,8 +575,4 @@ extension JSONReferenceParsingError: CustomStringConvertible {
     }
 }
 
-extension JSONReferenceParsingError: LocalizedError {
-    var errorDescription: String? {
-        description
-    }
-}
+extension JSONReferenceParsingError: LocalizedError { var errorDescription: String? { description } }

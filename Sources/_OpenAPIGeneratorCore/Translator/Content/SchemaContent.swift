@@ -25,6 +25,11 @@ struct SchemaContent {
     /// Can be nil for unstructured JSON payloads, or for unstructured
     /// content types such as binary data.
     var schema: UnresolvedSchema?
+
+    /// The optional encoding mapping for each of the properties in the object schema.
+    ///
+    /// Only used in multipart object schemas, ignored otherwise, as per the OpenAPI specification.
+    var encoding: OrderedDictionary<String, OpenAPI.Content.Encoding>?
 }
 
 /// A type grouping schema content and its computed Swift type usage.
@@ -40,9 +45,7 @@ struct TypedSchemaContent {
     ///
     /// The content might not have a schema, in which case we treat
     /// the schema as a JSON fragment (any payload).
-    var resolvedTypeUsage: TypeUsage {
-        typeUsage ?? TypeName.valueContainer.asUsage
-    }
+    var resolvedTypeUsage: TypeUsage { typeUsage ?? TypeName.valueContainer.asUsage }
 }
 
 /// An unresolved OpenAPI schema.

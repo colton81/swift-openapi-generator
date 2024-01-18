@@ -30,13 +30,14 @@ extension FileTranslator {
 
     /// Returns a typed response for the specified unresolved response.
     /// - Parameters:
-    ///   - unresolvedResponse: An unresolved response.
+    ///   - outcome: An unresolved response outcome.
     ///   - operation: The operation in which the response resides.
     /// - Returns: A typed response.
-    func typedResponse(
-        from outcome: OpenAPI.Operation.ResponseOutcome,
-        operation: OperationDescription
-    ) throws -> TypedResponse {
+    /// - Throws: An error if there's an issue resolving the type name, fetching the response,
+    ///           or determining the inlined status.
+    func typedResponse(from outcome: OpenAPI.Operation.ResponseOutcome, operation: OperationDescription) throws
+        -> TypedResponse
+    {
         let unresolvedResponse = outcome.response
         let typeName: TypeName
         let response: OpenAPI.Response
@@ -52,11 +53,7 @@ extension FileTranslator {
             response = _response
             isInlined = true
         }
-        return .init(
-            response: response,
-            typeUsage: typeName.asUsage,
-            isInlined: isInlined
-        )
+        return .init(response: response, typeUsage: typeName.asUsage, isInlined: isInlined)
     }
 }
 

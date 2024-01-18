@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 import OpenAPIKit
 
-extension FileTranslator {
+extension TypesFileTranslator {
 
     /// Returns a list of declarations for the specified schema.
     ///
@@ -28,29 +28,24 @@ extension FileTranslator {
     ///   - schema: The JSON schema representing the type.
     ///   - overrides: A structure with the properties that should be overridden
     ///   instead of extracted from the schema.
-    func translateSchema(
-        typeName: TypeName,
-        schema: UnresolvedSchema?,
-        overrides: SchemaOverrides
-    ) throws -> [Declaration] {
+    /// - Throws: An error if there is an issue during translation.
+    /// - Returns: A list of declarations representing the translated schema.
+    func translateSchema(typeName: TypeName, schema: UnresolvedSchema?, overrides: SchemaOverrides) throws
+        -> [Declaration]
+    {
         let unwrappedSchema: JSONSchema
         if let schema {
             switch schema {
             case let .a(ref):
                 // reference, wrap that into JSONSchema
                 unwrappedSchema = .reference(ref.jsonReference)
-            case let .b(schema):
-                unwrappedSchema = schema
+            case let .b(schema): unwrappedSchema = schema
             }
         } else {
             // fragment
             unwrappedSchema = .fragment
         }
-        return try translateSchema(
-            typeName: typeName,
-            schema: unwrappedSchema,
-            overrides: overrides
-        )
+        return try translateSchema(typeName: typeName, schema: unwrappedSchema, overrides: overrides)
     }
 
     /// Returns a list of declarations for the specified schema.
@@ -66,12 +61,17 @@ extension FileTranslator {
     ///   - schema: The JSON schema representing the type.
     ///   - overrides: A structure with the properties that should be overridden
     ///   instead of extracted from the schema.
+    ///   - isMultipartContent: A Boolean value indicating whether the schema defines multipart parts.
+    /// - Throws: An error if there is an issue during translation.
+    /// - Returns: A list of declarations representing the translated schema.
     func translateSchema(
         typeName: TypeName,
         schema: JSONSchema,
-        overrides: SchemaOverrides
+        overrides: SchemaOverrides,
+        isMultipartContent: Bool = false
     ) throws -> [Declaration] {
 
+        if isMultipartContent { return try translateMultipartBody(typeName: typeName, schema: schema) }
         let value = schema.value
 
         // Attach any warnings from the parsed schema as a diagnostic.
@@ -89,10 +89,7 @@ extension FileTranslator {
         }
 
         // If this type maps to a referenceable schema, define a typealias
-        if let builtinType = try typeMatcher.tryMatchReferenceableType(
-            for: schema,
-            components: components
-        ) {
+        if let builtinType = try typeMatcher.tryMatchReferenceableType(for: schema, components: components) {
             let typealiasDecl = try translateTypealias(
                 named: typeName,
                 userDescription: overrides.userDescription ?? schema.description,
@@ -167,8 +164,7 @@ extension FileTranslator {
                 schemas: schemas
             )
             return [oneOfDecl]
-        default:
-            return []
+        default: return []
         }
     }
 }

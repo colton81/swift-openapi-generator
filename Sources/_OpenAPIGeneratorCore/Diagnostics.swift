@@ -65,13 +65,9 @@ public struct Diagnostic: Error, Codable, Sendable {
     ///   - context: A set of key-value pairs that help the user understand
     ///   where the warning occurred.
     /// - Returns: A warning diagnostic.
-    public static func warning(
-        message: String,
-        location: Location? = nil,
-        context: [String: String] = [:]
-    ) -> Diagnostic {
-        .init(severity: .warning, message: message, location: location, context: context)
-    }
+    public static func warning(message: String, location: Location? = nil, context: [String: String] = [:])
+        -> Diagnostic
+    { .init(severity: .warning, message: message, location: location, context: context) }
 
     /// Creates a non-recoverable issue, which leads the generator to stop.
     /// - Parameters:
@@ -80,13 +76,8 @@ public struct Diagnostic: Error, Codable, Sendable {
     ///   - context: A set of key-value pairs that help the user understand
     ///   where the warning occurred.
     /// - Returns: An error diagnostic.
-    public static func error(
-        message: String,
-        location: Location? = nil,
-        context: [String: String] = [:]
-    ) -> Diagnostic {
-        .init(severity: .error, message: message, location: location, context: context)
-    }
+    public static func error(message: String, location: Location? = nil, context: [String: String] = [:]) -> Diagnostic
+    { .init(severity: .error, message: message, location: location, context: context) }
 
     /// Creates a diagnostic for an unsupported feature.
     ///
@@ -142,19 +133,17 @@ public struct Diagnostic: Error, Codable, Sendable {
 }
 
 extension Diagnostic.Severity: CustomStringConvertible {
-    public var description: String {
-        rawValue
-    }
+    /// A textual representation of the diagnostic severity.
+    public var description: String { rawValue }
 }
 
 extension Diagnostic: CustomStringConvertible {
+    /// A textual representation of the diagnostic, including location, severity, message, and context.
     public var description: String {
         var prefix = ""
         if let location = location {
             prefix = "\(location.filePath):"
-            if let line = location.lineNumber {
-                prefix += "\(line):"
-            }
+            if let line = location.lineNumber { prefix += "\(line):" }
             prefix += " "
         }
         let contextString = context.map { "\($0)=\($1)" }.sorted().joined(separator: ", ")
@@ -163,9 +152,8 @@ extension Diagnostic: CustomStringConvertible {
 }
 
 extension Diagnostic: LocalizedError {
-    public var errorDescription: String? {
-        description
-    }
+    /// A localized description of the diagnostic.
+    public var errorDescription: String? { description }
 }
 
 /// A type that receives diagnostics.
@@ -192,11 +180,7 @@ extension DiagnosticCollector {
     ///   feature was detected.
     ///   - context: A set of key-value pairs that help the user understand
     ///   where the warning occurred.
-    func emitUnsupported(
-        _ feature: String,
-        foundIn: String,
-        context: [String: String] = [:]
-    ) {
+    func emitUnsupported(_ feature: String, foundIn: String, context: [String: String] = [:]) {
         emit(Diagnostic.unsupported(feature, foundIn: foundIn, context: context))
     }
 
@@ -209,20 +193,8 @@ extension DiagnosticCollector {
     ///   schema was detected.
     ///   - context: A set of key-value pairs that help the user understand
     ///   where the warning occurred.
-    func emitUnsupportedSchema(
-        reason: String,
-        schema: JSONSchema,
-        foundIn: String,
-        context: [String: String] = [:]
-    ) {
-        emit(
-            Diagnostic.unsupportedSchema(
-                reason: reason,
-                schema: schema,
-                foundIn: foundIn,
-                context: context
-            )
-        )
+    func emitUnsupportedSchema(reason: String, schema: JSONSchema, foundIn: String, context: [String: String] = [:]) {
+        emit(Diagnostic.unsupportedSchema(reason: reason, schema: schema, foundIn: foundIn, context: context))
     }
 
     /// Emits a diagnostic for an unsupported feature found in the specified
@@ -234,11 +206,7 @@ extension DiagnosticCollector {
     ///   - foundIn: The type name related to where the issue was detected.
     ///   - context: A set of key-value pairs that help the user understand
     ///   where the warning occurred.
-    func emitUnsupported(
-        _ feature: String,
-        foundIn: TypeName,
-        context: [String: String] = [:]
-    ) {
+    func emitUnsupported(_ feature: String, foundIn: TypeName, context: [String: String] = [:]) {
         emit(Diagnostic.unsupported(feature, foundIn: foundIn.description, context: context))
     }
 
@@ -254,15 +222,8 @@ extension DiagnosticCollector {
     ///   feature was detected.
     ///   - context: A set of key-value pairs that help the user understand
     ///   where the warning occurred.
-    func emitUnsupportedIfNotNil(
-        _ test: Any?,
-        _ feature: String,
-        foundIn: String,
-        context: [String: String] = [:]
-    ) {
-        if test == nil {
-            return
-        }
+    func emitUnsupportedIfNotNil(_ test: Any?, _ feature: String, foundIn: String, context: [String: String] = [:]) {
+        if test == nil { return }
         emitUnsupported(feature, foundIn: foundIn, context: context)
     }
 
@@ -284,9 +245,7 @@ extension DiagnosticCollector {
         foundIn: String,
         context: [String: String] = [:]
     ) {
-        guard let test = test, !test.isEmpty else {
-            return
-        }
+        guard let test = test, !test.isEmpty else { return }
         emitUnsupported(feature, foundIn: foundIn, context: context)
     }
 
@@ -302,15 +261,8 @@ extension DiagnosticCollector {
     ///   feature was detected.
     ///   - context: A set of key-value pairs that help the user understand
     ///   where the warning occurred.
-    func emitUnsupportedIfTrue(
-        _ test: Bool,
-        _ feature: String,
-        foundIn: String,
-        context: [String: String] = [:]
-    ) {
-        if !test {
-            return
-        }
+    func emitUnsupportedIfTrue(_ test: Bool, _ feature: String, foundIn: String, context: [String: String] = [:]) {
+        if !test { return }
         emitUnsupported(feature, foundIn: foundIn, context: context)
     }
 }
@@ -321,9 +273,10 @@ struct PrintingDiagnosticCollector: DiagnosticCollector {
     /// Creates a new collector.
     public init() {}
 
-    public func emit(_ diagnostic: Diagnostic) {
-        print(diagnostic.description)
-    }
+    /// Emits a diagnostic message by printing it to the standard output.
+    ///
+    /// - Parameter diagnostic: The diagnostic message to emit.
+    public func emit(_ diagnostic: Diagnostic) { print(diagnostic.description) }
 }
 
 /// A diagnostic collector that prints diagnostics to standard error.
@@ -331,14 +284,13 @@ public struct StdErrPrintingDiagnosticCollector: DiagnosticCollector, Sendable {
     /// Creates a new collector.
     public init() {}
 
-    public func emit(_ diagnostic: Diagnostic) {
-        stdErrHandle.write(diagnostic.description)
-    }
+    /// Emits a diagnostic message to standard error.
+    ///
+    /// - Parameter diagnostic: The diagnostic message to emit.
+    public func emit(_ diagnostic: Diagnostic) { stdErrHandle.write(diagnostic.description) }
 }
 
 /// A no-op collector, silently ignores all diagnostics.
 ///
 /// Useful when diagnostics can be ignored.
-struct QuietDiagnosticCollector: DiagnosticCollector {
-    func emit(_ diagnostic: Diagnostic) {}
-}
+struct QuietDiagnosticCollector: DiagnosticCollector { func emit(_ diagnostic: Diagnostic) {} }

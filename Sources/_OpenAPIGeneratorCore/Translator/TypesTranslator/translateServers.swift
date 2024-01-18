@@ -23,34 +23,49 @@ extension TypesFileTranslator {
     ///   - server: The server URL information.
     /// - Returns: A static method declaration, and a name for the variable to
     /// declare the method under.
-    func translateServer(
-        index: Int,
-        server: OpenAPI.Server
-    ) -> Declaration {
+    func translateServer(index: Int, server: OpenAPI.Server) -> Declaration {
         let methodName = "\(Constants.ServerURL.propertyPrefix)\(index+1)"
+        let safeVariables = server.variables.map { (key, value) in
+            (originalKey: key, swiftSafeKey: swiftSafeName(for: key), value: value)
+        }
+        let parameters: [ParameterDescription] = safeVariables.map { (originalKey, swiftSafeKey, value) in
+            .init(label: swiftSafeKey, type: .init(TypeName.string), defaultValue: .literal(value.default))
+        }
+        let variableInitializers: [Expression] = safeVariables.map { (originalKey, swiftSafeKey, value) in
+            let allowedValuesArg: FunctionArgumentDescription?
+            if let allowedValues = value.enum {
+                allowedValuesArg = .init(
+                    label: "allowedValues",
+                    expression: .literal(.array(allowedValues.map { .literal($0) }))
+                )
+            } else {
+                allowedValuesArg = nil
+            }
+            return .dot("init")
+                .call(
+                    [
+                        .init(label: "name", expression: .literal(originalKey)),
+                        .init(label: "value", expression: .identifierPattern(swiftSafeKey)),
+                    ] + (allowedValuesArg.flatMap { [$0] } ?? [])
+                )
+        }
         let methodDecl = Declaration.commentable(
-            server.description.flatMap { .doc($0) },
+            .functionComment(abstract: server.description, parameters: safeVariables.map { ($1, $2.description) }),
             .function(
                 accessModifier: config.access,
                 kind: .function(name: methodName, isStatic: true),
-                parameters: [],
-                keywords: [
-                    .throws
-                ],
-                returnType: .identifier(Constants.ServerURL.underlyingType),
+                parameters: parameters,
+                keywords: [.throws],
+                returnType: .identifierType(TypeName.url),
                 body: [
                     .expression(
                         .try(
-                            .identifier(Constants.ServerURL.underlyingType)
+                            .identifierType(TypeName.url)
                                 .call([
                                     .init(
                                         label: "validatingOpenAPIServerURL",
-                                        expression: .literal(
-                                            .string(
-                                                server.urlTemplate.absoluteString
-                                            )
-                                        )
-                                    )
+                                        expression: .literal(.string(server.urlTemplate.absoluteString))
+                                    ), .init(label: "variables", expression: .literal(.array(variableInitializers))),
                                 ])
                         )
                     )
@@ -69,11 +84,7 @@ extension TypesFileTranslator {
         let serverDecls = servers.enumerated().map(translateServer)
         return .commentable(
             .doc("Server URLs defined in the OpenAPI document."),
-            .enum(
-                accessModifier: config.access,
-                name: Constants.ServerURL.namespace,
-                members: serverDecls
-            )
+            .enum(accessModifier: config.access, name: Constants.ServerURL.namespace, members: serverDecls)
         )
     }
 }

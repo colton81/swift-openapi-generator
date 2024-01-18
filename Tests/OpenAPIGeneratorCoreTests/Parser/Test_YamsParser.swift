@@ -98,8 +98,7 @@ final class Test_YamsParser: Test_Core {
             paths: {}
             """
 
-        let expected =
-            "/foo.yaml: error: Expected to find `info` key in the root Document object but it is missing."
+        let expected = "/foo.yaml: error: Expected to find `info` key in the root Document object but it is missing."
         assertThrownError(try _test(yaml), expectedDiagnostic: expected)
     }
 
@@ -163,11 +162,8 @@ final class Test_YamsParser: Test_Core {
     private func _test(_ yaml: String) throws -> ParsedOpenAPIRepresentation {
         try YamsParser()
             .parseOpenAPI(
-                .init(
-                    absolutePath: URL(fileURLWithPath: "/foo.yaml"),
-                    contents: Data(yaml.utf8)
-                ),
-                config: .init(mode: .types),
+                .init(absolutePath: URL(fileURLWithPath: "/foo.yaml"), contents: Data(yaml.utf8)),
+                config: .init(mode: .types, access: Config.defaultAccessModifier),
                 diagnostics: PrintingDiagnosticCollector()
             )
     }

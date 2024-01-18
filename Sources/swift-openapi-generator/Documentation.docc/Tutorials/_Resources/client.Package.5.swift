@@ -1,35 +1,23 @@
-// swift-tools-version: 5.8
+// swift-tools-version: 5.9
 import PackageDescription
 
 let package = Package(
     name: "GreetingServiceClient",
-    platforms: [
-        .macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6),
-    ],
+    platforms: [.macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6), .visionOS(.v1)],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-openapi-generator", .upToNextMinor(from: "0.3.0")),
-        .package(url: "https://github.com/apple/swift-openapi-runtime", .upToNextMinor(from: "0.3.0")),
-        .package(url: "https://github.com/apple/swift-openapi-urlsession", .upToNextMinor(from: "0.3.0")),
+        .package(url: "https://github.com/apple/swift-openapi-generator", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-openapi-runtime", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-openapi-urlsession", from: "1.0.0"),
     ],
     targets: [
         .executableTarget(
             name: "GreetingServiceClient",
             dependencies: [
-                .product(
-                    name: "OpenAPIRuntime",
-                    package: "swift-openapi-runtime"
-                ),
-                .product(
-                    name: "OpenAPIURLSession",
-                    package: "swift-openapi-urlsession"
-                ),
+                .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
+                .product(name: "OpenAPIURLSession", package: "swift-openapi-urlsession"),
             ],
-            path: "Sources",
             plugins: [
-                .plugin(
-                    name: "OpenAPIGenerator",
-                    package: "swift-openapi-generator"
-                )
+                .plugin(name: "OpenAPIGenerator", package: "swift-openapi-generator"),
             ]
         )
     ]

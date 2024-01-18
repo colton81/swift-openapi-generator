@@ -33,6 +33,8 @@ extension FileTranslator {
     ///   document.
     ///   - isNullable: Whether the enum schema is nullable.
     ///   - allowedValues: The enumerated allowed values.
+    /// - Throws: A `GenericError` if a disallowed value is encountered.
+    /// - Returns: A declaration of the specified raw value-based enum schema.
     func translateRawEnum(
         backingType: RawEnumBackingType,
         typeName: TypeName,
@@ -40,25 +42,26 @@ extension FileTranslator {
         isNullable: Bool,
         allowedValues: [AnyCodable]
     ) throws -> Declaration {
-        let cases: [(String, LiteralDescription)] =
-            try allowedValues
-            .map(\.value)
+        let cases: [(String, LiteralDescription)] = try allowedValues.map(\.value)
             .map { anyValue in
                 switch backingType {
                 case .string:
                     // In nullable enum schemas, empty strings are parsed as Void.
                     // This is unlikely to be fixed, so handling that case here.
                     // https://github.com/apple/swift-openapi-generator/issues/118
-                    if isNullable && anyValue is Void {
-                        return (swiftSafeName(for: ""), .string(""))
-                    }
+                    if isNullable && anyValue is Void { return (swiftSafeName(for: ""), .string("")) }
                     guard let rawValue = anyValue as? String else {
                         throw GenericError(message: "Disallowed value for a string enum '\(typeName)': \(anyValue)")
                     }
                     let caseName = swiftSafeName(for: rawValue)
                     return (caseName, .string(rawValue))
                 case .integer:
-                    guard let rawValue = anyValue as? Int else {
+                    let rawValue: Int
+                    if let intRawValue = anyValue as? Int {
+                        rawValue = intRawValue
+                    } else if let stringRawValue = anyValue as? String, let intRawValue = Int(stringRawValue) {
+                        rawValue = intRawValue
+                    } else {
                         throw GenericError(message: "Disallowed value for an integer enum '\(typeName)': \(anyValue)")
                     }
                     let caseName = rawValue < 0 ? "_n\(abs(rawValue))" : "_\(rawValue)"
@@ -67,10 +70,8 @@ extension FileTranslator {
             }
         let baseConformance: String
         switch backingType {
-        case .string:
-            baseConformance = Constants.RawEnum.baseConformanceString
-        case .integer:
-            baseConformance = Constants.RawEnum.baseConformanceInteger
+        case .string: baseConformance = Constants.RawEnum.baseConformanceString
+        case .integer: baseConformance = Constants.RawEnum.baseConformanceInteger
         }
         let conformances = [baseConformance] + Constants.RawEnum.conformances
         return try translateRawRepresentableEnum(

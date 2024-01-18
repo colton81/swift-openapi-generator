@@ -26,16 +26,14 @@ struct TestConfig: Encodable {
 
 extension TestConfig {
     var asConfig: Config {
-        .init(
-            mode: mode,
-            additionalImports: additionalImports ?? [],
-            featureFlags: featureFlags ?? []
-        )
+        .init(mode: mode, access: .public, additionalImports: additionalImports ?? [], featureFlags: featureFlags ?? [])
     }
 }
 
 /// Tests that the generator produces Swift files that match a reference.
 class FileBasedReferenceTests: XCTestCase {
+
+    /// Setup method called before the invocation of each test method in the class.
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
@@ -44,14 +42,13 @@ class FileBasedReferenceTests: XCTestCase {
         #endif
     }
 
-    func testPetstore() throws {
-        try _test(referenceProject: .init(name: .petstore))
-    }
+    func testPetstore() throws { try _test(referenceProject: .init(name: .petstore)) }
 
     // MARK: - Private
 
     var referenceTestResourcesDirectory: URL! = nil
 
+    /// Setup method called before the invocation of each test method in the class.
     override func setUpWithError() throws {
         self.referenceTestResourcesDirectory = try XCTUnwrap(
             Bundle.module.url(forResource: "Resources", withExtension: nil),
@@ -59,10 +56,7 @@ class FileBasedReferenceTests: XCTestCase {
         )
     }
 
-    func performReferenceTest(
-        _ referenceTest: TestConfig,
-        ignoredDiagnosticMessages: Set<String> = []
-    ) throws {
+    func performReferenceTest(_ referenceTest: TestConfig, ignoredDiagnosticMessages: Set<String> = []) throws {
         print(
             """
             \(String(repeating: "=", count: 60))
@@ -75,14 +69,8 @@ class FileBasedReferenceTests: XCTestCase {
 
         // Load the doc file into memory
         let docFilePath = referenceTest.docFilePath
-        let docFileURL = URL(
-            fileURLWithPath: docFilePath,
-            relativeTo: referenceTestResourcesDirectory
-        )
-        let input = InMemoryInputFile(
-            absolutePath: docFileURL,
-            contents: try Data(contentsOf: docFileURL)
-        )
+        let docFileURL = URL(fileURLWithPath: docFilePath, relativeTo: referenceTestResourcesDirectory)
+        let input = InMemoryInputFile(absolutePath: docFileURL, contents: try Data(contentsOf: docFileURL))
 
         // Run the requested generator invocation
         let generatorPipeline = self.makeGeneratorPipeline(
@@ -93,10 +81,7 @@ class FileBasedReferenceTests: XCTestCase {
 
         // Write generated sources to temporary directory
         let generatedOutputDir = try self.temporaryDirectory()
-        let generatedOutputFile = URL(
-            fileURLWithPath: generatedOutputSource.baseName,
-            relativeTo: generatedOutputDir
-        )
+        let generatedOutputFile = URL(fileURLWithPath: generatedOutputSource.baseName, relativeTo: generatedOutputDir)
         try generatedOutputSource.contents.write(to: generatedOutputFile)
 
         // Compare the generated directory with the reference directory
@@ -104,9 +89,7 @@ class FileBasedReferenceTests: XCTestCase {
             fileURLWithPath: referenceTest.referenceOutputDirectory,
             relativeTo: referenceTestResourcesDirectory
         )
-        let referenceOutputFile =
-            referenceOutputDir
-            .appendingPathComponent(generatedOutputSource.baseName)
+        let referenceOutputFile = referenceOutputDir.appendingPathComponent(generatedOutputSource.baseName)
         self.assert(
             contentsOf: generatedOutputFile,
             equalsContentsOf: referenceOutputFile,
@@ -117,26 +100,18 @@ class FileBasedReferenceTests: XCTestCase {
     enum ReferenceProjectName: String, Hashable, CaseIterable {
         case petstore
 
-        var openAPIDocFileName: String {
-            "\(rawValue).yaml"
-        }
+        var openAPIDocFileName: String { "\(rawValue).yaml" }
 
-        var fixtureCodeDirectoryName: String {
-            rawValue.capitalized
-        }
+        var fixtureCodeDirectoryName: String { rawValue.capitalized }
     }
 
     struct ReferenceProject: Hashable {
         var name: ReferenceProjectName
         var customDirectoryName: String? = nil
 
-        var fixtureCodeDirectoryName: String {
-            customDirectoryName ?? name.fixtureCodeDirectoryName
-        }
+        var fixtureCodeDirectoryName: String { customDirectoryName ?? name.fixtureCodeDirectoryName }
 
-        var openAPIDocFileName: String {
-            name.openAPIDocFileName
-        }
+        var openAPIDocFileName: String { name.openAPIDocFileName }
     }
 
     func _test(
@@ -144,11 +119,7 @@ class FileBasedReferenceTests: XCTestCase {
         featureFlags: FeatureFlags = [],
         ignoredDiagnosticMessages: Set<String> = []
     ) throws {
-        let modes: [GeneratorMode] = [
-            .types,
-            .client,
-            .server,
-        ]
+        let modes: [GeneratorMode] = [.types, .client, .server]
         for mode in modes {
             try performReferenceTest(
                 .init(
@@ -165,36 +136,23 @@ class FileBasedReferenceTests: XCTestCase {
 }
 
 extension FileBasedReferenceTests {
-    private func makeGeneratorPipeline(
-        config: Config,
-        ignoredDiagnosticMessages: Set<String> = []
-    ) -> GeneratorPipeline {
+    private func makeGeneratorPipeline(config: Config, ignoredDiagnosticMessages: Set<String> = []) -> GeneratorPipeline
+    {
         let parser = YamsParser()
         let translator = MultiplexTranslator()
-        let renderer = TextBasedRenderer()
+        let renderer = TextBasedRenderer.default
 
         return _OpenAPIGeneratorCore.makeGeneratorPipeline(
             parser: parser,
             translator: translator,
             renderer: renderer,
-            formatter: { file in
-                var newFile = file
-                newFile.contents = try newFile.contents.swiftFormatted
-                return newFile
-            },
             config: config,
-            diagnostics: XCTestDiagnosticCollector(
-                test: self,
-                ignoredDiagnosticMessages: ignoredDiagnosticMessages
-            )
+            diagnostics: XCTestDiagnosticCollector(test: self, ignoredDiagnosticMessages: ignoredDiagnosticMessages)
         )
     }
 
     private func temporaryDirectory(fileManager: FileManager = .default) throws -> URL {
-        let directoryURL = fileManager.temporaryDirectory.appendingPathComponent(
-            UUID().uuidString,
-            isDirectory: true
-        )
+        let directoryURL = fileManager.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
         try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         addTeardownBlock {
             do {
@@ -218,15 +176,11 @@ extension FileBasedReferenceTests {
         file: StaticString = #filePath,
         line: UInt = #line
     ) {
-        if FileManager.default.contentsEqual(atPath: generatedFile.path, andPath: referenceFile.path) {
-            return
-        }
+        if FileManager.default.contentsEqual(atPath: generatedFile.path, andPath: referenceFile.path) { return }
 
         let diffOutput: String?
         if runDiffWhenContentsDiffer {
-            do {
-                diffOutput = try runDiff(reference: referenceFile, actual: generatedFile)
-            } catch {
+            do { diffOutput = try runDiff(reference: referenceFile, actual: generatedFile) } catch {
                 diffOutput = "failed: \(error)"
             }
         } else {
@@ -254,24 +208,21 @@ extension FileBasedReferenceTests {
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
         process.currentDirectoryURL = self.referenceTestResourcesDirectory
         process.arguments = [
-            "git",
-            "diff",
-            "--no-index",
-            "-U5",
+            "git", "diff", "--no-index", "-U5",
             // The following arguments are useful for development.
             //            "--ignore-space-change",
             //            "--ignore-all-space",
             //            "--ignore-blank-lines",
             //            "--ignore-space-at-eol",
-            reference.relativePath,
-            actual.path,
+            reference.relativePath, actual.path,
         ]
         let pipe = Pipe()
         process.standardOutput = pipe
         try process.run()
+        let stdoutData = try pipe.fileHandleForReading.readToEnd()
         process.waitUntilExit()
         let pipeData = try XCTUnwrap(
-            pipe.fileHandleForReading.readToEnd(),
+            stdoutData,
             """
             No output from command:
             \(process.executableURL!.path) \(process.arguments!.joined(separator: " "))

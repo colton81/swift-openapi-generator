@@ -18,25 +18,19 @@ extension FileTranslator {
     /// Returns a declaration of a typealias.
     /// - Parameters:
     ///   - typeName: The name of the type to give to the declared typealias.
-    ///   - openAPIDescription: A user-specified description from the OpenAPI
-    ///   document.
+    ///   - userDescription: A user-specified description from the OpenAPI document.
     ///   - existingTypeUsage: The existing type the alias points to.
-    func translateTypealias(
-        named typeName: TypeName,
-        userDescription: String?,
-        to existingTypeUsage: TypeUsage
-    ) throws -> Declaration {
+    /// - Throws: An error if there is an issue during translation.
+    /// - Returns: A declaration representing the translated typealias.
+    func translateTypealias(named typeName: TypeName, userDescription: String?, to existingTypeUsage: TypeUsage) throws
+        -> Declaration
+    {
         let typealiasDescription = TypealiasDescription(
             accessModifier: config.access,
             name: typeName.shortSwiftName,
-            existingType: existingTypeUsage.fullyQualifiedNonOptionalSwiftName
+            existingType: .init(existingTypeUsage.withOptional(false))
         )
-        let typealiasComment: Comment? =
-            typeName
-            .docCommentWithUserDescription(userDescription)
-        return .commentable(
-            typealiasComment,
-            .typealias(typealiasDescription)
-        )
+        let typealiasComment: Comment? = typeName.docCommentWithUserDescription(userDescription)
+        return .commentable(typealiasComment, .typealias(typealiasDescription))
     }
 }

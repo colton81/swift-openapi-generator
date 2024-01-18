@@ -21,18 +21,11 @@ extension TypesFileTranslator {
     ///   - unresolvedParameter: An unresolved parameter.
     ///   - parent: The parent type name.
     /// - Returns: A property blueprint; nil when the parameter is unsupported.
-    func parseParameterAsProperty(
-        for unresolvedParameter: UnresolvedParameter,
-        inParent parent: TypeName
-    ) throws -> PropertyBlueprint? {
-        guard
-            let parameter = try parseAsTypedParameter(
-                from: unresolvedParameter,
-                inParent: parent
-            )
-        else {
-            return nil
-        }
+    /// - Throws: An error if there is an issue parsing the parameter as a typed parameter or translating the schema.
+    func parseParameterAsProperty(for unresolvedParameter: UnresolvedParameter, inParent parent: TypeName) throws
+        -> PropertyBlueprint?
+    {
+        guard let parameter = try parseAsTypedParameter(from: unresolvedParameter, inParent: parent) else { return nil }
         let associatedDeclarations: [Declaration]
         if let inlineableSchema = parameter.inlineableSchema {
             associatedDeclarations = try translateSchema(
@@ -59,15 +52,12 @@ extension TypesFileTranslator {
     ///   - componentKey: The component key for the parameter.
     ///   - parameter: The typed parameter.
     /// - Returns: A list of declarations; empty list if the parameter is unsupported.
-    func translateParameterInTypes(
-        componentKey: OpenAPI.ComponentKey,
-        parameter: TypedParameter
-    ) throws -> [Declaration] {
+    /// - Throws: An error if there is an issue translating the parameter into types.
+    func translateParameterInTypes(componentKey: OpenAPI.ComponentKey, parameter: TypedParameter) throws
+        -> [Declaration]
+    {
         let typeName = typeAssigner.typeName(for: componentKey, of: OpenAPI.Parameter.self)
-        return try translateParameterInTypes(
-            typeName: typeName,
-            parameter: parameter
-        )
+        return try translateParameterInTypes(typeName: typeName, parameter: parameter)
     }
 
     /// Returns a list of declarations that define a Swift type for the parameter and type name.
@@ -75,17 +65,12 @@ extension TypesFileTranslator {
     ///   - typeName: The type name to declare the parameter type under.
     ///   - parameter: The parameter to declare.
     /// - Returns: A list of declarations; empty list if the parameter is unsupported.
-    func translateParameterInTypes(
-        typeName: TypeName,
-        parameter: TypedParameter
-    ) throws -> [Declaration] {
+    /// - Throws: An error if there is an issue translating the parameter into types.
+    func translateParameterInTypes(typeName: TypeName, parameter: TypedParameter) throws -> [Declaration] {
         let decl = try translateSchema(
             typeName: typeName,
             schema: parameter.schema,
-            overrides: .init(
-                isOptional: !parameter.required,
-                userDescription: parameter.parameter.description
-            )
+            overrides: .init(isOptional: !parameter.required, userDescription: parameter.parameter.description)
         )
         return decl
     }
@@ -97,9 +82,9 @@ extension ClientFileTranslator {
     /// the specified operation, and an expression of an array literal
     /// with all those parameters.
     /// - Parameter description: The OpenAPI operation.
-    func translatePathParameterInClient(
-        description: OperationDescription
-    ) throws -> (String, Expression) {
+    /// - Returns: A tuple containing a templated string with path parameters and an expression representing an array of those parameters.
+    /// - Throws: An error if there is an issue translating path parameters for the client.
+    func translatePathParameterInClient(description: OperationDescription) throws -> (String, Expression) {
         try description.templatedPathForClient
     }
 
@@ -110,6 +95,7 @@ extension ClientFileTranslator {
     ///   - requestVariableName: The name of the request variable.
     ///   - inputVariableName: The name of the Input variable.
     /// - Returns: The expression; nil if the parameter is unsupported.
+    /// - Throws: An error if there is an issue translating path parameters for the client.
     func translateNonPathParameterInClient(
         _ parameter: TypedParameter,
         requestVariableName: String,
@@ -121,11 +107,11 @@ extension ClientFileTranslator {
         switch parameter.location {
         case .header:
             methodPrefix = "HeaderField"
-            containerExpr = .identifier(requestVariableName).dot("headerFields")
+            containerExpr = .identifierPattern(requestVariableName).dot("headerFields")
             supportsStyleAndExplode = false
         case .query:
             methodPrefix = "QueryItem"
-            containerExpr = .identifier(requestVariableName)
+            containerExpr = .identifierPattern(requestVariableName)
             supportsStyleAndExplode = true
         default:
             diagnostics.emitUnsupported(
@@ -144,20 +130,13 @@ extension ClientFileTranslator {
             styleAndExplodeArgs = []
         }
         return .try(
-            .identifier("converter")
-                .dot("set\(methodPrefix)As\(parameter.codingStrategy.runtimeName)")
+            .identifierPattern("converter").dot("set\(methodPrefix)As\(parameter.codingStrategy.runtimeName)")
                 .call(
-                    [
-                        .init(
-                            label: "in",
-                            expression: .inOut(containerExpr)
-                        )
-                    ] + styleAndExplodeArgs + [
+                    [.init(label: "in", expression: .inOut(containerExpr))] + styleAndExplodeArgs + [
                         .init(label: "name", expression: .literal(parameter.name)),
                         .init(
                             label: "value",
-                            expression: .identifier(inputVariableName)
-                                .dot(parameter.location.shortVariableName)
+                            expression: .identifierPattern(inputVariableName).dot(parameter.location.shortVariableName)
                                 .dot(parameter.variableName)
                         ),
                     ]
@@ -171,13 +150,11 @@ extension ServerFileTranslator {
     /// Returns an expression that populates a function argument call with the
     /// result of extracting the parameter value from a request into an Input.
     /// - Parameter typedParameter: The parameter to extract from a request.
-    func translateParameterInServer(
-        _ typedParameter: TypedParameter
-    ) throws -> FunctionArgumentDescription? {
+    /// - Returns: The expression representing the extraction of the parameter value; nil if the parameter is unsupported.
+    /// - Throws: An error if there is an issue translating the parameter extraction for the client.
+    func translateParameterInServer(_ typedParameter: TypedParameter) throws -> FunctionArgumentDescription? {
         let parameter = typedParameter.parameter
-        let parameterTypeName = typedParameter
-            .typeUsage
-            .fullyQualifiedNonOptionalSwiftName
+        let parameterTypeUsage = typedParameter.typeUsage.withOptional(false)
 
         func methodName(_ parameterLocationName: String, _ requiresOptionality: Bool = true) -> String {
             let optionality: String
@@ -193,41 +170,31 @@ extension ServerFileTranslator {
         switch parameter.location {
         case .path:
             convertExpr = .try(
-                .identifier("converter").dot(methodName("PathParameter", false))
+                .identifierPattern("converter").dot(methodName("PathParameter", false))
                     .call([
-                        .init(label: "in", expression: .identifier("metadata").dot("pathParameters")),
+                        .init(label: "in", expression: .identifierPattern("metadata").dot("pathParameters")),
                         .init(label: "name", expression: .literal(parameter.name)),
-                        .init(
-                            label: "as",
-                            expression: .identifier(parameterTypeName).dot("self")
-                        ),
+                        .init(label: "as", expression: .identifierType(parameterTypeUsage).dot("self")),
                     ])
             )
         case .query:
             convertExpr = .try(
-                .identifier("converter").dot(methodName("QueryItem"))
+                .identifierPattern("converter").dot(methodName("QueryItem"))
                     .call([
-                        .init(label: "in", expression: .identifier("request").dot("soar_query")),
+                        .init(label: "in", expression: .identifierPattern("request").dot("soar_query")),
                         .init(label: "style", expression: .dot(typedParameter.style.runtimeName)),
                         .init(label: "explode", expression: .literal(.bool(typedParameter.explode))),
                         .init(label: "name", expression: .literal(parameter.name)),
-                        .init(
-                            label: "as",
-                            expression: .identifier(parameterTypeName).dot("self")
-                        ),
+                        .init(label: "as", expression: .identifierType(parameterTypeUsage).dot("self")),
                     ])
             )
         case .header:
             convertExpr = .try(
-                .identifier("converter")
-                    .dot(methodName("HeaderField"))
+                .identifierPattern("converter").dot(methodName("HeaderField"))
                     .call([
-                        .init(label: "in", expression: .identifier("request").dot("headerFields")),
+                        .init(label: "in", expression: .identifierPattern("request").dot("headerFields")),
                         .init(label: "name", expression: .literal(parameter.name)),
-                        .init(
-                            label: "as",
-                            expression: .identifier(parameterTypeName).dot("self")
-                        ),
+                        .init(label: "as", expression: .identifierType(parameterTypeUsage).dot("self")),
                     ])
             )
         default:
@@ -238,9 +205,6 @@ extension ServerFileTranslator {
             return nil
         }
 
-        return FunctionArgumentDescription(
-            label: typedParameter.variableName,
-            expression: convertExpr
-        )
+        return FunctionArgumentDescription(label: typedParameter.variableName, expression: convertExpr)
     }
 }

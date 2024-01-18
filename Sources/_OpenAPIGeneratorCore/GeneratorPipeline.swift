@@ -67,14 +67,9 @@ struct GeneratorPipeline {
     /// recoverable diagnostics, such as unsupported features.
     /// - Parameter input: The input of the parsing stage.
     /// - Returns: The output of the rendering stage.
+    /// - Throws: An error if a non-recoverable issue occurs during pipeline execution.
     func run(_ input: RawInput) throws -> RenderedOutput {
-        try renderSwiftFilesStage.run(
-            translateOpenAPIToStructuredSwiftStage.run(
-                parseOpenAPIFileStage.run(
-                    input
-                )
-            )
-        )
+        try renderSwiftFilesStage.run(translateOpenAPIToStructuredSwiftStage.run(parseOpenAPIFileStage.run(input)))
     }
 }
 
@@ -86,20 +81,16 @@ struct GeneratorPipeline {
 /// - Throws: When encountering a non-recoverable error. For recoverable
 /// issues, emits issues into the diagnostics collector.
 /// - Returns: The raw contents of the generated Swift file.
-public func runGenerator(
-    input: InMemoryInputFile,
-    config: Config,
-    diagnostics: any DiagnosticCollector
-) throws -> InMemoryOutputFile {
-    try makeGeneratorPipeline(config: config, diagnostics: diagnostics).run(input)
-}
+public func runGenerator(input: InMemoryInputFile, config: Config, diagnostics: any DiagnosticCollector) throws
+    -> InMemoryOutputFile
+{ try makeGeneratorPipeline(config: config, diagnostics: diagnostics).run(input) }
 
 /// Creates a new pipeline instance.
 /// - Parameters:
 ///   - parser: An OpenAPI document parser.
+///   - validator: A validator for parsed OpenAPI documents.
 ///   - translator: A translator from OpenAPI to Swift.
 ///   - renderer: A Swift code renderer.
-///   - formatter: A Swift code formatter.
 ///   - config: A set of configuration values for the generator.
 ///   - diagnostics: A collector to which the generator emits diagnostics.
 /// - Returns: A configured generator pipeline that can be executed with
@@ -108,54 +99,37 @@ func makeGeneratorPipeline(
     parser: any ParserProtocol = YamsParser(),
     validator: @escaping (ParsedOpenAPIRepresentation, Config) throws -> [Diagnostic] = validateDoc,
     translator: any TranslatorProtocol = MultiplexTranslator(),
-    renderer: any RendererProtocol = TextBasedRenderer(),
-    formatter: @escaping (InMemoryOutputFile) throws -> InMemoryOutputFile = { try $0.swiftFormatted },
+    renderer: any RendererProtocol = TextBasedRenderer.default,
     config: Config,
     diagnostics: any DiagnosticCollector
 ) -> GeneratorPipeline {
+    let filterDoc = { (doc: OpenAPI.Document) -> OpenAPI.Document in
+        guard let documentFilter = config.filter else { return doc }
+        let filteredDoc: OpenAPI.Document = try documentFilter.filter(doc)
+        return filteredDoc
+    }
+    let validateDoc = { (doc: OpenAPI.Document) -> OpenAPI.Document in
+        let validationDiagnostics = try validator(doc, config)
+        for diagnostic in validationDiagnostics { diagnostics.emit(diagnostic) }
+        return doc
+    }
     return .init(
         parseOpenAPIFileStage: .init(
             preTransitionHooks: [],
-            transition: { input in
-                try parser.parseOpenAPI(
-                    input,
-                    config: config,
-                    diagnostics: diagnostics
-                )
-            },
-            postTransitionHooks: [
-                { doc in
-                    let validationDiagnostics = try validator(doc, config)
-                    for diagnostic in validationDiagnostics {
-                        diagnostics.emit(diagnostic)
-                    }
-                    return doc
-                }
-            ]
+            transition: { input in try parser.parseOpenAPI(input, config: config, diagnostics: diagnostics) },
+            postTransitionHooks: [filterDoc, validateDoc]
         ),
         translateOpenAPIToStructuredSwiftStage: .init(
             preTransitionHooks: [],
             transition: { input in
-                try translator.translate(
-                    parsedOpenAPI: input,
-                    config: config,
-                    diagnostics: diagnostics
-                )
+                try translator.translate(parsedOpenAPI: input, config: config, diagnostics: diagnostics)
             },
             postTransitionHooks: []
         ),
         renderSwiftFilesStage: .init(
             preTransitionHooks: [],
-            transition: { input in
-                try renderer.render(
-                    structured: input,
-                    config: config,
-                    diagnostics: diagnostics
-                )
-            },
-            postTransitionHooks: [
-                formatter
-            ]
+            transition: { input in try renderer.render(structured: input, config: config, diagnostics: diagnostics) },
+            postTransitionHooks: []
         )
     )
 }

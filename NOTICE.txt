@@ -35,9 +35,165 @@ This product contains derivations of various scripts and templates from SwiftNIO
 
 -------------------------------------------------------------------------------
 
+This product contains derivations of templates and proposal workflows from Swift.
+
+  * LICENSE (Apache License 2.0):
+    * https://swift.org/LICENSE.txt
+  * HOMEPAGE:
+    * https://github.com/apple/swift
+
+-------------------------------------------------------------------------------
+
 This product contains derivations of examples from the OpenAPI project.
 
   * LICENSE (Apache License 2.0):
     * https://github.com/OAI/OpenAPI-Specification/blob/main/LICENSE
   * HOMEPAGE:
     * https://github.com/OAI/OpenAPI-Specification
+
+-------------------------------------------------------------------------------
+
+This product contains OpenAPI document(s) for compatibility testing from:
+
+  * AWS Lambda for .NET Core
+    * LICENSE (Apache License 2.0):
+      * https://www.apache.org/licenses/LICENSE-2.0
+    * HOMEPAGE:
+      * https://github.com/aws/aws-lambda-dotnet
+
+  * Azure IoT Identity Service
+    * LICENSE (MIT License):
+      * https://mit-license.org
+    * HOMEPAGE:
+      * https://github.com/Azure/iot-identity-service
+
+  * OpenAPI 3.0 Specification for the Box APIs
+    * LICENSE (Apache License 2.0):
+      * https://www.apache.org/licenses/LICENSE-2.0
+    * HOMEPAGE:
+      * https://github.com/box/box-openapi
+
+  * MindMeld Conversational AI Platform
+    * LICENSE (Apache License 2.0):
+      * https://www.apache.org/licenses/LICENSE-2.0
+    * HOMEPAGE:
+      * https://github.com/cisco/mindmeld
+
+  * Cloud Hypervisor
+    * LICENSE (Apache License 2.0):
+      * https://www.apache.org/licenses/LICENSE-2.0
+    * HOMEPAGE:
+      * https://github.com/cloud-hypervisor/cloud-hypervisor
+
+  * Discourse API Documentation
+    * LICENSE (MIT License):
+      * https://mit-license.org
+    * HOMEPAGE:
+      * https://github.com/discourse/discourse_api_docs
+
+  * GitHub's REST API OpenAPI Description
+    * LICENSE (MIT License):
+      * https://mit-license.org
+    * HOMEPAGE:
+      * https://github.com/github/rest-api-description
+
+  * Kubernetes (K8s)
+    * LICENSE (Apache License 2.0):
+      * https://www.apache.org/licenses/LICENSE-2.0
+    * HOMEPAGE:
+      * https://github.com/kubernetes/kubernetes
+
+  * ConsoleMe
+    * LICENSE (Apache License 2.0):
+      * https://www.apache.org/licenses/LICENSE-2.0
+    * HOMEPAGE:
+      * https://github.com/Netflix/consoleme
+
+  * OpenAPI spec for the OpenAI API
+    * LICENSE (MIT License):
+      * https://mit-license.org
+    * HOMEPAGE:
+      * https://github.com/openai/openai-openapi
+
+  * The OpenAPI Specification
+    * LICENSE (Apache License 2.0):
+      * https://www.apache.org/licenses/LICENSE-2.0
+    * HOMEPAGE:
+      * https://github.com/OAI/OpenAPI-Specification
+
+  * Swift Package Manager Project
+    * LICENSE (Apache License 2.0):
+      * https://www.apache.org/licenses/LICENSE-2.0
+    * HOMEPAGE:
+      * https://github.com/apple/swift-package-manager
+
+-------------------------------------------------------------------------------
+
+This product contains samples of how to use Swift OpenAPI Generator with the
+following other projects:
+
+  * AsyncHTTPClient
+    * LICENSE (Apache License 2.0):
+      * https://www.apache.org/licenses/LICENSE-2.0
+    * HOMEPAGE:
+      * https://github.com/swift-server/swift-openapi-async-http-client
+
+  * Hummingbird
+    * LICENSE (Apache License 2.0):
+      * https://www.apache.org/licenses/LICENSE-2.0
+    * HOMEPAGE:
+      * https://github.com/hummingbird-project/hummingbird
+
+  * Swagger UI
+    * LICENSE (Apache License 2.0):
+      * https://www.apache.org/licenses/LICENSE-2.0
+    * HOMEPAGE:
+      * https://github.com/swagger-api/swagger-ui
+
+  * Swift Argument Parser
+    * LICENSE (Apache License 2.0):
+      * https://www.apache.org/licenses/LICENSE-2.0
+    * HOMEPAGE:
+      * https://github.com/apple/swift-argument-parser
+
+  * Swift Distributed Tracing
+    * LICENSE (Apache License 2.0):
+      * https://www.apache.org/licenses/LICENSE-2.0
+    * HOMEPAGE:
+      * https://github.com/apple/swift-distributed-tracing
+
+  * Swift Logging API
+    * LICENSE (Apache License 2.0):
+      * https://www.apache.org/licenses/LICENSE-2.0
+    * HOMEPAGE:
+      * https://github.com/apple/swift-log
+
+  * Swift Metrics
+    * LICENSE (Apache License 2.0):
+      * https://www.apache.org/licenses/LICENSE-2.0
+    * HOMEPAGE:
+      * https://github.com/apple/swift-metrics
+
+  * SwiftNIO
+    * LICENSE (Apache License 2.0):
+      * https://www.apache.org/licenses/LICENSE-2.0
+    * HOMEPAGE:
+      * https://github.com/apple/swift-nio
+
+  * Swift OTel
+    * LICENSE (Apache License 2.0):
+      * https://www.apache.org/licenses/LICENSE-2.0
+    * HOMEPAGE:
+      * https://github.com/slashmo/swift-otel
+
+  * SwiftPrometheus
+    * LICENSE (Apache License 2.0):
+      * https://www.apache.org/licenses/LICENSE-2.0
+    * HOMEPAGE:
+      * https://github.com/swift-server/swift-prometheus
+
+  * Vapor
+    * LICENSE (MIT License):
+      * https://mit-license.org
+    * HOMEPAGE:
+      * https://github.com/vapor/vapor

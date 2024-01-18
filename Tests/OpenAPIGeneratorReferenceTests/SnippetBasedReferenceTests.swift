@@ -28,7 +28,7 @@ final class SnippetBasedReferenceTests: XCTestCase {
             """,
             """
             public enum Headers {
-              public typealias MyHeader = Swift.String
+                public typealias MyHeader = Swift.String
             }
             """
         )
@@ -47,7 +47,7 @@ final class SnippetBasedReferenceTests: XCTestCase {
             """,
             """
             public enum Headers {
-              public typealias MyHeader = Components.Schemas.MySchema
+                public typealias MyHeader = Components.Schemas.MySchema
             }
             """
         )
@@ -65,9 +65,66 @@ final class SnippetBasedReferenceTests: XCTestCase {
             """,
             """
             public enum Parameters {
-              public typealias MyParam = Swift.String
+                public typealias MyParam = Swift.String
             }
             """
+        )
+    }
+
+    func test_accessModifier_public() throws {
+        try self.assertParametersTranslation(
+            """
+            parameters:
+              MyParam:
+                in: query
+                name: my_param
+                schema:
+                  type: string
+            """,
+            """
+            public enum Parameters {
+                public typealias MyParam = Swift.String
+            }
+            """,
+            accessModifier: .`public`
+        )
+    }
+
+    func test_accessModifier_package() throws {
+        try self.assertParametersTranslation(
+            """
+            parameters:
+              MyParam:
+                in: query
+                name: my_param
+                schema:
+                  type: string
+            """,
+            """
+            package enum Parameters {
+                package typealias MyParam = Swift.String
+            }
+            """,
+            accessModifier: .`package`
+        )
+    }
+
+    func test_accessModifier_internal() throws {
+        try self.assertParametersTranslation(
+            """
+            parameters:
+              MyParam:
+                in: query
+                name: my_param
+                schema:
+                  type: string
+            """,
+            """
+            internal enum Parameters {
+                internal typealias MyParam = Swift.String
+            }
+            """,
+            accessModifier: .`internal`
         )
     }
 
@@ -86,7 +143,7 @@ final class SnippetBasedReferenceTests: XCTestCase {
             """,
             """
             public enum Parameters {
-              public typealias MyParam = Components.Schemas.MySchema
+                public typealias MyParam = Components.Schemas.MySchema
             }
             """
         )
@@ -107,6 +164,66 @@ final class SnippetBasedReferenceTests: XCTestCase {
         )
     }
 
+    func testComponentsSchemasNullableString() throws {
+        try self.assertSchemasTranslation(
+            """
+            schemas:
+              MyString:
+                type: string
+            """,
+            // NOTE: We don't generate a typealias to an optional; instead nullable is considered at point of use.
+            """
+            public enum Schemas {
+                public typealias MyString = Swift.String
+            }
+            """
+        )
+    }
+
+    func testComponentsSchemasArrayWithNullableItems() throws {
+        try self.assertSchemasTranslation(
+            """
+            schemas:
+              StringArray:
+                type: array
+                items:
+                  type: string
+
+              StringArrayNullableItems:
+                type: array
+                items:
+                  type: [string, null]
+            """,
+            """
+            public enum Schemas {
+                public typealias StringArray = [Swift.String]
+                public typealias StringArrayNullableItems = [Swift.String?]
+            }
+            """
+        )
+    }
+
+    func testComponentsSchemasArrayOfRefsOfNullableItems() throws {
+        try XCTSkipIf(true, "TODO: Still need to propagate nullability through reference at time of use")
+        try self.assertSchemasTranslation(
+            """
+            schemas:
+              ArrayOfRefsToNullableItems:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NullableString'
+              NullableString:
+                type: [string, null]
+            """,
+            """
+            public enum Schemas {
+                public typealias ArrayOfRefsToNullableItems = [Components.Schemas.NullableString?]
+                public typealias NullableString = Swift.String
+            }
+            """
+        )
+    }
+
     func testComponentsSchemasNullableStringProperty() throws {
         try self.assertSchemasTranslation(
             """
@@ -122,9 +239,47 @@ final class SnippetBasedReferenceTests: XCTestCase {
                     type: [string, null]
                   fooRequiredNullable:
                     type: [string, null]
+
+                  fooOptionalArray:
+                    type: array
+                    items:
+                      type: string
+                  fooRequiredArray:
+                    type: array
+                    items:
+                      type: string
+                  fooOptionalNullableArray:
+                    type: [array, null]
+                    items:
+                      type: string
+                  fooRequiredNullableArray:
+                    type: [array, null]
+                    items:
+                      type: string
+
+                  fooOptionalArrayOfNullableItems:
+                    type: array
+                    items:
+                      type: [string, null]
+                  fooRequiredArrayOfNullableItems:
+                    type: array
+                    items:
+                      type: [string, null]
+                  fooOptionalNullableArrayOfNullableItems:
+                    type: [array, null]
+                    items:
+                      type: [string, null]
+                  fooRequiredNullableArrayOfNullableItems:
+                    type: [array, null]
+                    items:
+                      type: [string, null]
                 required:
                   - fooRequired
                   - fooRequiredNullable
+                  - fooRequiredArray
+                  - fooRequiredNullableArray
+                  - fooRequiredArrayOfNullableItems
+                  - fooRequiredNullableArrayOfNullableItems
             """,
             """
             public enum Schemas {
@@ -133,22 +288,105 @@ final class SnippetBasedReferenceTests: XCTestCase {
                     public var fooRequired: Swift.String
                     public var fooOptionalNullable: Swift.String?
                     public var fooRequiredNullable: Swift.String?
+                    public var fooOptionalArray: [Swift.String]?
+                    public var fooRequiredArray: [Swift.String]
+                    public var fooOptionalNullableArray: [Swift.String]?
+                    public var fooRequiredNullableArray: [Swift.String]?
+                    public var fooOptionalArrayOfNullableItems: [Swift.String?]?
+                    public var fooRequiredArrayOfNullableItems: [Swift.String?]
+                    public var fooOptionalNullableArrayOfNullableItems: [Swift.String?]?
+                    public var fooRequiredNullableArrayOfNullableItems: [Swift.String?]?
                     public init(
                         fooOptional: Swift.String? = nil,
                         fooRequired: Swift.String,
                         fooOptionalNullable: Swift.String? = nil,
-                        fooRequiredNullable: Swift.String? = nil
+                        fooRequiredNullable: Swift.String? = nil,
+                        fooOptionalArray: [Swift.String]? = nil,
+                        fooRequiredArray: [Swift.String],
+                        fooOptionalNullableArray: [Swift.String]? = nil,
+                        fooRequiredNullableArray: [Swift.String]? = nil,
+                        fooOptionalArrayOfNullableItems: [Swift.String?]? = nil,
+                        fooRequiredArrayOfNullableItems: [Swift.String?],
+                        fooOptionalNullableArrayOfNullableItems: [Swift.String?]? = nil,
+                        fooRequiredNullableArrayOfNullableItems: [Swift.String?]? = nil
                     ) {
                         self.fooOptional = fooOptional
                         self.fooRequired = fooRequired
                         self.fooOptionalNullable = fooOptionalNullable
                         self.fooRequiredNullable = fooRequiredNullable
+                        self.fooOptionalArray = fooOptionalArray
+                        self.fooRequiredArray = fooRequiredArray
+                        self.fooOptionalNullableArray = fooOptionalNullableArray
+                        self.fooRequiredNullableArray = fooRequiredNullableArray
+                        self.fooOptionalArrayOfNullableItems = fooOptionalArrayOfNullableItems
+                        self.fooRequiredArrayOfNullableItems = fooRequiredArrayOfNullableItems
+                        self.fooOptionalNullableArrayOfNullableItems = fooOptionalNullableArrayOfNullableItems
+                        self.fooRequiredNullableArrayOfNullableItems = fooRequiredNullableArrayOfNullableItems
                     }
                     public enum CodingKeys: String, CodingKey {
                         case fooOptional
                         case fooRequired
                         case fooOptionalNullable
                         case fooRequiredNullable
+                        case fooOptionalArray
+                        case fooRequiredArray
+                        case fooOptionalNullableArray
+                        case fooRequiredNullableArray
+                        case fooOptionalArrayOfNullableItems
+                        case fooRequiredArrayOfNullableItems
+                        case fooOptionalNullableArrayOfNullableItems
+                        case fooRequiredNullableArrayOfNullableItems
+                    }
+                }
+            }
+            """
+        )
+    }
+
+    func testEncodingDecodingArrayWithNullableItems() throws {
+        struct MyObject: Codable, Equatable {
+            let myArray: [String?]?
+
+            var json: String { get throws { try String(data: JSONEncoder().encode(self), encoding: .utf8)! } }
+
+            static func from(json: String) throws -> Self { try JSONDecoder().decode(Self.self, from: Data(json.utf8)) }
+        }
+
+        for (value, encoding) in [
+            (MyObject(myArray: nil), #"{}"#), (MyObject(myArray: []), #"{"myArray":[]}"#),
+            (MyObject(myArray: ["a"]), #"{"myArray":["a"]}"#), (MyObject(myArray: [nil]), #"{"myArray":[null]}"#),
+            (MyObject(myArray: ["a", nil]), #"{"myArray":["a",null]}"#),
+        ] {
+            XCTAssertEqual(try value.json, encoding)
+            XCTAssertEqual(try MyObject.from(json: value.json), value)
+        }
+    }
+
+    func testComponentsSchemasObjectWithInferredProperty() throws {
+        try self.assertSchemasTranslation(
+            ignoredDiagnosticMessages: [
+                "A property name only appears in the required list, but not in the properties map - this is likely a typo; skipping this property."
+            ],
+            """
+            schemas:
+              MyObj:
+                type: object
+                properties:
+                  fooRequired:
+                    type: string
+                required:
+                  - fooRequired
+                  - fooInferred
+            """,
+            """
+            public enum Schemas {
+                public struct MyObj: Codable, Hashable, Sendable {
+                    public var fooRequired: Swift.String
+                    public init(fooRequired: Swift.String) {
+                        self.fooRequired = fooRequired
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case fooRequired
                     }
                 }
             }
@@ -261,10 +499,10 @@ final class SnippetBasedReferenceTests: XCTestCase {
                   - nullableString
             """,
             """
-                public enum Schemas {
-                  public typealias MyRequiredString = Swift.String
-                  public typealias MyNullableString = Swift.String
-                  public struct MyObject: Codable, Hashable, Sendable {
+            public enum Schemas {
+                public typealias MyRequiredString = Swift.String
+                public typealias MyNullableString = Swift.String
+                public struct MyObject: Codable, Hashable, Sendable {
                     public var id: Swift.Int64
                     public var alias: Swift.String?
                     public var requiredString: Components.Schemas.MyRequiredString
@@ -286,8 +524,8 @@ final class SnippetBasedReferenceTests: XCTestCase {
                         case requiredString
                         case nullableString
                     }
-                  }
                 }
+            }
             """
         )
     }
@@ -312,13 +550,17 @@ final class SnippetBasedReferenceTests: XCTestCase {
                   - binaryProperty
             """,
             """
-                public enum Schemas {
-                  public struct MyObject: Codable, Hashable, Sendable {
+            public enum Schemas {
+                public struct MyObject: Codable, Hashable, Sendable {
                     public var actualString: Swift.String
-                    public init(actualString: Swift.String) { self.actualString = actualString }
-                    public enum CodingKeys: String, CodingKey { case actualString }
-                  }
+                    public init(actualString: Swift.String) {
+                        self.actualString = actualString
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case actualString
+                    }
                 }
+            }
             """
         )
     }
@@ -364,7 +606,9 @@ final class SnippetBasedReferenceTests: XCTestCase {
                         value3 = try decoder.decodeFromSingleValueContainer()
                         value4 = try decoder.decodeFromSingleValueContainer()
                     }
-                    public func encode(to encoder: any Encoder) throws { try encoder.encodeToSingleValueContainer(value3) }
+                    public func encode(to encoder: any Encoder) throws {
+                        try encoder.encodeToSingleValueContainer(value3)
+                    }
                 }
             }
             """
@@ -407,18 +651,44 @@ final class SnippetBasedReferenceTests: XCTestCase {
                         self.value4 = value4
                     }
                     public init(from decoder: any Decoder) throws {
-                        value1 = try? .init(from: decoder)
-                        value2 = try? .init(from: decoder)
-                        value3 = try? decoder.decodeFromSingleValueContainer()
-                        value4 = try? decoder.decodeFromSingleValueContainer()
-                        try DecodingError.verifyAtLeastOneSchemaIsNotNil(
-                            [value1, value2, value3, value4],
+                        var errors: [any Error] = []
+                        do {
+                            value1 = try .init(from: decoder)
+                        } catch {
+                            errors.append(error)
+                        }
+                        do {
+                            value2 = try .init(from: decoder)
+                        } catch {
+                            errors.append(error)
+                        }
+                        do {
+                            value3 = try decoder.decodeFromSingleValueContainer()
+                        } catch {
+                            errors.append(error)
+                        }
+                        do {
+                            value4 = try decoder.decodeFromSingleValueContainer()
+                        } catch {
+                            errors.append(error)
+                        }
+                        try Swift.DecodingError.verifyAtLeastOneSchemaIsNotNil(
+                            [
+                                value1,
+                                value2,
+                                value3,
+                                value4
+                            ],
                             type: Self.self,
-                            codingPath: decoder.codingPath
+                            codingPath: decoder.codingPath,
+                            errors: errors
                         )
                     }
                     public func encode(to encoder: any Encoder) throws {
-                        try encoder.encodeFirstNonNilValueToSingleValueContainer([value3, value4])
+                        try encoder.encodeFirstNonNilValueToSingleValueContainer([
+                            value3,
+                            value4
+                        ])
                         try value1?.encode(to: encoder)
                         try value2?.encode(to: encoder)
                     }
@@ -458,35 +728,53 @@ final class SnippetBasedReferenceTests: XCTestCase {
             public enum Schemas {
                 public struct A: Codable, Hashable, Sendable {
                     public var which: Swift.String?
-                    public init(which: Swift.String? = nil) { self.which = which }
-                    public enum CodingKeys: String, CodingKey { case which }
+                    public init(which: Swift.String? = nil) {
+                        self.which = which
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case which
+                    }
                 }
                 public struct B: Codable, Hashable, Sendable {
                     public var which: Swift.String?
-                    public init(which: Swift.String? = nil) { self.which = which }
-                    public enum CodingKeys: String, CodingKey { case which }
+                    public init(which: Swift.String? = nil) {
+                        self.which = which
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case which
+                    }
                 }
                 @frozen public enum MyOneOf: Codable, Hashable, Sendable {
                     case A(Components.Schemas.A)
                     case B(Components.Schemas.B)
-                    public enum CodingKeys: String, CodingKey { case which }
+                    public enum CodingKeys: String, CodingKey {
+                        case which
+                    }
                     public init(from decoder: any Decoder) throws {
                         let container = try decoder.container(keyedBy: CodingKeys.self)
-                        let discriminator = try container.decode(String.self, forKey: .which)
+                        let discriminator = try container.decode(
+                            Swift.String.self,
+                            forKey: .which
+                        )
                         switch discriminator {
-                        case "A", "#/components/schemas/A": self = .A(try .init(from: decoder))
-                        case "B", "#/components/schemas/B": self = .B(try .init(from: decoder))
+                        case "A", "#/components/schemas/A":
+                            self = .A(try .init(from: decoder))
+                        case "B", "#/components/schemas/B":
+                            self = .B(try .init(from: decoder))
                         default:
-                            throw DecodingError.failedToDecodeOneOfSchema(
-                                type: Self.self,
+                            throw Swift.DecodingError.unknownOneOfDiscriminator(
+                                discriminatorKey: CodingKeys.which,
+                                discriminatorValue: discriminator,
                                 codingPath: decoder.codingPath
                             )
                         }
                     }
                     public func encode(to encoder: any Encoder) throws {
                         switch self {
-                        case let .A(value): try value.encode(to: encoder)
-                        case let .B(value): try value.encode(to: encoder)
+                        case let .A(value):
+                            try value.encode(to: encoder)
+                        case let .B(value):
+                            try value.encode(to: encoder)
                         }
                     }
                 }
@@ -530,46 +818,72 @@ final class SnippetBasedReferenceTests: XCTestCase {
             public enum Schemas {
                 public struct A: Codable, Hashable, Sendable {
                     public var which: Swift.String?
-                    public init(which: Swift.String? = nil) { self.which = which }
-                    public enum CodingKeys: String, CodingKey { case which }
+                    public init(which: Swift.String? = nil) {
+                        self.which = which
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case which
+                    }
                 }
                 public struct B: Codable, Hashable, Sendable {
                     public var which: Swift.String?
-                    public init(which: Swift.String? = nil) { self.which = which }
-                    public enum CodingKeys: String, CodingKey { case which }
+                    public init(which: Swift.String? = nil) {
+                        self.which = which
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case which
+                    }
                 }
                 public struct C: Codable, Hashable, Sendable {
                     public var which: Swift.String?
-                    public init(which: Swift.String? = nil) { self.which = which }
-                    public enum CodingKeys: String, CodingKey { case which }
+                    public init(which: Swift.String? = nil) {
+                        self.which = which
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case which
+                    }
                 }
                 @frozen public enum MyOneOf: Codable, Hashable, Sendable {
                     case a(Components.Schemas.A)
                     case a2(Components.Schemas.A)
                     case b(Components.Schemas.B)
                     case C(Components.Schemas.C)
-                    public enum CodingKeys: String, CodingKey { case which }
+                    public enum CodingKeys: String, CodingKey {
+                        case which
+                    }
                     public init(from decoder: any Decoder) throws {
                         let container = try decoder.container(keyedBy: CodingKeys.self)
-                        let discriminator = try container.decode(String.self, forKey: .which)
+                        let discriminator = try container.decode(
+                            Swift.String.self,
+                            forKey: .which
+                        )
                         switch discriminator {
-                        case "a": self = .a(try .init(from: decoder))
-                        case "a2": self = .a2(try .init(from: decoder))
-                        case "b": self = .b(try .init(from: decoder))
-                        case "C", "#/components/schemas/C": self = .C(try .init(from: decoder))
+                        case "a":
+                            self = .a(try .init(from: decoder))
+                        case "a2":
+                            self = .a2(try .init(from: decoder))
+                        case "b":
+                            self = .b(try .init(from: decoder))
+                        case "C", "#/components/schemas/C":
+                            self = .C(try .init(from: decoder))
                         default:
-                            throw DecodingError.failedToDecodeOneOfSchema(
-                                type: Self.self,
+                            throw Swift.DecodingError.unknownOneOfDiscriminator(
+                                discriminatorKey: CodingKeys.which,
+                                discriminatorValue: discriminator,
                                 codingPath: decoder.codingPath
                             )
                         }
                     }
                     public func encode(to encoder: any Encoder) throws {
                         switch self {
-                        case let .a(value): try value.encode(to: encoder)
-                        case let .a2(value): try value.encode(to: encoder)
-                        case let .b(value): try value.encode(to: encoder)
-                        case let .C(value): try value.encode(to: encoder)
+                        case let .a(value):
+                            try value.encode(to: encoder)
+                        case let .a2(value):
+                            try value.encode(to: encoder)
+                        case let .b(value):
+                            try value.encode(to: encoder)
+                        case let .C(value):
+                            try value.encode(to: encoder)
                         }
                     }
                 }
@@ -597,28 +911,39 @@ final class SnippetBasedReferenceTests: XCTestCase {
                     case case2(Swift.Int)
                     case A(Components.Schemas.A)
                     public init(from decoder: any Decoder) throws {
+                        var errors: [any Error] = []
                         do {
                             self = .case1(try decoder.decodeFromSingleValueContainer())
                             return
-                        } catch {}
+                        } catch {
+                            errors.append(error)
+                        }
                         do {
                             self = .case2(try decoder.decodeFromSingleValueContainer())
                             return
-                        } catch {}
+                        } catch {
+                            errors.append(error)
+                        }
                         do {
                             self = .A(try .init(from: decoder))
                             return
-                        } catch {}
-                        throw DecodingError.failedToDecodeOneOfSchema(
+                        } catch {
+                            errors.append(error)
+                        }
+                        throw Swift.DecodingError.failedToDecodeOneOfSchema(
                             type: Self.self,
-                            codingPath: decoder.codingPath
+                            codingPath: decoder.codingPath,
+                            errors: errors
                         )
                     }
                     public func encode(to encoder: any Encoder) throws {
                         switch self {
-                        case let .case1(value): try encoder.encodeToSingleValueContainer(value)
-                        case let .case2(value): try encoder.encodeToSingleValueContainer(value)
-                        case let .A(value): try value.encode(to: encoder)
+                        case let .case1(value):
+                            try encoder.encodeToSingleValueContainer(value)
+                        case let .case2(value):
+                            try encoder.encodeToSingleValueContainer(value)
+                        case let .A(value):
+                            try value.encode(to: encoder)
                         }
                     }
                 }
@@ -656,28 +981,39 @@ final class SnippetBasedReferenceTests: XCTestCase {
                         case case2(Swift.Int)
                         case A(Components.Schemas.A)
                         public init(from decoder: any Decoder) throws {
+                            var errors: [any Error] = []
                             do {
                                 self = .case1(try decoder.decodeFromSingleValueContainer())
                                 return
-                            } catch {}
+                            } catch {
+                                errors.append(error)
+                            }
                             do {
                                 self = .case2(try decoder.decodeFromSingleValueContainer())
                                 return
-                            } catch {}
+                            } catch {
+                                errors.append(error)
+                            }
                             do {
                                 self = .A(try .init(from: decoder))
                                 return
-                            } catch {}
-                            throw DecodingError.failedToDecodeOneOfSchema(
+                            } catch {
+                                errors.append(error)
+                            }
+                            throw Swift.DecodingError.failedToDecodeOneOfSchema(
                                 type: Self.self,
-                                codingPath: decoder.codingPath
+                                codingPath: decoder.codingPath,
+                                errors: errors
                             )
                         }
                         public func encode(to encoder: any Encoder) throws {
                             switch self {
-                            case let .case1(value): try encoder.encodeToSingleValueContainer(value)
-                            case let .case2(value): try encoder.encodeToSingleValueContainer(value)
-                            case let .A(value): try value.encode(to: encoder)
+                            case let .case1(value):
+                                try encoder.encodeToSingleValueContainer(value)
+                            case let .case2(value):
+                                try encoder.encodeToSingleValueContainer(value)
+                            case let .A(value):
+                                try value.encode(to: encoder)
                             }
                         }
                     }
@@ -691,12 +1027,25 @@ final class SnippetBasedReferenceTests: XCTestCase {
                         self.value2 = value2
                     }
                     public init(from decoder: any Decoder) throws {
-                        value1 = try? .init(from: decoder)
-                        value2 = try? .init(from: decoder)
-                        try DecodingError.verifyAtLeastOneSchemaIsNotNil(
-                            [value1, value2],
+                        var errors: [any Error] = []
+                        do {
+                            value1 = try .init(from: decoder)
+                        } catch {
+                            errors.append(error)
+                        }
+                        do {
+                            value2 = try .init(from: decoder)
+                        } catch {
+                            errors.append(error)
+                        }
+                        try Swift.DecodingError.verifyAtLeastOneSchemaIsNotNil(
+                            [
+                                value1,
+                                value2
+                            ],
                             type: Self.self,
-                            codingPath: decoder.codingPath
+                            codingPath: decoder.codingPath,
+                            errors: errors
                         )
                     }
                     public func encode(to encoder: any Encoder) throws {
@@ -727,8 +1076,12 @@ final class SnippetBasedReferenceTests: XCTestCase {
                     public init(value1: Components.Schemas.A) {
                         self.value1 = value1
                     }
-                    public init(from decoder: any Decoder) throws { value1 = try decoder.decodeFromSingleValueContainer() }
-                    public func encode(to encoder: any Encoder) throws { try encoder.encodeToSingleValueContainer(value1) }
+                    public init(from decoder: any Decoder) throws {
+                        value1 = try decoder.decodeFromSingleValueContainer()
+                    }
+                    public func encode(to encoder: any Encoder) throws {
+                        try encoder.encodeToSingleValueContainer(value1)
+                    }
                 }
             }
             """
@@ -756,13 +1109,23 @@ final class SnippetBasedReferenceTests: XCTestCase {
                 public struct B: Codable, Hashable, Sendable {
                     public struct cPayload: Codable, Hashable, Sendable {
                         public var value1: Components.Schemas.A
-                        public init(value1: Components.Schemas.A) { self.value1 = value1 }
-                        public init(from decoder: any Decoder) throws { value1 = try decoder.decodeFromSingleValueContainer() }
-                        public func encode(to encoder: any Encoder) throws { try encoder.encodeToSingleValueContainer(value1) }
+                        public init(value1: Components.Schemas.A) {
+                            self.value1 = value1
+                        }
+                        public init(from decoder: any Decoder) throws {
+                            value1 = try decoder.decodeFromSingleValueContainer()
+                        }
+                        public func encode(to encoder: any Encoder) throws {
+                            try encoder.encodeToSingleValueContainer(value1)
+                        }
                     }
                     public var c: Components.Schemas.B.cPayload
-                    public init(c: Components.Schemas.B.cPayload) { self.c = c }
-                    public enum CodingKeys: String, CodingKey { case c }
+                    public init(c: Components.Schemas.B.cPayload) {
+                        self.c = c
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case c
+                    }
                 }
             }
             """
@@ -789,13 +1152,23 @@ final class SnippetBasedReferenceTests: XCTestCase {
                 public struct B: Codable, Hashable, Sendable {
                     public struct cPayload: Codable, Hashable, Sendable {
                         public var value1: Components.Schemas.A
-                        public init(value1: Components.Schemas.A) { self.value1 = value1 }
-                        public init(from decoder: any Decoder) throws { value1 = try decoder.decodeFromSingleValueContainer() }
-                        public func encode(to encoder: any Encoder) throws { try encoder.encodeToSingleValueContainer(value1) }
+                        public init(value1: Components.Schemas.A) {
+                            self.value1 = value1
+                        }
+                        public init(from decoder: any Decoder) throws {
+                            value1 = try decoder.decodeFromSingleValueContainer()
+                        }
+                        public func encode(to encoder: any Encoder) throws {
+                            try encoder.encodeToSingleValueContainer(value1)
+                        }
                     }
                     public var c: Components.Schemas.B.cPayload?
-                    public init(c: Components.Schemas.B.cPayload? = nil) { self.c = c }
-                    public enum CodingKeys: String, CodingKey { case c }
+                    public init(c: Components.Schemas.B.cPayload? = nil) {
+                        self.c = c
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case c
+                    }
                 }
             }
             """
@@ -865,8 +1238,7 @@ final class SnippetBasedReferenceTests: XCTestCase {
             """
             public enum Schemas {
                 public struct MyOpenEnum: Codable, Hashable, Sendable {
-                    @frozen
-                    public enum Value1Payload: String, Codable, Hashable, Sendable {
+                    @frozen public enum Value1Payload: String, Codable, Hashable, Sendable {
                         case one = "one"
                         case two = "two"
                     }
@@ -880,16 +1252,32 @@ final class SnippetBasedReferenceTests: XCTestCase {
                         self.value2 = value2
                     }
                     public init(from decoder: any Decoder) throws {
-                        value1 = try? decoder.decodeFromSingleValueContainer()
-                        value2 = try? decoder.decodeFromSingleValueContainer()
-                        try DecodingError.verifyAtLeastOneSchemaIsNotNil(
-                            [value1, value2],
+                        var errors: [any Error] = []
+                        do {
+                            value1 = try decoder.decodeFromSingleValueContainer()
+                        } catch {
+                            errors.append(error)
+                        }
+                        do {
+                            value2 = try decoder.decodeFromSingleValueContainer()
+                        } catch {
+                            errors.append(error)
+                        }
+                        try Swift.DecodingError.verifyAtLeastOneSchemaIsNotNil(
+                            [
+                                value1,
+                                value2
+                            ],
                             type: Self.self,
-                            codingPath: decoder.codingPath
+                            codingPath: decoder.codingPath,
+                            errors: errors
                         )
                     }
                     public func encode(to encoder: any Encoder) throws {
-                        try encoder.encodeFirstNonNilValueToSingleValueContainer([value1, value2])
+                        try encoder.encodeFirstNonNilValueToSingleValueContainer([
+                            value1,
+                            value2
+                        ])
                     }
                 }
             }
@@ -937,8 +1325,12 @@ final class SnippetBasedReferenceTests: XCTestCase {
                 public struct MyObject: Codable, Hashable, Sendable {
                     @available(*, deprecated)
                     public var id: Swift.String?
-                    public init(id: Swift.String? = nil) { self.id = id }
-                    public enum CodingKeys: String, CodingKey { case id }
+                    public init(id: Swift.String? = nil) {
+                        self.id = id
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case id
+                    }
                 }
             }
             """
@@ -967,7 +1359,7 @@ final class SnippetBasedReferenceTests: XCTestCase {
             schemas:
               MyData:
                 type: string
-                format: byte
+                contentEncoding: base64
             """,
             """
             public enum Schemas {
@@ -986,16 +1378,364 @@ final class SnippetBasedReferenceTests: XCTestCase {
                 properties:
                   stuff:
                     type: string
-                    format: byte
+                    contentEncoding: base64
             """,
             """
             public enum Schemas {
                 public struct MyObj: Codable, Hashable, Sendable {
                     public var stuff: OpenAPIRuntime.Base64EncodedData?
                     public init(stuff: OpenAPIRuntime.Base64EncodedData? = nil) {
-                      self.stuff = stuff
+                        self.stuff = stuff
                     }
-                    public enum CodingKeys: String, CodingKey { case stuff }
+                    public enum CodingKeys: String, CodingKey {
+                        case stuff
+                    }
+                }
+            }
+            """
+        )
+    }
+
+    func testComponentsSchemasRecursive_object() throws {
+        try self.assertSchemasTranslation(
+            """
+            schemas:
+              Node:
+                type: object
+                properties:
+                  parent:
+                    $ref: '#/components/schemas/Node'
+            """,
+            """
+            public enum Schemas {
+                public struct Node: Codable, Hashable, Sendable {
+                    public var parent: Components.Schemas.Node? {
+                        get  {
+                            storage.value.parent
+                        }
+                        _modify {
+                            yield &storage.value.parent
+                        }
+                    }
+                    public init(parent: Components.Schemas.Node? = nil) {
+                        storage = .init(value: .init(parent: parent))
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case parent
+                    }
+                    public init(from decoder: any Decoder) throws {
+                        storage = try .init(from: decoder)
+                    }
+                    public func encode(to encoder: any Encoder) throws {
+                        try storage.encode(to: encoder)
+                    }
+                    private var storage: OpenAPIRuntime.CopyOnWriteBox<Storage>
+                    private struct Storage: Codable, Hashable, Sendable {
+                        var parent: Components.Schemas.Node?
+                        init(parent: Components.Schemas.Node? = nil) {
+                            self.parent = parent
+                        }
+                        typealias CodingKeys = Components.Schemas.Node.CodingKeys
+                    }
+                }
+            }
+            """
+        )
+    }
+
+    func testComponentsSchemasRecursive_objectNested() throws {
+        try self.assertSchemasTranslation(
+            """
+            schemas:
+              Node:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  parent:
+                    type: object
+                    properties:
+                      nested:
+                        $ref: '#/components/schemas/Node'
+                    required:
+                      - nested
+                required:
+                  - name
+            """,
+            """
+            public enum Schemas {
+                public struct Node: Codable, Hashable, Sendable {
+                    public var name: Swift.String {
+                        get  {
+                            storage.value.name
+                        }
+                        _modify {
+                            yield &storage.value.name
+                        }
+                    }
+                    public struct parentPayload: Codable, Hashable, Sendable {
+                        public var nested: Components.Schemas.Node
+                        public init(nested: Components.Schemas.Node) {
+                            self.nested = nested
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case nested
+                        }
+                    }
+                    public var parent: Components.Schemas.Node.parentPayload? {
+                        get  {
+                            storage.value.parent
+                        }
+                        _modify {
+                            yield &storage.value.parent
+                        }
+                    }
+                    public init(
+                        name: Swift.String,
+                        parent: Components.Schemas.Node.parentPayload? = nil
+                    ) {
+                        storage = .init(value: .init(
+                            name: name,
+                            parent: parent
+                        ))
+                    }
+                    public enum CodingKeys: String, CodingKey {
+                        case name
+                        case parent
+                    }
+                    public init(from decoder: any Decoder) throws {
+                        storage = try .init(from: decoder)
+                    }
+                    public func encode(to encoder: any Encoder) throws {
+                        try storage.encode(to: encoder)
+                    }
+                    private var storage: OpenAPIRuntime.CopyOnWriteBox<Storage>
+                    private struct Storage: Codable, Hashable, Sendable {
+                        var name: Swift.String
+                        struct parentPayload: Codable, Hashable, Sendable {
+                            public var nested: Components.Schemas.Node
+                            public init(nested: Components.Schemas.Node) {
+                                self.nested = nested
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case nested
+                            }
+                        }
+                        var parent: Components.Schemas.Node.parentPayload?
+                        init(
+                            name: Swift.String,
+                            parent: Components.Schemas.Node.parentPayload? = nil
+                        ) {
+                            self.name = name
+                            self.parent = parent
+                        }
+                        typealias CodingKeys = Components.Schemas.Node.CodingKeys
+                    }
+                }
+            }
+            """
+        )
+    }
+
+    func testComponentsSchemasRecursive_allOf() throws {
+        try self.assertSchemasTranslation(
+            """
+            schemas:
+              Node:
+                allOf:
+                  - type: object
+                    properties:
+                      parent:
+                        $ref: '#/components/schemas/Node'
+            """,
+            """
+            public enum Schemas {
+                public struct Node: Codable, Hashable, Sendable {
+                    public struct Value1Payload: Codable, Hashable, Sendable {
+                        public var parent: Components.Schemas.Node?
+                        public init(parent: Components.Schemas.Node? = nil) {
+                            self.parent = parent
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case parent
+                        }
+                    }
+                    public var value1: Components.Schemas.Node.Value1Payload {
+                        get  {
+                            storage.value.value1
+                        }
+                        _modify {
+                            yield &storage.value.value1
+                        }
+                    }
+                    public init(value1: Components.Schemas.Node.Value1Payload) {
+                        storage = .init(value: .init(value1: value1))
+                    }
+                    public init(from decoder: any Decoder) throws {
+                        storage = try .init(from: decoder)
+                    }
+                    public func encode(to encoder: any Encoder) throws {
+                        try storage.encode(to: encoder)
+                    }
+                    private var storage: OpenAPIRuntime.CopyOnWriteBox<Storage>
+                    private struct Storage: Codable, Hashable, Sendable {
+                        struct Value1Payload: Codable, Hashable, Sendable {
+                            public var parent: Components.Schemas.Node?
+                            public init(parent: Components.Schemas.Node? = nil) {
+                                self.parent = parent
+                            }
+                            public enum CodingKeys: String, CodingKey {
+                                case parent
+                            }
+                        }
+                        var value1: Components.Schemas.Node.Value1Payload
+                        init(value1: Components.Schemas.Node.Value1Payload) {
+                            self.value1 = value1
+                        }
+                        init(from decoder: any Decoder) throws {
+                            value1 = try .init(from: decoder)
+                        }
+                        func encode(to encoder: any Encoder) throws {
+                            try value1.encode(to: encoder)
+                        }
+                    }
+                }
+            }
+            """
+        )
+    }
+
+    func testComponentsSchemasRecursive_anyOf() throws {
+        try self.assertSchemasTranslation(
+            """
+            schemas:
+              Node:
+                anyOf:
+                  - $ref: '#/components/schemas/Node'
+                  - type: string
+            """,
+            """
+            public enum Schemas {
+                public struct Node: Codable, Hashable, Sendable {
+                    public var value1: Components.Schemas.Node? {
+                        get  {
+                            storage.value.value1
+                        }
+                        _modify {
+                            yield &storage.value.value1
+                        }
+                    }
+                    public var value2: Swift.String? {
+                        get  {
+                            storage.value.value2
+                        }
+                        _modify {
+                            yield &storage.value.value2
+                        }
+                    }
+                    public init(
+                        value1: Components.Schemas.Node? = nil,
+                        value2: Swift.String? = nil
+                    ) {
+                        storage = .init(value: .init(
+                            value1: value1,
+                            value2: value2
+                        ))
+                    }
+                    public init(from decoder: any Decoder) throws {
+                        storage = try .init(from: decoder)
+                    }
+                    public func encode(to encoder: any Encoder) throws {
+                        try storage.encode(to: encoder)
+                    }
+                    private var storage: OpenAPIRuntime.CopyOnWriteBox<Storage>
+                    private struct Storage: Codable, Hashable, Sendable {
+                        var value1: Components.Schemas.Node?
+                        var value2: Swift.String?
+                        init(
+                            value1: Components.Schemas.Node? = nil,
+                            value2: Swift.String? = nil
+                        ) {
+                            self.value1 = value1
+                            self.value2 = value2
+                        }
+                        init(from decoder: any Decoder) throws {
+                            var errors: [any Error] = []
+                            do {
+                                value1 = try .init(from: decoder)
+                            } catch {
+                                errors.append(error)
+                            }
+                            do {
+                                value2 = try decoder.decodeFromSingleValueContainer()
+                            } catch {
+                                errors.append(error)
+                            }
+                            try Swift.DecodingError.verifyAtLeastOneSchemaIsNotNil(
+                                [
+                                    value1,
+                                    value2
+                                ],
+                                type: Self.self,
+                                codingPath: decoder.codingPath,
+                                errors: errors
+                            )
+                        }
+                        func encode(to encoder: any Encoder) throws {
+                            try encoder.encodeFirstNonNilValueToSingleValueContainer([
+                                value2
+                            ])
+                            try value1?.encode(to: encoder)
+                        }
+                    }
+                }
+            }
+            """
+        )
+    }
+
+    func testComponentsSchemasRecursive_oneOf() throws {
+        try self.assertSchemasTranslation(
+            """
+            schemas:
+              Node:
+                oneOf:
+                  - $ref: '#/components/schemas/Node'
+                  - type: string
+            """,
+            """
+            public enum Schemas {
+                @frozen public indirect enum Node: Codable, Hashable, Sendable {
+                    case Node(Components.Schemas.Node)
+                    case case2(Swift.String)
+                    public init(from decoder: any Decoder) throws {
+                        var errors: [any Error] = []
+                        do {
+                            self = .Node(try .init(from: decoder))
+                            return
+                        } catch {
+                            errors.append(error)
+                        }
+                        do {
+                            self = .case2(try decoder.decodeFromSingleValueContainer())
+                            return
+                        } catch {
+                            errors.append(error)
+                        }
+                        throw Swift.DecodingError.failedToDecodeOneOfSchema(
+                            type: Self.self,
+                            codingPath: decoder.codingPath,
+                            errors: errors
+                        )
+                    }
+                    public func encode(to encoder: any Encoder) throws {
+                        switch self {
+                        case let .Node(value):
+                            try value.encode(to: encoder)
+                        case let .case2(value):
+                            try encoder.encodeToSingleValueContainer(value)
+                        }
+                    }
                 }
             }
             """
@@ -1038,15 +1778,14 @@ final class SnippetBasedReferenceTests: XCTestCase {
                         public var json: Swift.String {
                             get throws {
                                 switch self {
-                                case let .json(body): return body
+                                case let .json(body):
+                                    return body
                                 }
                             }
                         }
                     }
                     public var body: Components.Responses.BadRequest.Body
-                    public init(
-                        body: Components.Responses.BadRequest.Body
-                    ) {
+                    public init(body: Components.Responses.BadRequest.Body) {
                         self.body = body
                     }
                 }
@@ -1076,38 +1815,64 @@ final class SnippetBasedReferenceTests: XCTestCase {
                 public struct MultipleContentTypes: Sendable, Hashable {
                     @frozen public enum Body: Sendable, Hashable {
                         case json(Swift.Int)
-                        public var json: Swift.Int { get throws {
-                            switch self {
-                            case let .json(body): return body
-                            default: try throwUnexpectedResponseBody(expectedContent: "application/json", body: self)
+                        public var json: Swift.Int {
+                            get throws {
+                                switch self {
+                                case let .json(body):
+                                    return body
+                                default:
+                                    try throwUnexpectedResponseBody(
+                                        expectedContent: "application/json",
+                                        body: self
+                                    )
+                                }
                             }
-                        }}
+                        }
                         case application_json_foo_bar(Swift.Int)
-                        public var application_json_foo_bar: Swift.Int { get throws {
-                            switch self {
-                            case let .application_json_foo_bar(body): return body
-                            default: try throwUnexpectedResponseBody(expectedContent: "application/json", body: self)
+                        public var application_json_foo_bar: Swift.Int {
+                            get throws {
+                                switch self {
+                                case let .application_json_foo_bar(body):
+                                    return body
+                                default:
+                                    try throwUnexpectedResponseBody(
+                                        expectedContent: "application/json",
+                                        body: self
+                                    )
+                                }
                             }
-                        }}
+                        }
                         case plainText(OpenAPIRuntime.HTTPBody)
-                        public var plainText: OpenAPIRuntime.HTTPBody { get throws {
-                            switch self {
-                            case let .plainText(body): return body
-                            default: try throwUnexpectedResponseBody(expectedContent: "text/plain", body: self)
+                        public var plainText: OpenAPIRuntime.HTTPBody {
+                            get throws {
+                                switch self {
+                                case let .plainText(body):
+                                    return body
+                                default:
+                                    try throwUnexpectedResponseBody(
+                                        expectedContent: "text/plain",
+                                        body: self
+                                    )
+                                }
                             }
-                        }}
+                        }
                         case binary(OpenAPIRuntime.HTTPBody)
-                        public var binary: OpenAPIRuntime.HTTPBody { get throws {
-                            switch self {
-                            case let .binary(body): return body
-                            default: try throwUnexpectedResponseBody(expectedContent: "application/octet-stream", body: self)
+                        public var binary: OpenAPIRuntime.HTTPBody {
+                            get throws {
+                                switch self {
+                                case let .binary(body):
+                                    return body
+                                default:
+                                    try throwUnexpectedResponseBody(
+                                        expectedContent: "application/octet-stream",
+                                        body: self
+                                    )
+                                }
                             }
-                        }}
+                        }
                     }
                     public var body: Components.Responses.MultipleContentTypes.Body
-                    public init(
-                        body: Components.Responses.MultipleContentTypes.Body
-                    ) {
+                    public init(body: Components.Responses.MultipleContentTypes.Body) {
                         self.body = body
                     }
                 }
@@ -1133,12 +1898,46 @@ final class SnippetBasedReferenceTests: XCTestCase {
                     public struct Headers: Sendable, Hashable {
                         public var X_hyphen_Reason: Swift.String?
                         public init(X_hyphen_Reason: Swift.String? = nil) {
-                            self.X_hyphen_Reason = X_hyphen_Reason }
+                            self.X_hyphen_Reason = X_hyphen_Reason
+                        }
                     }
                     public var headers: Components.Responses.BadRequest.Headers
-                    public init(
-                        headers: Components.Responses.BadRequest.Headers = .init()
-                    ) {
+                    public init(headers: Components.Responses.BadRequest.Headers = .init()) {
+                        self.headers = headers
+                    }
+                }
+            }
+            """
+        )
+    }
+
+    func testComponentsResponsesResponseWithInlineHeader() throws {
+        try self.assertResponsesTranslation(
+            """
+            responses:
+              BadRequest:
+                description: Bad request
+                headers:
+                  X-Reason:
+                    schema:
+                      type: string
+                      enum:
+                        - badLuck
+            """,
+            """
+            public enum Responses {
+                public struct BadRequest: Sendable, Hashable {
+                    public struct Headers: Sendable, Hashable {
+                        @frozen public enum X_hyphen_ReasonPayload: String, Codable, Hashable, Sendable {
+                            case badLuck = "badLuck"
+                        }
+                        public var X_hyphen_Reason: Components.Responses.BadRequest.Headers.X_hyphen_ReasonPayload?
+                        public init(X_hyphen_Reason: Components.Responses.BadRequest.Headers.X_hyphen_ReasonPayload? = nil) {
+                            self.X_hyphen_Reason = X_hyphen_Reason
+                        }
+                    }
+                    public var headers: Components.Responses.BadRequest.Headers
+                    public init(headers: Components.Responses.BadRequest.Headers = .init()) {
                         self.headers = headers
                     }
                 }
@@ -1165,12 +1964,11 @@ final class SnippetBasedReferenceTests: XCTestCase {
                     public struct Headers: Sendable, Hashable {
                         public var X_hyphen_Reason: Swift.String
                         public init(X_hyphen_Reason: Swift.String) {
-                            self.X_hyphen_Reason = X_hyphen_Reason }
+                            self.X_hyphen_Reason = X_hyphen_Reason
+                        }
                     }
                     public var headers: Components.Responses.BadRequest.Headers
-                    public init(
-                        headers: Components.Responses.BadRequest.Headers
-                    ) {
+                    public init(headers: Components.Responses.BadRequest.Headers) {
                         self.headers = headers
                     }
                 }
@@ -1262,8 +2060,12 @@ final class SnippetBasedReferenceTests: XCTestCase {
                 @frozen public enum MyRequestBody: Sendable, Hashable {
                     public struct urlEncodedFormPayload: Codable, Hashable, Sendable {
                         public var foo: Swift.String
-                        public init(foo: Swift.String) { self.foo = foo }
-                        public enum CodingKeys: String, CodingKey { case foo }
+                        public init(foo: Swift.String) {
+                            self.foo = foo
+                        }
+                        public enum CodingKeys: String, CodingKey {
+                            case foo
+                        }
                     }
                     case urlEncodedForm(Components.RequestBodies.MyRequestBody.urlEncodedFormPayload)
                 }
@@ -1272,34 +2074,108 @@ final class SnippetBasedReferenceTests: XCTestCase {
         )
     }
 
-    func testPathsSimplestCase() throws {
-        try self.assertPathsTranslation(
+    func testComponentsRequestBodiesInline_multipart() throws {
+        try self.assertRequestBodiesTranslation(
             """
-            /health:
-              get:
-                operationId: getHealth
-                responses:
-                  '200':
-                    description: A success response with a greeting.
-                    content:
-                      text/plain:
-                        schema:
+            requestBodies:
+              MultipartUploadTypedRequest:
+                required: true
+                content:
+                  multipart/form-data:
+                    schema:
+                      type: object
+                      properties:
+                        log:
                           type: string
+                        metadata:
+                          type: object
+                          properties:
+                            createdAt:
+                              type: string
+                              format: date-time
+                          required:
+                            - createdAt
+                        keyword:
+                          type: array
+                          items:
+                            type: string
+                      required:
+                        - log
+                    encoding:
+                      log:
+                        headers:
+                          x-log-type:
+                            description: The type of the log.
+                            schema:
+                              type: string
+                              enum:
+                                - structured
+                                - unstructured
             """,
-            """
-            public protocol APIProtocol: Sendable {
-                func getHealth(_ input: Operations.getHealth.Input) async throws -> Operations.getHealth.Output
+            #"""
+            public enum RequestBodies {
+                @frozen public enum MultipartUploadTypedRequest: Sendable, Hashable {
+                    @frozen public enum multipartFormPayload: Sendable, Hashable {
+                        public struct logPayload: Sendable, Hashable {
+                            public struct Headers: Sendable, Hashable {
+                                @frozen public enum x_hyphen_log_hyphen_typePayload: String, Codable, Hashable, Sendable {
+                                    case structured = "structured"
+                                    case unstructured = "unstructured"
+                                }
+                                public var x_hyphen_log_hyphen_type: Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload.logPayload.Headers.x_hyphen_log_hyphen_typePayload?
+                                public init(x_hyphen_log_hyphen_type: Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload.logPayload.Headers.x_hyphen_log_hyphen_typePayload? = nil) {
+                                    self.x_hyphen_log_hyphen_type = x_hyphen_log_hyphen_type
+                                }
+                            }
+                            public var headers: Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload.logPayload.Headers
+                            public var body: OpenAPIRuntime.HTTPBody
+                            public init(
+                                headers: Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload.logPayload.Headers = .init(),
+                                body: OpenAPIRuntime.HTTPBody
+                            ) {
+                                self.headers = headers
+                                self.body = body
+                            }
+                        }
+                        case log(OpenAPIRuntime.MultipartPart<Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload.logPayload>)
+                        public struct metadataPayload: Sendable, Hashable {
+                            public struct bodyPayload: Codable, Hashable, Sendable {
+                                public var createdAt: Foundation.Date
+                                public init(createdAt: Foundation.Date) {
+                                    self.createdAt = createdAt
+                                }
+                                public enum CodingKeys: String, CodingKey {
+                                    case createdAt
+                                }
+                            }
+                            public var body: Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload.metadataPayload.bodyPayload
+                            public init(body: Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload.metadataPayload.bodyPayload) {
+                                self.body = body
+                            }
+                        }
+                        case metadata(OpenAPIRuntime.MultipartPart<Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload.metadataPayload>)
+                        public struct keywordPayload: Sendable, Hashable {
+                            public var body: OpenAPIRuntime.HTTPBody
+                            public init(body: OpenAPIRuntime.HTTPBody) {
+                                self.body = body
+                            }
+                        }
+                        case keyword(OpenAPIRuntime.MultipartPart<Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload.keywordPayload>)
+                        case undocumented(OpenAPIRuntime.MultipartRawPart)
+                    }
+                    case multipartForm(OpenAPIRuntime.MultipartBody<Components.RequestBodies.MultipartUploadTypedRequest.multipartFormPayload>)
+                }
             }
-            """
+            """#
         )
     }
 
-    func testPathsSimplestCaseExtension() throws {
-        try self.assertPathsTranslationExtension(
-            """
-            /health:
+    func testPaths() throws {
+        let paths = """
+            /healthOld:
               get:
-                operationId: getHealth
+                operationId: getHealthOld
+                deprecated: true
                 responses:
                   '200':
                     description: A success response with a greeting.
@@ -1307,11 +2183,37 @@ final class SnippetBasedReferenceTests: XCTestCase {
                       text/plain:
                         schema:
                           type: string
-            """,
+            /healthNew:
+              get:
+                operationId: getHealthNew
+                responses:
+                  '200':
+                    description: A success response with a greeting.
+                    content:
+                      text/plain:
+                        schema:
+                          type: string
+            """
+        try self.assertPathsTranslation(
+            paths,
+            """
+            public protocol APIProtocol: Sendable {
+                @available(*, deprecated)
+                func getHealthOld(_ input: Operations.getHealthOld.Input) async throws -> Operations.getHealthOld.Output
+                func getHealthNew(_ input: Operations.getHealthNew.Input) async throws -> Operations.getHealthNew.Output
+            }
+            """
+        )
+        try self.assertPathsTranslationExtension(
+            paths,
             """
             extension APIProtocol {
-                public func getHealth(headers: Operations.getHealth.Input.Headers = .init()) async throws -> Operations.getHealth.Output {
-                    try await getHealth(Operations.getHealth.Input(headers: headers))
+                @available(*, deprecated)
+                public func getHealthOld(headers: Operations.getHealthOld.Input.Headers = .init()) async throws -> Operations.getHealthOld.Output {
+                    try await getHealthOld(Operations.getHealthOld.Input(headers: headers))
+                }
+                public func getHealthNew(headers: Operations.getHealthNew.Input.Headers = .init()) async throws -> Operations.getHealthNew.Output {
+                    try await getHealthNew(Operations.getHealthNew.Input(headers: headers))
                 }
             }
             """
@@ -1335,7 +2237,7 @@ final class SnippetBasedReferenceTests: XCTestCase {
             """
             public func registerHandlers(
                 on transport: any ServerTransport,
-                serverURL: URL = .defaultOpenAPIServerURL,
+                serverURL: Foundation.URL = .defaultOpenAPIServerURL,
                 configuration: Configuration = .init(),
                 middlewares: [any ServerMiddleware] = []
             ) throws {
@@ -1346,7 +2248,13 @@ final class SnippetBasedReferenceTests: XCTestCase {
                     middlewares: middlewares
                 )
                 try transport.register(
-                    { try await server.getHealth(request: $0, body: $1, metadata: $2) },
+                    {
+                        try await server.getHealth(
+                            request: $0,
+                            body: $1,
+                            metadata: $2
+                        )
+                    },
                     method: .get,
                     path: server.apiPathComponentsWithServerPrefix("/health")
                 )
@@ -1363,11 +2271,10 @@ final class SnippetBasedReferenceTests: XCTestCase {
             """
             public func registerHandlers(
                 on transport: any ServerTransport,
-                serverURL: URL = .defaultOpenAPIServerURL,
+                serverURL: Foundation.URL = .defaultOpenAPIServerURL,
                 configuration: Configuration = .init(),
                 middlewares: [any ServerMiddleware] = []
-            ) throws {
-            }
+            ) throws {}
             """
         )
     }
@@ -1417,13 +2324,16 @@ final class SnippetBasedReferenceTests: XCTestCase {
                     @frozen public enum Body: Sendable, Hashable {
                         case json(Swift.String)
                         public var json: Swift.String {
-                            get throws { switch self { case let .json(body): return body } }
+                            get throws {
+                                switch self {
+                                case let .json(body):
+                                    return body
+                                }
+                            }
                         }
                     }
                     public var body: Components.Responses.MyResponse.Body
-                    public init(
-                        body: Components.Responses.MyResponse.Body
-                    ) {
+                    public init(body: Components.Responses.MyResponse.Body) {
                         self.body = body
                     }
                 }
@@ -1452,13 +2362,16 @@ final class SnippetBasedReferenceTests: XCTestCase {
                     @frozen public enum Body: Sendable, Hashable {
                         case json(Swift.String)
                         public var json: Swift.String {
-                            get throws { switch self { case let .json(body): return body } }
+                            get throws {
+                                switch self {
+                                case let .json(body):
+                                    return body
+                                }
+                            }
                         }
                     }
                     public var body: Components.Responses.MyResponse.Body
-                    public init(
-                        body: Components.Responses.MyResponse.Body
-                    ) {
+                    public init(body: Components.Responses.MyResponse.Body) {
                         self.body = body
                     }
                 }
@@ -1518,8 +2431,15 @@ final class SnippetBasedReferenceTests: XCTestCase {
                 }
                 """,
             client: """
-                { input in let path = try converter.renderedPath(template: "/foo", parameters: [])
-                    var request: HTTPTypes.HTTPRequest = .init(soar_path: path, method: .get)
+                { input in
+                    let path = try converter.renderedPath(
+                        template: "/foo",
+                        parameters: []
+                    )
+                    var request: HTTPTypes.HTTPRequest = .init(
+                        soar_path: path,
+                        method: .get
+                    )
                     suppressMutabilityWarning(&request)
                     try converter.setQueryItemAsURI(
                         in: &request,
@@ -1575,6 +2495,96 @@ final class SnippetBasedReferenceTests: XCTestCase {
                 """
         )
     }
+    func testRequestWithPathParams() throws {
+        try self.assertRequestInTypesClientServerTranslation(
+            """
+            /foo/a/{a}/b/{b}/c{num}:
+              get:
+                parameters:
+                  - name: b
+                    in: path
+                    required: true
+                    schema:
+                      type: string
+                  - name: a
+                    in: path
+                    required: true
+                    schema:
+                      type: string
+                  - name: num
+                    in: path
+                    required: true
+                    schema:
+                      type: integer
+                operationId: getFoo
+                responses:
+                  default:
+                    description: Response
+            """,
+            types: """
+                public struct Input: Sendable, Hashable {
+                    public struct Path: Sendable, Hashable {
+                        public var b: Swift.String
+                        public var a: Swift.String
+                        public var num: Swift.Int
+                        public init(
+                            b: Swift.String,
+                            a: Swift.String,
+                            num: Swift.Int
+                        ) {
+                            self.b = b
+                            self.a = a
+                            self.num = num
+                        }
+                    }
+                    public var path: Operations.getFoo.Input.Path
+                    public init(path: Operations.getFoo.Input.Path) {
+                        self.path = path
+                    }
+                }
+                """,
+            client: """
+                { input in
+                    let path = try converter.renderedPath(
+                        template: "/foo/a/{}/b/{}/c{}",
+                        parameters: [
+                            input.path.a,
+                            input.path.b,
+                            input.path.num
+                        ]
+                    )
+                    var request: HTTPTypes.HTTPRequest = .init(
+                        soar_path: path,
+                        method: .get
+                    )
+                    suppressMutabilityWarning(&request)
+                    return (request, nil)
+                }
+                """,
+            server: """
+                { request, requestBody, metadata in
+                    let path: Operations.getFoo.Input.Path = .init(
+                        b: try converter.getPathParameterAsURI(
+                            in: metadata.pathParameters,
+                            name: "b",
+                            as: Swift.String.self
+                        ),
+                        a: try converter.getPathParameterAsURI(
+                            in: metadata.pathParameters,
+                            name: "a",
+                            as: Swift.String.self
+                        ),
+                        num: try converter.getPathParameterAsURI(
+                            in: metadata.pathParameters,
+                            name: "num",
+                            as: Swift.Int.self
+                        )
+                    )
+                    return Operations.getFoo.Input(path: path)
+                }
+                """
+        )
+    }
 
     func testRequestRequiredBodyPrimitiveSchema() throws {
         try self.assertRequestInTypesClientServerTranslation(
@@ -1593,14 +2603,25 @@ final class SnippetBasedReferenceTests: XCTestCase {
             """,
             types: """
                 public struct Input: Sendable, Hashable {
-                    @frozen public enum Body: Sendable, Hashable { case json(Swift.String) }
+                    @frozen public enum Body: Sendable, Hashable {
+                        case json(Swift.String)
+                    }
                     public var body: Operations.get_sol_foo.Input.Body
-                    public init(body: Operations.get_sol_foo.Input.Body) { self.body = body }
+                    public init(body: Operations.get_sol_foo.Input.Body) {
+                        self.body = body
+                    }
                 }
                 """,
             client: """
-                { input in let path = try converter.renderedPath(template: "/foo", parameters: [])
-                    var request: HTTPTypes.HTTPRequest = .init(soar_path: path, method: .get)
+                { input in
+                    let path = try converter.renderedPath(
+                        template: "/foo",
+                        parameters: []
+                    )
+                    var request: HTTPTypes.HTTPRequest = .init(
+                        soar_path: path,
+                        method: .get
+                    )
                     suppressMutabilityWarning(&request)
                     let body: OpenAPIRuntime.HTTPBody?
                     switch input.body {
@@ -1615,17 +2636,26 @@ final class SnippetBasedReferenceTests: XCTestCase {
                 }
                 """,
             server: """
-                { request, requestBody, metadata in let contentType = converter.extractContentTypeIfPresent(in: request.headerFields)
+                { request, requestBody, metadata in
+                    let contentType = converter.extractContentTypeIfPresent(in: request.headerFields)
                     let body: Operations.get_sol_foo.Input.Body
-                    if try contentType == nil || converter.isMatchingContentType(received: contentType, expectedRaw: "application/json")
-                    {
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
                         body = try await converter.getRequiredRequestBodyAsJSON(
                             Swift.String.self,
                             from: requestBody,
-                            transforming: { value in .json(value) }
+                            transforming: { value in
+                                .json(value)
+                            }
                         )
-                    } else {
-                        throw converter.makeUnexpectedContentTypeError(contentType: contentType)
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
                     }
                     return Operations.get_sol_foo.Input(body: body)
                 }
@@ -1650,14 +2680,25 @@ final class SnippetBasedReferenceTests: XCTestCase {
             """,
             types: """
                 public struct Input: Sendable, Hashable {
-                    @frozen public enum Body: Sendable, Hashable { case json(Swift.String) }
+                    @frozen public enum Body: Sendable, Hashable {
+                        case json(Swift.String)
+                    }
                     public var body: Operations.get_sol_foo.Input.Body
-                    public init(body: Operations.get_sol_foo.Input.Body) { self.body = body }
+                    public init(body: Operations.get_sol_foo.Input.Body) {
+                        self.body = body
+                    }
                 }
                 """,
             client: """
-                { input in let path = try converter.renderedPath(template: "/foo", parameters: [])
-                    var request: HTTPTypes.HTTPRequest = .init(soar_path: path, method: .get)
+                { input in
+                    let path = try converter.renderedPath(
+                        template: "/foo",
+                        parameters: []
+                    )
+                    var request: HTTPTypes.HTTPRequest = .init(
+                        soar_path: path,
+                        method: .get
+                    )
                     suppressMutabilityWarning(&request)
                     let body: OpenAPIRuntime.HTTPBody?
                     switch input.body {
@@ -1672,17 +2713,26 @@ final class SnippetBasedReferenceTests: XCTestCase {
                 }
                 """,
             server: """
-                { request, requestBody, metadata in let contentType = converter.extractContentTypeIfPresent(in: request.headerFields)
+                { request, requestBody, metadata in
+                    let contentType = converter.extractContentTypeIfPresent(in: request.headerFields)
                     let body: Operations.get_sol_foo.Input.Body
-                    if try contentType == nil || converter.isMatchingContentType(received: contentType, expectedRaw: "application/json")
-                    {
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
                         body = try await converter.getRequiredRequestBodyAsJSON(
                             Swift.String.self,
                             from: requestBody,
-                            transforming: { value in .json(value) }
+                            transforming: { value in
+                                .json(value)
+                            }
                         )
-                    } else {
-                        throw converter.makeUnexpectedContentTypeError(contentType: contentType)
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
                     }
                     return Operations.get_sol_foo.Input(body: body)
                 }
@@ -1707,18 +2757,30 @@ final class SnippetBasedReferenceTests: XCTestCase {
             """,
             types: """
                 public struct Input: Sendable, Hashable {
-                    @frozen public enum Body: Sendable, Hashable { case json(Swift.String) }
+                    @frozen public enum Body: Sendable, Hashable {
+                        case json(Swift.String)
+                    }
                     public var body: Operations.get_sol_foo.Input.Body?
-                    public init(body: Operations.get_sol_foo.Input.Body? = nil) { self.body = body }
+                    public init(body: Operations.get_sol_foo.Input.Body? = nil) {
+                        self.body = body
+                    }
                 }
                 """,
             client: """
-                { input in let path = try converter.renderedPath(template: "/foo", parameters: [])
-                    var request: HTTPTypes.HTTPRequest = .init(soar_path: path, method: .get)
+                { input in
+                    let path = try converter.renderedPath(
+                        template: "/foo",
+                        parameters: []
+                    )
+                    var request: HTTPTypes.HTTPRequest = .init(
+                        soar_path: path,
+                        method: .get
+                    )
                     suppressMutabilityWarning(&request)
                     let body: OpenAPIRuntime.HTTPBody?
                     switch input.body {
-                    case .none: body = nil
+                    case .none:
+                        body = nil
                     case let .json(value):
                         body = try converter.setOptionalRequestBodyAsJSON(
                             value,
@@ -1730,17 +2792,26 @@ final class SnippetBasedReferenceTests: XCTestCase {
                 }
                 """,
             server: """
-                { request, requestBody, metadata in let contentType = converter.extractContentTypeIfPresent(in: request.headerFields)
+                { request, requestBody, metadata in
+                    let contentType = converter.extractContentTypeIfPresent(in: request.headerFields)
                     let body: Operations.get_sol_foo.Input.Body?
-                    if try contentType == nil || converter.isMatchingContentType(received: contentType, expectedRaw: "application/json")
-                    {
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
                         body = try await converter.getOptionalRequestBodyAsJSON(
                             Swift.String.self,
                             from: requestBody,
-                            transforming: { value in .json(value) }
+                            transforming: { value in
+                                .json(value)
+                            }
                         )
-                    } else {
-                        throw converter.makeUnexpectedContentTypeError(contentType: contentType)
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
                     }
                     return Operations.get_sol_foo.Input(body: body)
                 }
@@ -1765,18 +2836,30 @@ final class SnippetBasedReferenceTests: XCTestCase {
             """,
             types: """
                 public struct Input: Sendable, Hashable {
-                    @frozen public enum Body: Sendable, Hashable { case json(Swift.String) }
+                    @frozen public enum Body: Sendable, Hashable {
+                        case json(Swift.String)
+                    }
                     public var body: Operations.get_sol_foo.Input.Body?
-                    public init(body: Operations.get_sol_foo.Input.Body? = nil) { self.body = body }
+                    public init(body: Operations.get_sol_foo.Input.Body? = nil) {
+                        self.body = body
+                    }
                 }
                 """,
             client: """
-                { input in let path = try converter.renderedPath(template: "/foo", parameters: [])
-                    var request: HTTPTypes.HTTPRequest = .init(soar_path: path, method: .get)
+                { input in
+                    let path = try converter.renderedPath(
+                        template: "/foo",
+                        parameters: []
+                    )
+                    var request: HTTPTypes.HTTPRequest = .init(
+                        soar_path: path,
+                        method: .get
+                    )
                     suppressMutabilityWarning(&request)
                     let body: OpenAPIRuntime.HTTPBody?
                     switch input.body {
-                    case .none: body = nil
+                    case .none:
+                        body = nil
                     case let .json(value):
                         body = try converter.setOptionalRequestBodyAsJSON(
                             value,
@@ -1788,17 +2871,26 @@ final class SnippetBasedReferenceTests: XCTestCase {
                 }
                 """,
             server: """
-                { request, requestBody, metadata in let contentType = converter.extractContentTypeIfPresent(in: request.headerFields)
+                { request, requestBody, metadata in
+                    let contentType = converter.extractContentTypeIfPresent(in: request.headerFields)
                     let body: Operations.get_sol_foo.Input.Body?
-                    if try contentType == nil || converter.isMatchingContentType(received: contentType, expectedRaw: "application/json")
-                    {
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "application/json"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "application/json":
                         body = try await converter.getOptionalRequestBodyAsJSON(
                             Swift.String.self,
                             from: requestBody,
-                            transforming: { value in .json(value) }
+                            transforming: { value in
+                                .json(value)
+                            }
                         )
-                    } else {
-                        throw converter.makeUnexpectedContentTypeError(contentType: contentType)
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
                     }
                     return Operations.get_sol_foo.Input(body: body)
                 }
@@ -1806,9 +2898,1948 @@ final class SnippetBasedReferenceTests: XCTestCase {
         )
     }
 
+    func testRequestMultipartBodyReferencedRequestBody() throws {
+        try self.assertRequestInTypesClientServerTranslation(
+            """
+            /foo:
+              post:
+                requestBody:
+                  $ref: '#/components/requestBodies/MultipartRequest'
+                responses:
+                  default:
+                    description: Response
+            """,
+            """
+            requestBodies:
+              MultipartRequest:
+                required: true
+                content:
+                  multipart/form-data:
+                    schema:
+                      type: object
+                      properties:
+                        log:
+                          type: string
+            """,
+            types: """
+                public struct Input: Sendable, Hashable {
+                    public var body: Components.RequestBodies.MultipartRequest
+                    public init(body: Components.RequestBodies.MultipartRequest) {
+                        self.body = body
+                    }
+                }
+                """,
+            requestBodies: """
+                public enum RequestBodies {
+                    @frozen public enum MultipartRequest: Sendable, Hashable {
+                        @frozen public enum multipartFormPayload: Sendable, Hashable {
+                            public struct logPayload: Sendable, Hashable {
+                                public var body: OpenAPIRuntime.HTTPBody
+                                public init(body: OpenAPIRuntime.HTTPBody) {
+                                    self.body = body
+                                }
+                            }
+                            case log(OpenAPIRuntime.MultipartPart<Components.RequestBodies.MultipartRequest.multipartFormPayload.logPayload>)
+                            case undocumented(OpenAPIRuntime.MultipartRawPart)
+                        }
+                        case multipartForm(OpenAPIRuntime.MultipartBody<Components.RequestBodies.MultipartRequest.multipartFormPayload>)
+                    }
+                }
+                """,
+            client: """
+                { input in
+                    let path = try converter.renderedPath(
+                        template: "/foo",
+                        parameters: []
+                    )
+                    var request: HTTPTypes.HTTPRequest = .init(
+                        soar_path: path,
+                        method: .post
+                    )
+                    suppressMutabilityWarning(&request)
+                    let body: OpenAPIRuntime.HTTPBody?
+                    switch input.body {
+                    case let .multipartForm(value):
+                        body = try converter.setRequiredRequestBodyAsMultipart(
+                            value,
+                            headerFields: &request.headerFields,
+                            contentType: "multipart/form-data",
+                            allowsUnknownParts: true,
+                            requiredExactlyOncePartNames: [],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [
+                                "log"
+                            ],
+                            zeroOrMoreTimesPartNames: [],
+                            encoding: { part in
+                                switch part {
+                                case let .log(wrapped):
+                                    var headerFields: HTTPTypes.HTTPFields = .init()
+                                    let value = wrapped.payload
+                                    let body = try converter.setRequiredRequestBodyAsBinary(
+                                        value.body,
+                                        headerFields: &headerFields,
+                                        contentType: "text/plain"
+                                    )
+                                    return .init(
+                                        name: "log",
+                                        filename: wrapped.filename,
+                                        headerFields: headerFields,
+                                        body: body
+                                    )
+                                case let .undocumented(value):
+                                    return value
+                                }
+                            }
+                        )
+                    }
+                    return (request, body)
+                }
+                """,
+            server: """
+                { request, requestBody, metadata in
+                    let contentType = converter.extractContentTypeIfPresent(in: request.headerFields)
+                    let body: Components.RequestBodies.MultipartRequest
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "multipart/form-data"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "multipart/form-data":
+                        body = try converter.getRequiredRequestBodyAsMultipart(
+                            OpenAPIRuntime.MultipartBody<Components.RequestBodies.MultipartRequest.multipartFormPayload>.self,
+                            from: requestBody,
+                            transforming: { value in
+                                .multipartForm(value)
+                            },
+                            boundary: contentType.requiredBoundary(),
+                            allowsUnknownParts: true,
+                            requiredExactlyOncePartNames: [],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [
+                                "log"
+                            ],
+                            zeroOrMoreTimesPartNames: [],
+                            decoding: { part in
+                                let headerFields = part.headerFields
+                                let (name, filename) = try converter.extractContentDispositionNameAndFilename(in: headerFields)
+                                switch name {
+                                case "log":
+                                    try converter.verifyContentTypeIfPresent(
+                                        in: headerFields,
+                                        matches: "text/plain"
+                                    )
+                                    let body = try converter.getRequiredRequestBodyAsBinary(
+                                        OpenAPIRuntime.HTTPBody.self,
+                                        from: part.body,
+                                        transforming: {
+                                            $0
+                                        }
+                                    )
+                                    return .log(.init(
+                                        payload: .init(body: body),
+                                        filename: filename
+                                    ))
+                                default:
+                                    return .undocumented(part)
+                                }
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return Operations.post_sol_foo.Input(body: body)
+                }
+                """
+        )
+    }
+
+    func testRequestMultipartBodyInlineRequestBody() throws {
+        try self.assertRequestInTypesClientServerTranslation(
+            """
+            /foo:
+              post:
+                requestBody:
+                  required: true
+                  content:
+                    multipart/form-data:
+                      schema:
+                        type: object
+                        properties:
+                          log:
+                            type: string
+                responses:
+                  default:
+                    description: Response
+            """,
+            types: """
+                public struct Input: Sendable, Hashable {
+                    @frozen public enum Body: Sendable, Hashable {
+                        @frozen public enum multipartFormPayload: Sendable, Hashable {
+                            public struct logPayload: Sendable, Hashable {
+                                public var body: OpenAPIRuntime.HTTPBody
+                                public init(body: OpenAPIRuntime.HTTPBody) {
+                                    self.body = body
+                                }
+                            }
+                            case log(OpenAPIRuntime.MultipartPart<Operations.post_sol_foo.Input.Body.multipartFormPayload.logPayload>)
+                            case undocumented(OpenAPIRuntime.MultipartRawPart)
+                        }
+                        case multipartForm(OpenAPIRuntime.MultipartBody<Operations.post_sol_foo.Input.Body.multipartFormPayload>)
+                    }
+                    public var body: Operations.post_sol_foo.Input.Body
+                    public init(body: Operations.post_sol_foo.Input.Body) {
+                        self.body = body
+                    }
+                }
+                """,
+            client: """
+                { input in
+                    let path = try converter.renderedPath(
+                        template: "/foo",
+                        parameters: []
+                    )
+                    var request: HTTPTypes.HTTPRequest = .init(
+                        soar_path: path,
+                        method: .post
+                    )
+                    suppressMutabilityWarning(&request)
+                    let body: OpenAPIRuntime.HTTPBody?
+                    switch input.body {
+                    case let .multipartForm(value):
+                        body = try converter.setRequiredRequestBodyAsMultipart(
+                            value,
+                            headerFields: &request.headerFields,
+                            contentType: "multipart/form-data",
+                            allowsUnknownParts: true,
+                            requiredExactlyOncePartNames: [],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [
+                                "log"
+                            ],
+                            zeroOrMoreTimesPartNames: [],
+                            encoding: { part in
+                                switch part {
+                                case let .log(wrapped):
+                                    var headerFields: HTTPTypes.HTTPFields = .init()
+                                    let value = wrapped.payload
+                                    let body = try converter.setRequiredRequestBodyAsBinary(
+                                        value.body,
+                                        headerFields: &headerFields,
+                                        contentType: "text/plain"
+                                    )
+                                    return .init(
+                                        name: "log",
+                                        filename: wrapped.filename,
+                                        headerFields: headerFields,
+                                        body: body
+                                    )
+                                case let .undocumented(value):
+                                    return value
+                                }
+                            }
+                        )
+                    }
+                    return (request, body)
+                }
+                """,
+            server: """
+                { request, requestBody, metadata in
+                    let contentType = converter.extractContentTypeIfPresent(in: request.headerFields)
+                    let body: Operations.post_sol_foo.Input.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "multipart/form-data"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "multipart/form-data":
+                        body = try converter.getRequiredRequestBodyAsMultipart(
+                            OpenAPIRuntime.MultipartBody<Operations.post_sol_foo.Input.Body.multipartFormPayload>.self,
+                            from: requestBody,
+                            transforming: { value in
+                                .multipartForm(value)
+                            },
+                            boundary: contentType.requiredBoundary(),
+                            allowsUnknownParts: true,
+                            requiredExactlyOncePartNames: [],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [
+                                "log"
+                            ],
+                            zeroOrMoreTimesPartNames: [],
+                            decoding: { part in
+                                let headerFields = part.headerFields
+                                let (name, filename) = try converter.extractContentDispositionNameAndFilename(in: headerFields)
+                                switch name {
+                                case "log":
+                                    try converter.verifyContentTypeIfPresent(
+                                        in: headerFields,
+                                        matches: "text/plain"
+                                    )
+                                    let body = try converter.getRequiredRequestBodyAsBinary(
+                                        OpenAPIRuntime.HTTPBody.self,
+                                        from: part.body,
+                                        transforming: {
+                                            $0
+                                        }
+                                    )
+                                    return .log(.init(
+                                        payload: .init(body: body),
+                                        filename: filename
+                                    ))
+                                default:
+                                    return .undocumented(part)
+                                }
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return Operations.post_sol_foo.Input(body: body)
+                }
+                """
+        )
+    }
+
+    func testRequestMultipartBodyInlineRequestBodyReferencedPartSchema() throws {
+        try self.assertRequestInTypesClientServerTranslation(
+            """
+            /foo:
+              post:
+                requestBody:
+                  required: true
+                  content:
+                    multipart/form-data:
+                      schema:
+                        type: object
+                        properties:
+                          info:
+                            $ref: '#/components/schemas/Info'
+                responses:
+                  default:
+                    description: Response
+            """,
+            """
+            schemas:
+              Info:
+                type: object
+            """,
+            types: """
+                public struct Input: Sendable, Hashable {
+                    @frozen public enum Body: Sendable, Hashable {
+                        @frozen public enum multipartFormPayload: Sendable, Hashable {
+                            public struct infoPayload: Sendable, Hashable {
+                                public var body: Components.Schemas.Info
+                                public init(body: Components.Schemas.Info) {
+                                    self.body = body
+                                }
+                            }
+                            case info(OpenAPIRuntime.MultipartPart<Operations.post_sol_foo.Input.Body.multipartFormPayload.infoPayload>)
+                            case undocumented(OpenAPIRuntime.MultipartRawPart)
+                        }
+                        case multipartForm(OpenAPIRuntime.MultipartBody<Operations.post_sol_foo.Input.Body.multipartFormPayload>)
+                    }
+                    public var body: Operations.post_sol_foo.Input.Body
+                    public init(body: Operations.post_sol_foo.Input.Body) {
+                        self.body = body
+                    }
+                }
+                """,
+            client: """
+                { input in
+                    let path = try converter.renderedPath(
+                        template: "/foo",
+                        parameters: []
+                    )
+                    var request: HTTPTypes.HTTPRequest = .init(
+                        soar_path: path,
+                        method: .post
+                    )
+                    suppressMutabilityWarning(&request)
+                    let body: OpenAPIRuntime.HTTPBody?
+                    switch input.body {
+                    case let .multipartForm(value):
+                        body = try converter.setRequiredRequestBodyAsMultipart(
+                            value,
+                            headerFields: &request.headerFields,
+                            contentType: "multipart/form-data",
+                            allowsUnknownParts: true,
+                            requiredExactlyOncePartNames: [],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [
+                                "info"
+                            ],
+                            zeroOrMoreTimesPartNames: [],
+                            encoding: { part in
+                                switch part {
+                                case let .info(wrapped):
+                                    var headerFields: HTTPTypes.HTTPFields = .init()
+                                    let value = wrapped.payload
+                                    let body = try converter.setRequiredRequestBodyAsJSON(
+                                        value.body,
+                                        headerFields: &headerFields,
+                                        contentType: "application/json; charset=utf-8"
+                                    )
+                                    return .init(
+                                        name: "info",
+                                        filename: wrapped.filename,
+                                        headerFields: headerFields,
+                                        body: body
+                                    )
+                                case let .undocumented(value):
+                                    return value
+                                }
+                            }
+                        )
+                    }
+                    return (request, body)
+                }
+                """,
+            server: """
+                { request, requestBody, metadata in
+                    let contentType = converter.extractContentTypeIfPresent(in: request.headerFields)
+                    let body: Operations.post_sol_foo.Input.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "multipart/form-data"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "multipart/form-data":
+                        body = try converter.getRequiredRequestBodyAsMultipart(
+                            OpenAPIRuntime.MultipartBody<Operations.post_sol_foo.Input.Body.multipartFormPayload>.self,
+                            from: requestBody,
+                            transforming: { value in
+                                .multipartForm(value)
+                            },
+                            boundary: contentType.requiredBoundary(),
+                            allowsUnknownParts: true,
+                            requiredExactlyOncePartNames: [],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [
+                                "info"
+                            ],
+                            zeroOrMoreTimesPartNames: [],
+                            decoding: { part in
+                                let headerFields = part.headerFields
+                                let (name, filename) = try converter.extractContentDispositionNameAndFilename(in: headerFields)
+                                switch name {
+                                case "info":
+                                    try converter.verifyContentTypeIfPresent(
+                                        in: headerFields,
+                                        matches: "application/json"
+                                    )
+                                    let body = try await converter.getRequiredRequestBodyAsJSON(
+                                        Components.Schemas.Info.self,
+                                        from: part.body,
+                                        transforming: {
+                                            $0
+                                        }
+                                    )
+                                    return .info(.init(
+                                        payload: .init(body: body),
+                                        filename: filename
+                                    ))
+                                default:
+                                    return .undocumented(part)
+                                }
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return Operations.post_sol_foo.Input(body: body)
+                }
+                """
+        )
+    }
+
+    func testRequestMultipartBodyReferencedSchema() throws {
+        try self.assertRequestInTypesClientServerTranslation(
+            """
+            /foo:
+              post:
+                requestBody:
+                  required: true
+                  content:
+                    multipart/form-data:
+                      schema:
+                        $ref: '#/components/schemas/Multipet'
+                responses:
+                  default:
+                    description: Response
+            """,
+            """
+            schemas:
+              Multipet:
+                type: object
+                properties:
+                  log:
+                    type: string
+                required:
+                  - log
+            """,
+            types: """
+                public struct Input: Sendable, Hashable {
+                    @frozen public enum Body: Sendable, Hashable {
+                        case multipartForm(OpenAPIRuntime.MultipartBody<Components.Schemas.Multipet>)
+                    }
+                    public var body: Operations.post_sol_foo.Input.Body
+                    public init(body: Operations.post_sol_foo.Input.Body) {
+                        self.body = body
+                    }
+                }
+                """,
+            schemas: """
+                public enum Schemas {
+                    @frozen public enum Multipet: Sendable, Hashable {
+                        public struct logPayload: Sendable, Hashable {
+                            public var body: OpenAPIRuntime.HTTPBody
+                            public init(body: OpenAPIRuntime.HTTPBody) {
+                                self.body = body
+                            }
+                        }
+                        case log(OpenAPIRuntime.MultipartPart<Components.Schemas.Multipet.logPayload>)
+                        case undocumented(OpenAPIRuntime.MultipartRawPart)
+                    }
+                }
+                """,
+            client: """
+                { input in
+                    let path = try converter.renderedPath(
+                        template: "/foo",
+                        parameters: []
+                    )
+                    var request: HTTPTypes.HTTPRequest = .init(
+                        soar_path: path,
+                        method: .post
+                    )
+                    suppressMutabilityWarning(&request)
+                    let body: OpenAPIRuntime.HTTPBody?
+                    switch input.body {
+                    case let .multipartForm(value):
+                        body = try converter.setRequiredRequestBodyAsMultipart(
+                            value,
+                            headerFields: &request.headerFields,
+                            contentType: "multipart/form-data",
+                            allowsUnknownParts: true,
+                            requiredExactlyOncePartNames: [
+                                "log"
+                            ],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [],
+                            zeroOrMoreTimesPartNames: [],
+                            encoding: { part in
+                                switch part {
+                                case let .log(wrapped):
+                                    var headerFields: HTTPTypes.HTTPFields = .init()
+                                    let value = wrapped.payload
+                                    let body = try converter.setRequiredRequestBodyAsBinary(
+                                        value.body,
+                                        headerFields: &headerFields,
+                                        contentType: "text/plain"
+                                    )
+                                    return .init(
+                                        name: "log",
+                                        filename: wrapped.filename,
+                                        headerFields: headerFields,
+                                        body: body
+                                    )
+                                case let .undocumented(value):
+                                    return value
+                                }
+                            }
+                        )
+                    }
+                    return (request, body)
+                }
+                """,
+            server: """
+                { request, requestBody, metadata in
+                    let contentType = converter.extractContentTypeIfPresent(in: request.headerFields)
+                    let body: Operations.post_sol_foo.Input.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "multipart/form-data"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "multipart/form-data":
+                        body = try converter.getRequiredRequestBodyAsMultipart(
+                            OpenAPIRuntime.MultipartBody<Components.Schemas.Multipet>.self,
+                            from: requestBody,
+                            transforming: { value in
+                                .multipartForm(value)
+                            },
+                            boundary: contentType.requiredBoundary(),
+                            allowsUnknownParts: true,
+                            requiredExactlyOncePartNames: [
+                                "log"
+                            ],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [],
+                            zeroOrMoreTimesPartNames: [],
+                            decoding: { part in
+                                let headerFields = part.headerFields
+                                let (name, filename) = try converter.extractContentDispositionNameAndFilename(in: headerFields)
+                                switch name {
+                                case "log":
+                                    try converter.verifyContentTypeIfPresent(
+                                        in: headerFields,
+                                        matches: "text/plain"
+                                    )
+                                    let body = try converter.getRequiredRequestBodyAsBinary(
+                                        OpenAPIRuntime.HTTPBody.self,
+                                        from: part.body,
+                                        transforming: {
+                                            $0
+                                        }
+                                    )
+                                    return .log(.init(
+                                        payload: .init(body: body),
+                                        filename: filename
+                                    ))
+                                default:
+                                    return .undocumented(part)
+                                }
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return Operations.post_sol_foo.Input(body: body)
+                }
+                """
+        )
+    }
+
+    func testRequestMultipartBodyReferencedSchemaWithEncoding() throws {
+        try self.assertRequestInTypesClientServerTranslation(
+            """
+            /foo:
+              post:
+                requestBody:
+                  required: true
+                  content:
+                    multipart/form-data:
+                      schema:
+                        $ref: '#/components/schemas/Multipet'
+                      encoding:
+                        log:
+                          headers:
+                            x-log-type:
+                              schema:
+                                type: string
+                responses:
+                  default:
+                    description: Response
+            """,
+            """
+            schemas:
+              Multipet:
+                type: object
+                properties:
+                  log:
+                    type: string
+                required:
+                  - log
+            """,
+            types: """
+                public struct Input: Sendable, Hashable {
+                    @frozen public enum Body: Sendable, Hashable {
+                        @frozen public enum multipartFormPayload: Sendable, Hashable {
+                            public struct logPayload: Sendable, Hashable {
+                                public struct Headers: Sendable, Hashable {
+                                    public var x_hyphen_log_hyphen_type: Swift.String?
+                                    public init(x_hyphen_log_hyphen_type: Swift.String? = nil) {
+                                        self.x_hyphen_log_hyphen_type = x_hyphen_log_hyphen_type
+                                    }
+                                }
+                                public var headers: Operations.post_sol_foo.Input.Body.multipartFormPayload.logPayload.Headers
+                                public var body: OpenAPIRuntime.HTTPBody
+                                public init(
+                                    headers: Operations.post_sol_foo.Input.Body.multipartFormPayload.logPayload.Headers = .init(),
+                                    body: OpenAPIRuntime.HTTPBody
+                                ) {
+                                    self.headers = headers
+                                    self.body = body
+                                }
+                            }
+                            case log(OpenAPIRuntime.MultipartPart<Operations.post_sol_foo.Input.Body.multipartFormPayload.logPayload>)
+                            case undocumented(OpenAPIRuntime.MultipartRawPart)
+                        }
+                        case multipartForm(OpenAPIRuntime.MultipartBody<Operations.post_sol_foo.Input.Body.multipartFormPayload>)
+                    }
+                    public var body: Operations.post_sol_foo.Input.Body
+                    public init(body: Operations.post_sol_foo.Input.Body) {
+                        self.body = body
+                    }
+                }
+                """,
+            schemas: """
+                public enum Schemas {
+                    @frozen public enum Multipet: Sendable, Hashable {
+                        public struct logPayload: Sendable, Hashable {
+                            public var body: OpenAPIRuntime.HTTPBody
+                            public init(body: OpenAPIRuntime.HTTPBody) {
+                                self.body = body
+                            }
+                        }
+                        case log(OpenAPIRuntime.MultipartPart<Components.Schemas.Multipet.logPayload>)
+                        case undocumented(OpenAPIRuntime.MultipartRawPart)
+                    }
+                }
+                """,
+            client: """
+                { input in
+                    let path = try converter.renderedPath(
+                        template: "/foo",
+                        parameters: []
+                    )
+                    var request: HTTPTypes.HTTPRequest = .init(
+                        soar_path: path,
+                        method: .post
+                    )
+                    suppressMutabilityWarning(&request)
+                    let body: OpenAPIRuntime.HTTPBody?
+                    switch input.body {
+                    case let .multipartForm(value):
+                        body = try converter.setRequiredRequestBodyAsMultipart(
+                            value,
+                            headerFields: &request.headerFields,
+                            contentType: "multipart/form-data",
+                            allowsUnknownParts: true,
+                            requiredExactlyOncePartNames: [
+                                "log"
+                            ],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [],
+                            zeroOrMoreTimesPartNames: [],
+                            encoding: { part in
+                                switch part {
+                                case let .log(wrapped):
+                                    var headerFields: HTTPTypes.HTTPFields = .init()
+                                    let value = wrapped.payload
+                                    try converter.setHeaderFieldAsURI(
+                                        in: &headerFields,
+                                        name: "x-log-type",
+                                        value: value.headers.x_hyphen_log_hyphen_type
+                                    )
+                                    let body = try converter.setRequiredRequestBodyAsBinary(
+                                        value.body,
+                                        headerFields: &headerFields,
+                                        contentType: "text/plain"
+                                    )
+                                    return .init(
+                                        name: "log",
+                                        filename: wrapped.filename,
+                                        headerFields: headerFields,
+                                        body: body
+                                    )
+                                case let .undocumented(value):
+                                    return value
+                                }
+                            }
+                        )
+                    }
+                    return (request, body)
+                }
+                """,
+            server: """
+                { request, requestBody, metadata in
+                    let contentType = converter.extractContentTypeIfPresent(in: request.headerFields)
+                    let body: Operations.post_sol_foo.Input.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "multipart/form-data"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "multipart/form-data":
+                        body = try converter.getRequiredRequestBodyAsMultipart(
+                            OpenAPIRuntime.MultipartBody<Operations.post_sol_foo.Input.Body.multipartFormPayload>.self,
+                            from: requestBody,
+                            transforming: { value in
+                                .multipartForm(value)
+                            },
+                            boundary: contentType.requiredBoundary(),
+                            allowsUnknownParts: true,
+                            requiredExactlyOncePartNames: [
+                                "log"
+                            ],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [],
+                            zeroOrMoreTimesPartNames: [],
+                            decoding: { part in
+                                let headerFields = part.headerFields
+                                let (name, filename) = try converter.extractContentDispositionNameAndFilename(in: headerFields)
+                                switch name {
+                                case "log":
+                                    let headers: Operations.post_sol_foo.Input.Body.multipartFormPayload.logPayload.Headers = .init(x_hyphen_log_hyphen_type: try converter.getOptionalHeaderFieldAsURI(
+                                        in: headerFields,
+                                        name: "x-log-type",
+                                        as: Swift.String.self
+                                    ))
+                                    try converter.verifyContentTypeIfPresent(
+                                        in: headerFields,
+                                        matches: "text/plain"
+                                    )
+                                    let body = try converter.getRequiredRequestBodyAsBinary(
+                                        OpenAPIRuntime.HTTPBody.self,
+                                        from: part.body,
+                                        transforming: {
+                                            $0
+                                        }
+                                    )
+                                    return .log(.init(
+                                        payload: .init(
+                                            headers: headers,
+                                            body: body
+                                        ),
+                                        filename: filename
+                                    ))
+                                default:
+                                    return .undocumented(part)
+                                }
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return Operations.post_sol_foo.Input(body: body)
+                }
+                """
+        )
+    }
+
+    func testRequestMultipartBodyFragment() throws {
+        try self.assertRequestInTypesClientServerTranslation(
+            """
+            /foo:
+              post:
+                requestBody:
+                  required: true
+                  content:
+                    multipart/form-data: {}
+                responses:
+                  default:
+                    description: Response
+            """,
+            types: """
+                public struct Input: Sendable, Hashable {
+                    @frozen public enum Body: Sendable, Hashable {
+                        @frozen public enum multipartFormPayload: Sendable, Hashable {
+                            case undocumented(OpenAPIRuntime.MultipartRawPart)
+                        }
+                        case multipartForm(OpenAPIRuntime.MultipartBody<Operations.post_sol_foo.Input.Body.multipartFormPayload>)
+                    }
+                    public var body: Operations.post_sol_foo.Input.Body
+                    public init(body: Operations.post_sol_foo.Input.Body) {
+                        self.body = body
+                    }
+                }
+                """,
+            client: """
+                { input in
+                    let path = try converter.renderedPath(
+                        template: "/foo",
+                        parameters: []
+                    )
+                    var request: HTTPTypes.HTTPRequest = .init(
+                        soar_path: path,
+                        method: .post
+                    )
+                    suppressMutabilityWarning(&request)
+                    let body: OpenAPIRuntime.HTTPBody?
+                    switch input.body {
+                    case let .multipartForm(value):
+                        body = try converter.setRequiredRequestBodyAsMultipart(
+                            value,
+                            headerFields: &request.headerFields,
+                            contentType: "multipart/form-data",
+                            allowsUnknownParts: true,
+                            requiredExactlyOncePartNames: [],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [],
+                            zeroOrMoreTimesPartNames: [],
+                            encoding: { part in
+                                switch part {
+                                case let .undocumented(value):
+                                    return value
+                                }
+                            }
+                        )
+                    }
+                    return (request, body)
+                }
+                """,
+            server: """
+                { request, requestBody, metadata in
+                    let contentType = converter.extractContentTypeIfPresent(in: request.headerFields)
+                    let body: Operations.post_sol_foo.Input.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "multipart/form-data"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "multipart/form-data":
+                        body = try converter.getRequiredRequestBodyAsMultipart(
+                            OpenAPIRuntime.MultipartBody<Operations.post_sol_foo.Input.Body.multipartFormPayload>.self,
+                            from: requestBody,
+                            transforming: { value in
+                                .multipartForm(value)
+                            },
+                            boundary: contentType.requiredBoundary(),
+                            allowsUnknownParts: true,
+                            requiredExactlyOncePartNames: [],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [],
+                            zeroOrMoreTimesPartNames: [],
+                            decoding: { part in
+                                let headerFields = part.headerFields
+                                let (name, _) = try converter.extractContentDispositionNameAndFilename(in: headerFields)
+                                switch name {
+                                default:
+                                    return .undocumented(part)
+                                }
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return Operations.post_sol_foo.Input(body: body)
+                }
+                """
+        )
+    }
+
+    func testRequestMultipartBodyAdditionalPropertiesTrue() throws {
+        try self.assertRequestInTypesClientServerTranslation(
+            """
+            /foo:
+              post:
+                requestBody:
+                  required: true
+                  content:
+                    multipart/form-data:
+                      schema:
+                        type: object
+                        additionalProperties: true
+                responses:
+                  default:
+                    description: Response
+            """,
+            types: """
+                public struct Input: Sendable, Hashable {
+                    @frozen public enum Body: Sendable, Hashable {
+                        @frozen public enum multipartFormPayload: Sendable, Hashable {
+                            case other(OpenAPIRuntime.MultipartRawPart)
+                        }
+                        case multipartForm(OpenAPIRuntime.MultipartBody<Operations.post_sol_foo.Input.Body.multipartFormPayload>)
+                    }
+                    public var body: Operations.post_sol_foo.Input.Body
+                    public init(body: Operations.post_sol_foo.Input.Body) {
+                        self.body = body
+                    }
+                }
+                """,
+            client: """
+                { input in
+                    let path = try converter.renderedPath(
+                        template: "/foo",
+                        parameters: []
+                    )
+                    var request: HTTPTypes.HTTPRequest = .init(
+                        soar_path: path,
+                        method: .post
+                    )
+                    suppressMutabilityWarning(&request)
+                    let body: OpenAPIRuntime.HTTPBody?
+                    switch input.body {
+                    case let .multipartForm(value):
+                        body = try converter.setRequiredRequestBodyAsMultipart(
+                            value,
+                            headerFields: &request.headerFields,
+                            contentType: "multipart/form-data",
+                            allowsUnknownParts: true,
+                            requiredExactlyOncePartNames: [],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [],
+                            zeroOrMoreTimesPartNames: [],
+                            encoding: { part in
+                                switch part {
+                                case let .other(value):
+                                    return value
+                                }
+                            }
+                        )
+                    }
+                    return (request, body)
+                }
+                """,
+            server: """
+                { request, requestBody, metadata in
+                    let contentType = converter.extractContentTypeIfPresent(in: request.headerFields)
+                    let body: Operations.post_sol_foo.Input.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "multipart/form-data"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "multipart/form-data":
+                        body = try converter.getRequiredRequestBodyAsMultipart(
+                            OpenAPIRuntime.MultipartBody<Operations.post_sol_foo.Input.Body.multipartFormPayload>.self,
+                            from: requestBody,
+                            transforming: { value in
+                                .multipartForm(value)
+                            },
+                            boundary: contentType.requiredBoundary(),
+                            allowsUnknownParts: true,
+                            requiredExactlyOncePartNames: [],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [],
+                            zeroOrMoreTimesPartNames: [],
+                            decoding: { part in
+                                let headerFields = part.headerFields
+                                let (name, _) = try converter.extractContentDispositionNameAndFilename(in: headerFields)
+                                switch name {
+                                default:
+                                    return .other(part)
+                                }
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return Operations.post_sol_foo.Input(body: body)
+                }
+                """
+        )
+    }
+
+    func testRequestMultipartBodyAdditionalPropertiesFalse() throws {
+        try self.assertRequestInTypesClientServerTranslation(
+            """
+            /foo:
+              post:
+                requestBody:
+                  required: true
+                  content:
+                    multipart/form-data:
+                      schema:
+                        type: object
+                        properties:
+                          log:
+                            type: string
+                        required:
+                          - log
+                        additionalProperties: false
+                responses:
+                  default:
+                    description: Response
+            """,
+            types: """
+                public struct Input: Sendable, Hashable {
+                    @frozen public enum Body: Sendable, Hashable {
+                        @frozen public enum multipartFormPayload: Sendable, Hashable {
+                            public struct logPayload: Sendable, Hashable {
+                                public var body: OpenAPIRuntime.HTTPBody
+                                public init(body: OpenAPIRuntime.HTTPBody) {
+                                    self.body = body
+                                }
+                            }
+                            case log(OpenAPIRuntime.MultipartPart<Operations.post_sol_foo.Input.Body.multipartFormPayload.logPayload>)
+                        }
+                        case multipartForm(OpenAPIRuntime.MultipartBody<Operations.post_sol_foo.Input.Body.multipartFormPayload>)
+                    }
+                    public var body: Operations.post_sol_foo.Input.Body
+                    public init(body: Operations.post_sol_foo.Input.Body) {
+                        self.body = body
+                    }
+                }
+                """,
+            client: """
+                { input in
+                    let path = try converter.renderedPath(
+                        template: "/foo",
+                        parameters: []
+                    )
+                    var request: HTTPTypes.HTTPRequest = .init(
+                        soar_path: path,
+                        method: .post
+                    )
+                    suppressMutabilityWarning(&request)
+                    let body: OpenAPIRuntime.HTTPBody?
+                    switch input.body {
+                    case let .multipartForm(value):
+                        body = try converter.setRequiredRequestBodyAsMultipart(
+                            value,
+                            headerFields: &request.headerFields,
+                            contentType: "multipart/form-data",
+                            allowsUnknownParts: false,
+                            requiredExactlyOncePartNames: [
+                                "log"
+                            ],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [],
+                            zeroOrMoreTimesPartNames: [],
+                            encoding: { part in
+                                switch part {
+                                case let .log(wrapped):
+                                    var headerFields: HTTPTypes.HTTPFields = .init()
+                                    let value = wrapped.payload
+                                    let body = try converter.setRequiredRequestBodyAsBinary(
+                                        value.body,
+                                        headerFields: &headerFields,
+                                        contentType: "text/plain"
+                                    )
+                                    return .init(
+                                        name: "log",
+                                        filename: wrapped.filename,
+                                        headerFields: headerFields,
+                                        body: body
+                                    )
+                                }
+                            }
+                        )
+                    }
+                    return (request, body)
+                }
+                """,
+            server: """
+                { request, requestBody, metadata in
+                    let contentType = converter.extractContentTypeIfPresent(in: request.headerFields)
+                    let body: Operations.post_sol_foo.Input.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "multipart/form-data"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "multipart/form-data":
+                        body = try converter.getRequiredRequestBodyAsMultipart(
+                            OpenAPIRuntime.MultipartBody<Operations.post_sol_foo.Input.Body.multipartFormPayload>.self,
+                            from: requestBody,
+                            transforming: { value in
+                                .multipartForm(value)
+                            },
+                            boundary: contentType.requiredBoundary(),
+                            allowsUnknownParts: false,
+                            requiredExactlyOncePartNames: [
+                                "log"
+                            ],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [],
+                            zeroOrMoreTimesPartNames: [],
+                            decoding: { part in
+                                let headerFields = part.headerFields
+                                let (name, filename) = try converter.extractContentDispositionNameAndFilename(in: headerFields)
+                                switch name {
+                                case "log":
+                                    try converter.verifyContentTypeIfPresent(
+                                        in: headerFields,
+                                        matches: "text/plain"
+                                    )
+                                    let body = try converter.getRequiredRequestBodyAsBinary(
+                                        OpenAPIRuntime.HTTPBody.self,
+                                        from: part.body,
+                                        transforming: {
+                                            $0
+                                        }
+                                    )
+                                    return .log(.init(
+                                        payload: .init(body: body),
+                                        filename: filename
+                                    ))
+                                default:
+                                    preconditionFailure("Unknown part should be rejected by multipart validation.")
+                                }
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return Operations.post_sol_foo.Input(body: body)
+                }
+                """
+        )
+    }
+
+    func testRequestMultipartBodyAdditionalPropertiesSchemaInline() throws {
+        try self.assertRequestInTypesClientServerTranslation(
+            """
+            /foo:
+              post:
+                requestBody:
+                  required: true
+                  content:
+                    multipart/form-data:
+                      schema:
+                        type: object
+                        properties:
+                          log:
+                            type: string
+                        required:
+                          - log
+                        additionalProperties:
+                          type: object
+                          properties:
+                            foo:
+                              type: string
+                responses:
+                  default:
+                    description: Response
+            """,
+            types: """
+                public struct Input: Sendable, Hashable {
+                    @frozen public enum Body: Sendable, Hashable {
+                        @frozen public enum multipartFormPayload: Sendable, Hashable {
+                            public struct logPayload: Sendable, Hashable {
+                                public var body: OpenAPIRuntime.HTTPBody
+                                public init(body: OpenAPIRuntime.HTTPBody) {
+                                    self.body = body
+                                }
+                            }
+                            case log(OpenAPIRuntime.MultipartPart<Operations.post_sol_foo.Input.Body.multipartFormPayload.logPayload>)
+                            public struct additionalPropertiesPayload: Codable, Hashable, Sendable {
+                                public var foo: Swift.String?
+                                public init(foo: Swift.String? = nil) {
+                                    self.foo = foo
+                                }
+                                public enum CodingKeys: String, CodingKey {
+                                    case foo
+                                }
+                            }
+                            case additionalProperties(OpenAPIRuntime.MultipartDynamicallyNamedPart<Operations.post_sol_foo.Input.Body.multipartFormPayload.additionalPropertiesPayload>)
+                        }
+                        case multipartForm(OpenAPIRuntime.MultipartBody<Operations.post_sol_foo.Input.Body.multipartFormPayload>)
+                    }
+                    public var body: Operations.post_sol_foo.Input.Body
+                    public init(body: Operations.post_sol_foo.Input.Body) {
+                        self.body = body
+                    }
+                }
+                """,
+            client: """
+                { input in
+                    let path = try converter.renderedPath(
+                        template: "/foo",
+                        parameters: []
+                    )
+                    var request: HTTPTypes.HTTPRequest = .init(
+                        soar_path: path,
+                        method: .post
+                    )
+                    suppressMutabilityWarning(&request)
+                    let body: OpenAPIRuntime.HTTPBody?
+                    switch input.body {
+                    case let .multipartForm(value):
+                        body = try converter.setRequiredRequestBodyAsMultipart(
+                            value,
+                            headerFields: &request.headerFields,
+                            contentType: "multipart/form-data",
+                            allowsUnknownParts: true,
+                            requiredExactlyOncePartNames: [
+                                "log"
+                            ],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [],
+                            zeroOrMoreTimesPartNames: [],
+                            encoding: { part in
+                                switch part {
+                                case let .log(wrapped):
+                                    var headerFields: HTTPTypes.HTTPFields = .init()
+                                    let value = wrapped.payload
+                                    let body = try converter.setRequiredRequestBodyAsBinary(
+                                        value.body,
+                                        headerFields: &headerFields,
+                                        contentType: "text/plain"
+                                    )
+                                    return .init(
+                                        name: "log",
+                                        filename: wrapped.filename,
+                                        headerFields: headerFields,
+                                        body: body
+                                    )
+                                case let .additionalProperties(wrapped):
+                                    var headerFields: HTTPTypes.HTTPFields = .init()
+                                    let value = wrapped.payload
+                                    let body = try converter.setRequiredRequestBodyAsJSON(
+                                        value,
+                                        headerFields: &headerFields,
+                                        contentType: "application/json; charset=utf-8"
+                                    )
+                                    return .init(
+                                        name: wrapped.name,
+                                        filename: wrapped.filename,
+                                        headerFields: headerFields,
+                                        body: body
+                                    )
+                                }
+                            }
+                        )
+                    }
+                    return (request, body)
+                }
+                """,
+            server: """
+                { request, requestBody, metadata in
+                    let contentType = converter.extractContentTypeIfPresent(in: request.headerFields)
+                    let body: Operations.post_sol_foo.Input.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "multipart/form-data"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "multipart/form-data":
+                        body = try converter.getRequiredRequestBodyAsMultipart(
+                            OpenAPIRuntime.MultipartBody<Operations.post_sol_foo.Input.Body.multipartFormPayload>.self,
+                            from: requestBody,
+                            transforming: { value in
+                                .multipartForm(value)
+                            },
+                            boundary: contentType.requiredBoundary(),
+                            allowsUnknownParts: true,
+                            requiredExactlyOncePartNames: [
+                                "log"
+                            ],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [],
+                            zeroOrMoreTimesPartNames: [],
+                            decoding: { part in
+                                let headerFields = part.headerFields
+                                let (name, filename) = try converter.extractContentDispositionNameAndFilename(in: headerFields)
+                                switch name {
+                                case "log":
+                                    try converter.verifyContentTypeIfPresent(
+                                        in: headerFields,
+                                        matches: "text/plain"
+                                    )
+                                    let body = try converter.getRequiredRequestBodyAsBinary(
+                                        OpenAPIRuntime.HTTPBody.self,
+                                        from: part.body,
+                                        transforming: {
+                                            $0
+                                        }
+                                    )
+                                    return .log(.init(
+                                        payload: .init(body: body),
+                                        filename: filename
+                                    ))
+                                default:
+                                    try converter.verifyContentTypeIfPresent(
+                                        in: headerFields,
+                                        matches: "application/json"
+                                    )
+                                    let body = try await converter.getRequiredRequestBodyAsJSON(
+                                        Operations.post_sol_foo.Input.Body.multipartFormPayload.additionalPropertiesPayload.self,
+                                        from: part.body,
+                                        transforming: {
+                                            $0
+                                        }
+                                    )
+                                    return .additionalProperties(.init(
+                                        payload: body,
+                                        filename: filename,
+                                        name: name
+                                    ))
+                                }
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return Operations.post_sol_foo.Input(body: body)
+                }
+                """
+        )
+    }
+
+    func testRequestMultipartBodyAdditionalPropertiesSchemaReferenced() throws {
+        try self.assertRequestInTypesClientServerTranslation(
+            """
+            /foo:
+              post:
+                requestBody:
+                  required: true
+                  content:
+                    multipart/form-data:
+                      schema:
+                        type: object
+                        properties:
+                          log:
+                            type: string
+                        required:
+                          - log
+                        additionalProperties:
+                          $ref: '#/components/schemas/AssociatedValue'
+                responses:
+                  default:
+                    description: Response
+            """,
+            """
+            schemas:
+              AssociatedValue:
+                type: object
+                properties:
+                  foo:
+                    type: string
+            """,
+            types: """
+                public struct Input: Sendable, Hashable {
+                    @frozen public enum Body: Sendable, Hashable {
+                        @frozen public enum multipartFormPayload: Sendable, Hashable {
+                            public struct logPayload: Sendable, Hashable {
+                                public var body: OpenAPIRuntime.HTTPBody
+                                public init(body: OpenAPIRuntime.HTTPBody) {
+                                    self.body = body
+                                }
+                            }
+                            case log(OpenAPIRuntime.MultipartPart<Operations.post_sol_foo.Input.Body.multipartFormPayload.logPayload>)
+                            case additionalProperties(OpenAPIRuntime.MultipartDynamicallyNamedPart<Components.Schemas.AssociatedValue>)
+                        }
+                        case multipartForm(OpenAPIRuntime.MultipartBody<Operations.post_sol_foo.Input.Body.multipartFormPayload>)
+                    }
+                    public var body: Operations.post_sol_foo.Input.Body
+                    public init(body: Operations.post_sol_foo.Input.Body) {
+                        self.body = body
+                    }
+                }
+                """,
+            client: """
+                { input in
+                    let path = try converter.renderedPath(
+                        template: "/foo",
+                        parameters: []
+                    )
+                    var request: HTTPTypes.HTTPRequest = .init(
+                        soar_path: path,
+                        method: .post
+                    )
+                    suppressMutabilityWarning(&request)
+                    let body: OpenAPIRuntime.HTTPBody?
+                    switch input.body {
+                    case let .multipartForm(value):
+                        body = try converter.setRequiredRequestBodyAsMultipart(
+                            value,
+                            headerFields: &request.headerFields,
+                            contentType: "multipart/form-data",
+                            allowsUnknownParts: true,
+                            requiredExactlyOncePartNames: [
+                                "log"
+                            ],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [],
+                            zeroOrMoreTimesPartNames: [],
+                            encoding: { part in
+                                switch part {
+                                case let .log(wrapped):
+                                    var headerFields: HTTPTypes.HTTPFields = .init()
+                                    let value = wrapped.payload
+                                    let body = try converter.setRequiredRequestBodyAsBinary(
+                                        value.body,
+                                        headerFields: &headerFields,
+                                        contentType: "text/plain"
+                                    )
+                                    return .init(
+                                        name: "log",
+                                        filename: wrapped.filename,
+                                        headerFields: headerFields,
+                                        body: body
+                                    )
+                                case let .additionalProperties(wrapped):
+                                    var headerFields: HTTPTypes.HTTPFields = .init()
+                                    let value = wrapped.payload
+                                    let body = try converter.setRequiredRequestBodyAsJSON(
+                                        value,
+                                        headerFields: &headerFields,
+                                        contentType: "application/json; charset=utf-8"
+                                    )
+                                    return .init(
+                                        name: wrapped.name,
+                                        filename: wrapped.filename,
+                                        headerFields: headerFields,
+                                        body: body
+                                    )
+                                }
+                            }
+                        )
+                    }
+                    return (request, body)
+                }
+                """,
+            server: """
+                { request, requestBody, metadata in
+                    let contentType = converter.extractContentTypeIfPresent(in: request.headerFields)
+                    let body: Operations.post_sol_foo.Input.Body
+                    let chosenContentType = try converter.bestContentType(
+                        received: contentType,
+                        options: [
+                            "multipart/form-data"
+                        ]
+                    )
+                    switch chosenContentType {
+                    case "multipart/form-data":
+                        body = try converter.getRequiredRequestBodyAsMultipart(
+                            OpenAPIRuntime.MultipartBody<Operations.post_sol_foo.Input.Body.multipartFormPayload>.self,
+                            from: requestBody,
+                            transforming: { value in
+                                .multipartForm(value)
+                            },
+                            boundary: contentType.requiredBoundary(),
+                            allowsUnknownParts: true,
+                            requiredExactlyOncePartNames: [
+                                "log"
+                            ],
+                            requiredAtLeastOncePartNames: [],
+                            atMostOncePartNames: [],
+                            zeroOrMoreTimesPartNames: [],
+                            decoding: { part in
+                                let headerFields = part.headerFields
+                                let (name, filename) = try converter.extractContentDispositionNameAndFilename(in: headerFields)
+                                switch name {
+                                case "log":
+                                    try converter.verifyContentTypeIfPresent(
+                                        in: headerFields,
+                                        matches: "text/plain"
+                                    )
+                                    let body = try converter.getRequiredRequestBodyAsBinary(
+                                        OpenAPIRuntime.HTTPBody.self,
+                                        from: part.body,
+                                        transforming: {
+                                            $0
+                                        }
+                                    )
+                                    return .log(.init(
+                                        payload: .init(body: body),
+                                        filename: filename
+                                    ))
+                                default:
+                                    try converter.verifyContentTypeIfPresent(
+                                        in: headerFields,
+                                        matches: "application/json"
+                                    )
+                                    let body = try await converter.getRequiredRequestBodyAsJSON(
+                                        Components.Schemas.AssociatedValue.self,
+                                        from: part.body,
+                                        transforming: {
+                                            $0
+                                        }
+                                    )
+                                    return .additionalProperties(.init(
+                                        payload: body,
+                                        filename: filename,
+                                        name: name
+                                    ))
+                                }
+                            }
+                        )
+                    default:
+                        preconditionFailure("bestContentType chose an invalid content type.")
+                    }
+                    return Operations.post_sol_foo.Input(body: body)
+                }
+                """
+        )
+    }
+
+    func testResponseMultipartReferencedResponse() throws {
+        try self.assertResponseInTypesClientServerTranslation(
+            """
+            /foo:
+              get:
+                responses:
+                  '200':
+                    $ref: '#/components/responses/MultipartResponse'
+            """,
+            """
+            responses:
+              MultipartResponse:
+                description: Multipart
+                content:
+                  multipart/form-data:
+                    schema:
+                      type: object
+                      properties:
+                        log:
+                          type: string
+            """,
+            types: """
+                @frozen public enum Output: Sendable, Hashable {
+                    case ok(Components.Responses.MultipartResponse)
+                    public var ok: Components.Responses.MultipartResponse {
+                        get throws {
+                            switch self {
+                            case let .ok(response):
+                                return response
+                            default:
+                                try throwUnexpectedResponseStatus(
+                                    expectedStatus: "ok",
+                                    response: self
+                                )
+                            }
+                        }
+                    }
+                    case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+                }
+                """,
+            responses: """
+                public enum Responses {
+                    public struct MultipartResponse: Sendable, Hashable {
+                        @frozen public enum Body: Sendable, Hashable {
+                            @frozen public enum multipartFormPayload: Sendable, Hashable {
+                                public struct logPayload: Sendable, Hashable {
+                                    public var body: OpenAPIRuntime.HTTPBody
+                                    public init(body: OpenAPIRuntime.HTTPBody) {
+                                        self.body = body
+                                    }
+                                }
+                                case log(OpenAPIRuntime.MultipartPart<Components.Responses.MultipartResponse.Body.multipartFormPayload.logPayload>)
+                                case undocumented(OpenAPIRuntime.MultipartRawPart)
+                            }
+                            case multipartForm(OpenAPIRuntime.MultipartBody<Components.Responses.MultipartResponse.Body.multipartFormPayload>)
+                            public var multipartForm: OpenAPIRuntime.MultipartBody<Components.Responses.MultipartResponse.Body.multipartFormPayload> {
+                                get throws {
+                                    switch self {
+                                    case let .multipartForm(body):
+                                        return body
+                                    }
+                                }
+                            }
+                        }
+                        public var body: Components.Responses.MultipartResponse.Body
+                        public init(body: Components.Responses.MultipartResponse.Body) {
+                            self.body = body
+                        }
+                    }
+                }
+                """,
+            server: """
+                { output, request in
+                    switch output {
+                    case let .ok(value):
+                        suppressUnusedWarning(value)
+                        var response = HTTPTypes.HTTPResponse(soar_statusCode: 200)
+                        suppressMutabilityWarning(&response)
+                        let body: OpenAPIRuntime.HTTPBody
+                        switch value.body {
+                        case let .multipartForm(value):
+                            try converter.validateAcceptIfPresent(
+                                "multipart/form-data",
+                                in: request.headerFields
+                            )
+                            body = try converter.setResponseBodyAsMultipart(
+                                value,
+                                headerFields: &response.headerFields,
+                                contentType: "multipart/form-data",
+                                allowsUnknownParts: true,
+                                requiredExactlyOncePartNames: [],
+                                requiredAtLeastOncePartNames: [],
+                                atMostOncePartNames: [
+                                    "log"
+                                ],
+                                zeroOrMoreTimesPartNames: [],
+                                encoding: { part in
+                                    switch part {
+                                    case let .log(wrapped):
+                                        var headerFields: HTTPTypes.HTTPFields = .init()
+                                        let value = wrapped.payload
+                                        let body = try converter.setResponseBodyAsBinary(
+                                            value.body,
+                                            headerFields: &headerFields,
+                                            contentType: "text/plain"
+                                        )
+                                        return .init(
+                                            name: "log",
+                                            filename: wrapped.filename,
+                                            headerFields: headerFields,
+                                            body: body
+                                        )
+                                    case let .undocumented(value):
+                                        return value
+                                    }
+                                }
+                            )
+                        }
+                        return (response, body)
+                    case let .undocumented(statusCode, _):
+                        return (.init(soar_statusCode: statusCode), nil)
+                    }
+                }
+                """,
+            client: """
+                { response, responseBody in
+                    switch response.status.code {
+                    case 200:
+                        let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                        let body: Components.Responses.MultipartResponse.Body
+                        let chosenContentType = try converter.bestContentType(
+                            received: contentType,
+                            options: [
+                                "multipart/form-data"
+                            ]
+                        )
+                        switch chosenContentType {
+                        case "multipart/form-data":
+                            body = try converter.getResponseBodyAsMultipart(
+                                OpenAPIRuntime.MultipartBody<Components.Responses.MultipartResponse.Body.multipartFormPayload>.self,
+                                from: responseBody,
+                                transforming: { value in
+                                    .multipartForm(value)
+                                },
+                                boundary: contentType.requiredBoundary(),
+                                allowsUnknownParts: true,
+                                requiredExactlyOncePartNames: [],
+                                requiredAtLeastOncePartNames: [],
+                                atMostOncePartNames: [
+                                    "log"
+                                ],
+                                zeroOrMoreTimesPartNames: [],
+                                decoding: { part in
+                                    let headerFields = part.headerFields
+                                    let (name, filename) = try converter.extractContentDispositionNameAndFilename(in: headerFields)
+                                    switch name {
+                                    case "log":
+                                        try converter.verifyContentTypeIfPresent(
+                                            in: headerFields,
+                                            matches: "text/plain"
+                                        )
+                                        let body = try converter.getResponseBodyAsBinary(
+                                            OpenAPIRuntime.HTTPBody.self,
+                                            from: part.body,
+                                            transforming: {
+                                                $0
+                                            }
+                                        )
+                                        return .log(.init(
+                                            payload: .init(body: body),
+                                            filename: filename
+                                        ))
+                                    default:
+                                        return .undocumented(part)
+                                    }
+                                }
+                            )
+                        default:
+                            preconditionFailure("bestContentType chose an invalid content type.")
+                        }
+                        return .ok(.init(body: body))
+                    default:
+                        return .undocumented(
+                            statusCode: response.status.code,
+                            .init(
+                                headerFields: response.headerFields,
+                                body: responseBody
+                            )
+                        )
+                    }
+                }
+                """
+        )
+    }
+
+    func testResponseMultipartInlineResponse() throws {
+        try self.assertResponseInTypesClientServerTranslation(
+            """
+            /foo:
+              get:
+                responses:
+                  '200':
+                    description: Multipart
+                    content:
+                      multipart/form-data:
+                        schema:
+                          type: object
+                          properties:
+                            log:
+                              type: string
+            """,
+            types: """
+                @frozen public enum Output: Sendable, Hashable {
+                    public struct Ok: Sendable, Hashable {
+                        @frozen public enum Body: Sendable, Hashable {
+                            @frozen public enum multipartFormPayload: Sendable, Hashable {
+                                public struct logPayload: Sendable, Hashable {
+                                    public var body: OpenAPIRuntime.HTTPBody
+                                    public init(body: OpenAPIRuntime.HTTPBody) {
+                                        self.body = body
+                                    }
+                                }
+                                case log(OpenAPIRuntime.MultipartPart<Operations.get_sol_foo.Output.Ok.Body.multipartFormPayload.logPayload>)
+                                case undocumented(OpenAPIRuntime.MultipartRawPart)
+                            }
+                            case multipartForm(OpenAPIRuntime.MultipartBody<Operations.get_sol_foo.Output.Ok.Body.multipartFormPayload>)
+                            public var multipartForm: OpenAPIRuntime.MultipartBody<Operations.get_sol_foo.Output.Ok.Body.multipartFormPayload> {
+                                get throws {
+                                    switch self {
+                                    case let .multipartForm(body):
+                                        return body
+                                    }
+                                }
+                            }
+                        }
+                        public var body: Operations.get_sol_foo.Output.Ok.Body
+                        public init(body: Operations.get_sol_foo.Output.Ok.Body) {
+                            self.body = body
+                        }
+                    }
+                    case ok(Operations.get_sol_foo.Output.Ok)
+                    public var ok: Operations.get_sol_foo.Output.Ok {
+                        get throws {
+                            switch self {
+                            case let .ok(response):
+                                return response
+                            default:
+                                try throwUnexpectedResponseStatus(
+                                    expectedStatus: "ok",
+                                    response: self
+                                )
+                            }
+                        }
+                    }
+                    case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+                }
+                """,
+            server: """
+                { output, request in
+                    switch output {
+                    case let .ok(value):
+                        suppressUnusedWarning(value)
+                        var response = HTTPTypes.HTTPResponse(soar_statusCode: 200)
+                        suppressMutabilityWarning(&response)
+                        let body: OpenAPIRuntime.HTTPBody
+                        switch value.body {
+                        case let .multipartForm(value):
+                            try converter.validateAcceptIfPresent(
+                                "multipart/form-data",
+                                in: request.headerFields
+                            )
+                            body = try converter.setResponseBodyAsMultipart(
+                                value,
+                                headerFields: &response.headerFields,
+                                contentType: "multipart/form-data",
+                                allowsUnknownParts: true,
+                                requiredExactlyOncePartNames: [],
+                                requiredAtLeastOncePartNames: [],
+                                atMostOncePartNames: [
+                                    "log"
+                                ],
+                                zeroOrMoreTimesPartNames: [],
+                                encoding: { part in
+                                    switch part {
+                                    case let .log(wrapped):
+                                        var headerFields: HTTPTypes.HTTPFields = .init()
+                                        let value = wrapped.payload
+                                        let body = try converter.setResponseBodyAsBinary(
+                                            value.body,
+                                            headerFields: &headerFields,
+                                            contentType: "text/plain"
+                                        )
+                                        return .init(
+                                            name: "log",
+                                            filename: wrapped.filename,
+                                            headerFields: headerFields,
+                                            body: body
+                                        )
+                                    case let .undocumented(value):
+                                        return value
+                                    }
+                                }
+                            )
+                        }
+                        return (response, body)
+                    case let .undocumented(statusCode, _):
+                        return (.init(soar_statusCode: statusCode), nil)
+                    }
+                }
+                """,
+            client: """
+                { response, responseBody in
+                    switch response.status.code {
+                    case 200:
+                        let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+                        let body: Operations.get_sol_foo.Output.Ok.Body
+                        let chosenContentType = try converter.bestContentType(
+                            received: contentType,
+                            options: [
+                                "multipart/form-data"
+                            ]
+                        )
+                        switch chosenContentType {
+                        case "multipart/form-data":
+                            body = try converter.getResponseBodyAsMultipart(
+                                OpenAPIRuntime.MultipartBody<Operations.get_sol_foo.Output.Ok.Body.multipartFormPayload>.self,
+                                from: responseBody,
+                                transforming: { value in
+                                    .multipartForm(value)
+                                },
+                                boundary: contentType.requiredBoundary(),
+                                allowsUnknownParts: true,
+                                requiredExactlyOncePartNames: [],
+                                requiredAtLeastOncePartNames: [],
+                                atMostOncePartNames: [
+                                    "log"
+                                ],
+                                zeroOrMoreTimesPartNames: [],
+                                decoding: { part in
+                                    let headerFields = part.headerFields
+                                    let (name, filename) = try converter.extractContentDispositionNameAndFilename(in: headerFields)
+                                    switch name {
+                                    case "log":
+                                        try converter.verifyContentTypeIfPresent(
+                                            in: headerFields,
+                                            matches: "text/plain"
+                                        )
+                                        let body = try converter.getResponseBodyAsBinary(
+                                            OpenAPIRuntime.HTTPBody.self,
+                                            from: part.body,
+                                            transforming: {
+                                                $0
+                                            }
+                                        )
+                                        return .log(.init(
+                                            payload: .init(body: body),
+                                            filename: filename
+                                        ))
+                                    default:
+                                        return .undocumented(part)
+                                    }
+                                }
+                            )
+                        default:
+                            preconditionFailure("bestContentType chose an invalid content type.")
+                        }
+                        return .ok(.init(body: body))
+                    default:
+                        return .undocumented(
+                            statusCode: response.status.code,
+                            .init(
+                                headerFields: response.headerFields,
+                                body: responseBody
+                            )
+                        )
+                    }
+                }
+                """
+        )
+    }
+
     func testResponseWithExampleWithOnlyValueByte() throws {
         try self.assertResponsesTranslation(
-            featureFlags: [.base64DataEncodingDecoding],
             """
             responses:
               MyResponse:
@@ -1817,7 +4848,7 @@ final class SnippetBasedReferenceTests: XCTestCase {
                   application/json:
                     schema:
                       type: string
-                      format: byte
+                      contentEncoding: base64
                     examples:
                       application/json:
                         summary: "a hello response"
@@ -1829,14 +4860,15 @@ final class SnippetBasedReferenceTests: XCTestCase {
                         case json(OpenAPIRuntime.Base64EncodedData)
                         public var json: OpenAPIRuntime.Base64EncodedData {
                             get throws {
-                                switch self { case let .json(body): return body }
+                                switch self {
+                                case let .json(body):
+                                    return body
+                                }
                             }
                         }
                     }
                     public var body: Components.Responses.MyResponse.Body
-                    public init(
-                        body: Components.Responses.MyResponse.Body
-                    ) {
+                    public init(body: Components.Responses.MyResponse.Body) {
                         self.body = body
                     }
                 }
@@ -1851,20 +4883,21 @@ extension SnippetBasedReferenceTests {
     func makeTypesTranslator(openAPIDocumentYAML: String) throws -> TypesFileTranslator {
         let document = try YAMLDecoder().decode(OpenAPI.Document.self, from: openAPIDocumentYAML)
         return TypesFileTranslator(
-            config: Config(mode: .types),
+            config: Config(mode: .types, access: .public),
             diagnostics: XCTestDiagnosticCollector(test: self),
             components: document.components
         )
     }
 
     func makeTypesTranslator(
+        accessModifier: AccessModifier = .public,
         featureFlags: FeatureFlags = [],
         ignoredDiagnosticMessages: Set<String> = [],
         componentsYAML: String
     ) throws -> TypesFileTranslator {
         let components = try YAMLDecoder().decode(OpenAPI.Components.self, from: componentsYAML)
         return TypesFileTranslator(
-            config: Config(mode: .types, featureFlags: featureFlags),
+            config: Config(mode: .types, access: accessModifier, featureFlags: featureFlags),
             diagnostics: XCTestDiagnosticCollector(test: self, ignoredDiagnosticMessages: ignoredDiagnosticMessages),
             components: components
         )
@@ -1878,17 +4911,17 @@ extension SnippetBasedReferenceTests {
         let collector = XCTestDiagnosticCollector(test: self, ignoredDiagnosticMessages: ignoredDiagnosticMessages)
         return (
             TypesFileTranslator(
-                config: Config(mode: .types, featureFlags: featureFlags),
+                config: Config(mode: .types, access: .public, featureFlags: featureFlags),
                 diagnostics: collector,
                 components: components
             ),
             ClientFileTranslator(
-                config: Config(mode: .client, featureFlags: featureFlags),
+                config: Config(mode: .client, access: .public, featureFlags: featureFlags),
                 diagnostics: collector,
                 components: components
             ),
             ServerFileTranslator(
-                config: Config(mode: .server, featureFlags: featureFlags),
+                config: Config(mode: .server, access: .public, featureFlags: featureFlags),
                 diagnostics: collector,
                 components: components
             )
@@ -1909,10 +4942,11 @@ extension SnippetBasedReferenceTests {
     func assertParametersTranslation(
         _ componentsYAML: String,
         _ expectedSwift: String,
+        accessModifier: AccessModifier = .public,
         file: StaticString = #filePath,
         line: UInt = #line
     ) throws {
-        let translator = try makeTypesTranslator(componentsYAML: componentsYAML)
+        let translator = try makeTypesTranslator(accessModifier: accessModifier, componentsYAML: componentsYAML)
         let translation = try translator.translateComponentParameters(translator.components.parameters)
         try XCTAssertSwiftEquivalent(translation, expectedSwift, file: file, line: line)
     }
@@ -1921,17 +4955,19 @@ extension SnippetBasedReferenceTests {
         _ pathsYAML: String,
         _ componentsYAML: String? = nil,
         types expectedTypesSwift: String,
+        schemas expectedSchemasSwift: String? = nil,
+        requestBodies expectedRequestBodiesSwift: String? = nil,
         client expectedClientSwift: String,
         server expectedServerSwift: String,
         file: StaticString = #filePath,
         line: UInt = #line
     ) throws {
         continueAfterFailure = false
-        let (types, client, server) = try makeTranslators()
         let components =
             try componentsYAML.flatMap { componentsYAML in
                 try YAMLDecoder().decode(OpenAPI.Components.self, from: componentsYAML)
             } ?? OpenAPI.Components.noComponents
+        let (types, client, server) = try makeTranslators(components: components)
         let paths = try YAMLDecoder().decode(OpenAPI.PathItem.Map.self, from: pathsYAML)
         let document = OpenAPI.Document(
             openAPIVersion: .v3_1_0,
@@ -1940,6 +4976,7 @@ extension SnippetBasedReferenceTests {
             paths: paths,
             components: components
         )
+        let multipartSchemaNames = try types.parseSchemaNamesUsedInMultipart(paths: paths, components: components)
         let operationDescriptions = try OperationDescription.all(
             from: document.paths,
             in: document.components,
@@ -1948,12 +4985,88 @@ extension SnippetBasedReferenceTests {
         let operation = try XCTUnwrap(operationDescriptions.first)
         let generatedTypesStructuredSwift = try types.translateOperationInput(operation)
         try XCTAssertSwiftEquivalent(generatedTypesStructuredSwift, expectedTypesSwift, file: file, line: line)
-
+        if let expectedSchemasSwift {
+            let generatedSchemasStructuredSwift = try types.translateSchemas(
+                document.components.schemas,
+                multipartSchemaNames: multipartSchemaNames
+            )
+            try XCTAssertSwiftEquivalent(generatedSchemasStructuredSwift, expectedSchemasSwift, file: file, line: line)
+        }
+        if let expectedRequestBodiesSwift {
+            let generatedRequestBodiesStructuredSwift = try types.translateComponentRequestBodies(
+                document.components.requestBodies
+            )
+            try XCTAssertSwiftEquivalent(
+                generatedRequestBodiesStructuredSwift,
+                expectedRequestBodiesSwift,
+                file: file,
+                line: line
+            )
+        }
         let generatedClientStructuredSwift = try client.translateClientSerializer(operation)
         try XCTAssertSwiftEquivalent(generatedClientStructuredSwift, expectedClientSwift, file: file, line: line)
 
         let generatedServerStructuredSwift = try server.translateServerDeserializer(operation)
         try XCTAssertSwiftEquivalent(generatedServerStructuredSwift, expectedServerSwift, file: file, line: line)
+    }
+
+    func assertResponseInTypesClientServerTranslation(
+        _ pathsYAML: String,
+        _ componentsYAML: String? = nil,
+        types expectedTypesSwift: String,
+        schemas expectedSchemasSwift: String? = nil,
+        responses expectedResponsesSwift: String? = nil,
+        server expectedServerSwift: String,
+        client expectedClientSwift: String,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        continueAfterFailure = false
+        let components =
+            try componentsYAML.flatMap { componentsYAML in
+                try YAMLDecoder().decode(OpenAPI.Components.self, from: componentsYAML)
+            } ?? OpenAPI.Components.noComponents
+        let (types, client, server) = try makeTranslators(components: components)
+        let paths = try YAMLDecoder().decode(OpenAPI.PathItem.Map.self, from: pathsYAML)
+        let document = OpenAPI.Document(
+            openAPIVersion: .v3_1_0,
+            info: .init(title: "Test", version: "1.0.0"),
+            servers: [],
+            paths: paths,
+            components: components
+        )
+        let multipartSchemaNames = try types.parseSchemaNamesUsedInMultipart(paths: paths, components: components)
+        let operationDescriptions = try OperationDescription.all(
+            from: document.paths,
+            in: document.components,
+            asSwiftSafeName: types.swiftSafeName
+        )
+        let operation = try XCTUnwrap(operationDescriptions.first)
+        let generatedTypesStructuredSwift = try types.translateOperationOutput(operation)
+        try XCTAssertSwiftEquivalent(generatedTypesStructuredSwift, expectedTypesSwift, file: file, line: line)
+        if let expectedSchemasSwift {
+            let generatedSchemasStructuredSwift = try types.translateSchemas(
+                document.components.schemas,
+                multipartSchemaNames: multipartSchemaNames
+            )
+            try XCTAssertSwiftEquivalent(generatedSchemasStructuredSwift, expectedSchemasSwift, file: file, line: line)
+        }
+        if let expectedResponsesSwift {
+            let generatedRequestBodiesStructuredSwift = try types.translateComponentResponses(
+                document.components.responses
+            )
+            try XCTAssertSwiftEquivalent(
+                generatedRequestBodiesStructuredSwift,
+                expectedResponsesSwift,
+                file: file,
+                line: line
+            )
+        }
+        let generatedServerStructuredSwift = try server.translateServerSerializer(operation)
+        try XCTAssertSwiftEquivalent(generatedServerStructuredSwift, expectedServerSwift, file: file, line: line)
+
+        let generatedClientStructuredSwift = try client.translateClientDeserializer(operation)
+        try XCTAssertSwiftEquivalent(generatedClientStructuredSwift, expectedClientSwift, file: file, line: line)
     }
 
     func assertSchemasTranslation(
@@ -1969,7 +5082,12 @@ extension SnippetBasedReferenceTests {
             ignoredDiagnosticMessages: ignoredDiagnosticMessages,
             componentsYAML: componentsYAML
         )
-        let translation = try translator.translateSchemas(translator.components.schemas)
+        let components = translator.components
+        let multipartSchemaNames = try translator.parseSchemaNamesUsedInMultipart(paths: [:], components: components)
+        let translation = try translator.translateSchemas(
+            components.schemas,
+            multipartSchemaNames: multipartSchemaNames
+        )
         try XCTAssertSwiftEquivalent(translation, expectedSwift, file: file, line: line)
     }
 
@@ -2074,12 +5192,10 @@ private func XCTAssertSwiftEquivalent(
     file: StaticString = #filePath,
     line: UInt = #line
 ) throws {
-    try XCTAssertEqualWithDiff(
-        TextBasedRenderer().renderedDeclaration(declaration.strippingComments).swiftFormatted,
-        expectedSwift.swiftFormatted,
-        file: file,
-        line: line
-    )
+    let renderer = TextBasedRenderer.default
+    renderer.renderDeclaration(declaration.strippingComments)
+    let contents = renderer.renderedContents()
+    try XCTAssertEqualWithDiff(contents, expectedSwift, file: file, line: line)
 }
 
 private func XCTAssertSwiftEquivalent(
@@ -2088,12 +5204,10 @@ private func XCTAssertSwiftEquivalent(
     file: StaticString = #filePath,
     line: UInt = #line
 ) throws {
-    try XCTAssertEqualWithDiff(
-        TextBasedRenderer().renderedCodeBlock(codeBlock).swiftFormatted,
-        expectedSwift.swiftFormatted,
-        file: file,
-        line: line
-    )
+    let renderer = TextBasedRenderer.default
+    renderer.renderCodeBlock(codeBlock)
+    let contents = renderer.renderedContents()
+    try XCTAssertEqualWithDiff(contents, expectedSwift, file: file, line: line)
 }
 
 private func XCTAssertSwiftEquivalent(
@@ -2102,20 +5216,17 @@ private func XCTAssertSwiftEquivalent(
     file: StaticString = #filePath,
     line: UInt = #line
 ) throws {
-    try XCTAssertEqualWithDiff(
-        TextBasedRenderer().renderedExpression(expression).swiftFormatted,
-        expectedSwift.swiftFormatted,
-        file: file,
-        line: line
-    )
+    let renderer = TextBasedRenderer.default
+    renderer.renderExpression(expression)
+    let contents = renderer.renderedContents()
+    try XCTAssertEqualWithDiff(contents, expectedSwift, file: file, line: line)
 }
 
 private func diff(expected: String, actual: String) throws -> String {
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
     process.arguments = [
-        "bash", "-c",
-        "diff -U5 --label=expected <(echo '\(expected)') --label=actual <(echo '\(actual)')",
+        "bash", "-c", "diff -U5 --label=expected <(echo '\(expected)') --label=actual <(echo '\(actual)')",
     ]
     let pipe = Pipe()
     process.standardOutput = pipe
@@ -2136,10 +5247,8 @@ fileprivate extension Declaration {
 
     func stripComments(_ decl: Declaration) -> Declaration {
         switch decl {
-        case let .commentable(_, d):
-            return stripComments(d)
-        case let .deprecated(a, b):
-            return .deprecated(a, stripComments(b))
+        case let .commentable(_, d): return stripComments(d)
+        case let .deprecated(a, b): return .deprecated(a, stripComments(b))
         case var .protocol(p):
             p.members = p.members.map(stripComments(_:))
             return .protocol(p)
@@ -2158,20 +5267,14 @@ fileprivate extension Declaration {
         case var .variable(v):
             v.getter = stripComments(v.getter)
             return .variable(v)
-        case let .typealias(t):
-            return .typealias(t)
-        case let .enumCase(e):
-            return .enumCase(e)
+        case let .typealias(t): return .typealias(t)
+        case let .enumCase(e): return .enumCase(e)
         }
     }
 
-    func stripComments(_ body: [CodeBlock]?) -> [CodeBlock]? {
-        body.map(stripComments(_:))
-    }
+    func stripComments(_ body: [CodeBlock]?) -> [CodeBlock]? { body.map(stripComments(_:)) }
 
-    func stripComments(_ body: [CodeBlock]) -> [CodeBlock] {
-        body.map(stripComments(_:))
-    }
+    func stripComments(_ body: [CodeBlock]) -> [CodeBlock] { body.map(stripComments(_:)) }
 
     func stripComments(_ codeBlock: CodeBlock) -> CodeBlock {
         CodeBlock(comment: nil, item: stripComments(codeBlock.item))

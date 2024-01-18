@@ -13,44 +13,28 @@
 //===----------------------------------------------------------------------===//
 import Foundation
 
-extension Data {
-    /// A copy of the data formatted using swift-format.
-    ///
-    /// Data is assumed to contain Swift code encoded using UTF-8.
-    ///
-    /// - Throws: When data is not valid UTF-8.
-    var swiftFormatted: Data {
-        get throws {
-            let string = String(decoding: self, as: UTF8.self)
-            return try Self(string.swiftFormatted.utf8)
-        }
-    }
-}
+#if $RetroactiveAttribute
+extension FileHandle: @retroactive TextOutputStream {}
+#else
+extension FileHandle: TextOutputStream {}
+#endif
 
 extension InMemoryInputFile {
     /// Creates a new in-memory file by reading the contents at the specified path.
     /// - Parameter url: The path to the file to read.
-    init(fromFileAt url: URL) throws {
-        try self.init(absolutePath: url, contents: Data(contentsOf: url))
-    }
-}
-
-extension InMemoryOutputFile {
-    /// A copy of the file formatted using swift-format.
-    public var swiftFormatted: InMemoryOutputFile {
-        get throws {
-            var new = self
-            new.contents = try contents.swiftFormatted
-            return new
-        }
-    }
+    /// - Throws: An error if there's an issue reading the file or initializing the in-memory file.
+    init(fromFileAt url: URL) throws { try self.init(absolutePath: url, contents: Data(contentsOf: url)) }
 }
 
 /// File handle to stderr.
 let stdErrHandle = FileHandle.standardError
 
-extension FileHandle: TextOutputStream {
-    public func write(_ string: String) {
-        write(Data(string.utf8))
-    }
+extension FileHandle {
+    /// Writes the given string to the file handle.
+    ///
+    /// This method writes the provided string to the file handle using its UTF-8
+    /// representation.
+    ///
+    /// - Parameter string: The string to be written to the file handle.
+    public func write(_ string: String) { write(Data(string.utf8)) }
 }

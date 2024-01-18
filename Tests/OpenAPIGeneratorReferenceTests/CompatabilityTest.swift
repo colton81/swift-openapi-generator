@@ -28,12 +28,11 @@ final class CompatibilityTest: XCTestCase {
     let compatibilityTestParallelCodegen = getBoolEnv("SWIFT_OPENAPI_COMPATIBILITY_TEST_PARALLEL_CODEGEN") ?? false
     let compatibilityTestNumBuildJobs = getIntEnv("SWIFT_OPENAPI_COMPATIBILITY_TEST_NUM_BUILD_JOBS")
 
+    /// Setup method called before the invocation of each test method in the class.
     override func setUp() async throws {
         continueAfterFailure = false
         try XCTSkipUnless(compatibilityTestEnabled)
-        if _isDebugAssertConfiguration() {
-            log("Warning: Compatility test running in debug mode")
-        }
+        if _isDebugAssertConfiguration() { log("Warning: Compatility test running in debug mode") }
     }
 
     func testAWSLambdaRuntime() async throws {
@@ -56,9 +55,12 @@ final class CompatibilityTest: XCTestCase {
 
     func testBox() async throws {
         try await _test(
-            "https://raw.githubusercontent.com/box/box-openapi/5955d651f0cd273c0968e3855c1d873c7ae3523e/openapi.json",
+            "https://raw.githubusercontent.com/box/box-openapi/98f51911398fb3f997b2ce0666f11f37065fc4c9/openapi.json",
             license: .apache,
-            expectedDiagnostics: [],
+            expectedDiagnostics: [
+                "Multipart request bodies must always be required, but found an optional one - skipping. Mark as `required: true` to get this body generated.",
+                "A property name only appears in the required list, but not in the properties map - this is likely a typo; skipping this property.",
+            ],
             skipBuild: compatibilityTestSkipBuild
         )
     }
@@ -74,7 +76,7 @@ final class CompatibilityTest: XCTestCase {
 
     func testCloudHypervisor() async throws {
         try await _test(
-            "https://raw.githubusercontent.com/cloud-hypervisor/cloud-hypervisor/889d06277acae45c2b55bd5f6298ca2b21a55cbb/vmm/src/api/openapi/cloud-hypervisor.yaml",
+            "https://raw.githubusercontent.com/cloud-hypervisor/cloud-hypervisor/2b457584e06fb72c0256433141731750c58eb6b5/vmm/src/api/openapi/cloud-hypervisor.yaml",
             license: .apache,
             expectedDiagnostics: [],
             skipBuild: compatibilityTestSkipBuild
@@ -83,10 +85,11 @@ final class CompatibilityTest: XCTestCase {
 
     func testDiscourse() async throws {
         try await _test(
-            "https://raw.githubusercontent.com/discourse/discourse_api_docs/aa152ea188c7b07bbf809681154cc311ec178acf/openapi.yml",
+            "https://raw.githubusercontent.com/discourse/discourse_api_docs/fa2391353e9c3eb016ccae30daa34467d2ac2616/openapi.yml",
             license: .apache,
             expectedDiagnostics: [
-                "Validation warning: Inconsistency encountered when parsing `OpenAPI Schema`: Found nothing but unsupported attributes.."
+                "Validation warning: Inconsistency encountered when parsing `OpenAPI Schema`: Found nothing but unsupported attributes..",
+                "Multipart request bodies must always be required, but found an optional one - skipping. Mark as `required: true` to get this body generated.",
             ],
             skipBuild: compatibilityTestSkipBuild
         )
@@ -94,25 +97,42 @@ final class CompatibilityTest: XCTestCase {
 
     func testGithub() async throws {
         try await _test(
-            "https://raw.githubusercontent.com/github/rest-api-description/13c873cb3b15ffd5bcd88c6d6270a963ef4518f6/descriptions/api.github.com/api.github.com.yaml",
+            "https://raw.githubusercontent.com/github/rest-api-description/322663c9c909974af16363b4dc0873c428bdbe34/descriptions-next/api.github.com/api.github.com.yaml",
             license: .mit,
-            expectedDiagnostics: [],
+            expectedDiagnostics: [
+                "Validation warning: Inconsistency encountered when parsing `OpenAPI Schema`: Found schema attributes not consistent with the type specified: array. Specifically, attributes for these other types: [\"object\"].",
+                "Validation warning: Inconsistency encountered when parsing `OpenAPI Schema`: Found schema attributes not consistent with the type specified: string. Specifically, attributes for these other types: [\"object\"].",
+                "Validation warning: Inconsistency encountered when parsing `OpenAPI Schema`: Found nothing but unsupported attributes..",
+                "Schema warning: Inconsistency encountered when parsing `OpenAPI Schema`: Found schema attributes not consistent with the type specified: string. Specifically, attributes for these other types: [\"array\"].",
+                "Validation warning: Inconsistency encountered when parsing `Schema`: A schema contains properties for multiple types of schemas, namely: [\"array\", \"object\"]..",
+                "Validation warning: Inconsistency encountered when parsing `OpenAPI Schema`: Found schema attributes not consistent with the type specified: string. Specifically, attributes for these other types: [\"array\"].",
+                "A property name only appears in the required list, but not in the properties map - this is likely a typo; skipping this property.",
+                "Schema warning: Inconsistency encountered when parsing `OpenAPI Schema`: Found schema attributes not consistent with the type specified: array. Specifically, attributes for these other types: [\"object\"].",
+                "Schema warning: Inconsistency encountered when parsing `Schema`: A schema contains properties for multiple types of schemas, namely: [\"array\", \"object\"]..",
+            ],
             skipBuild: true
         )
     }
 
     func testGithubEnterprise() async throws {
         try await _test(
-            "https://raw.githubusercontent.com/github/rest-api-description/13c873cb3b15ffd5bcd88c6d6270a963ef4518f6/descriptions/ghes-3.5/ghes-3.5.yaml",
+            "https://raw.githubusercontent.com/github/rest-api-description/322663c9c909974af16363b4dc0873c428bdbe34/descriptions-next/ghes-3.7/ghes-3.7.yaml",
             license: .mit,
-            expectedDiagnostics: [],
+            expectedDiagnostics: [
+                "Multipart request bodies must always be required, but found an optional one - skipping. Mark as `required: true` to get this body generated.",
+                "Validation warning: Inconsistency encountered when parsing `OpenAPI Schema`: Found nothing but unsupported attributes..",
+                "Validation warning: Inconsistency encountered when parsing `OpenAPI Schema`: Found schema attributes not consistent with the type specified: string. Specifically, attributes for these other types: [\"array\"].",
+                "A property name only appears in the required list, but not in the properties map - this is likely a typo; skipping this property.",
+                "Validation warning: Inconsistency encountered when parsing `OpenAPI Schema`: Found schema attributes not consistent with the type specified: string. Specifically, attributes for these other types: [\"object\"].",
+                "Schema warning: Inconsistency encountered when parsing `OpenAPI Schema`: Found schema attributes not consistent with the type specified: string. Specifically, attributes for these other types: [\"array\"].",
+            ],
             skipBuild: true
         )
     }
 
     func testKubernetes() async throws {
         try await _test(
-            "https://raw.githubusercontent.com/kubernetes/kubernetes/fa3d7990104d7c1f16943a67f11b154b71f6a132/api/openapi-spec/v3/api__v1_openapi.json",
+            "https://raw.githubusercontent.com/kubernetes/kubernetes/599fdb7adde5658dadb6a149c40624b4342fc909/api/openapi-spec/v3/api__v1_openapi.json",
             license: .apache,
             expectedDiagnostics: [],
             skipBuild: compatibilityTestSkipBuild
@@ -123,17 +143,19 @@ final class CompatibilityTest: XCTestCase {
         try await _test(
             "https://raw.githubusercontent.com/Netflix/consoleme/774420462b0190b1bfa78aa73d39e20044f52db9/swagger.yaml",
             license: .apache,
-            expectedDiagnostics: [],
+            expectedDiagnostics: [
+                "A property name only appears in the required list, but not in the properties map - this is likely a typo; skipping this property."
+            ],
             skipBuild: compatibilityTestSkipBuild
         )
     }
 
     func testOpenAI() async throws {
         try await _test(
-            "https://raw.githubusercontent.com/openai/openai-openapi/ec0b3953bfa08a92782bdccf34c1931b13402f56/openapi.yaml",
+            "https://raw.githubusercontent.com/openai/openai-openapi/75eebb4477355ddb3abe18615108e02cf6fdca42/openapi.yaml",
             license: .mit,
             expectedDiagnostics: [
-                "Schema \"string (binary)\" is not supported, reason: \"Binary properties in object schemas.\", skipping"
+                "A property name only appears in the required list, but not in the properties map - this is likely a typo; skipping this property."
             ],
             skipBuild: compatibilityTestSkipBuild
         )
@@ -156,6 +178,7 @@ final class CompatibilityTest: XCTestCase {
             skipBuild: compatibilityTestSkipBuild
         )
     }
+
     func testOpenAPIExamplesAPIWithExamples() async throws {
         try await _test(
             "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/9dff244e5708fbe16e768738f4f17cf3fddf4066/examples/v3.0/api-with-examples.yaml",
@@ -164,6 +187,7 @@ final class CompatibilityTest: XCTestCase {
             skipBuild: compatibilityTestSkipBuild
         )
     }
+
     func testOpenAPIExamplesCallbackExample() async throws {
         try await _test(
             "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/9dff244e5708fbe16e768738f4f17cf3fddf4066/examples/v3.0/callback-example.yaml",
@@ -172,6 +196,7 @@ final class CompatibilityTest: XCTestCase {
             skipBuild: compatibilityTestSkipBuild
         )
     }
+
     func testOpenAPIExamplesLinkExample() async throws {
         try await _test(
             "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/9dff244e5708fbe16e768738f4f17cf3fddf4066/examples/v3.0/link-example.yaml",
@@ -205,12 +230,11 @@ fileprivate extension CompatibilityTest {
     ///   - documentURL: The URL to the OpenAPI document.
     ///   - license: The license of the OpenAPI document itself. Note, this is not necessarily the license of the code for the service API itself.
     ///   - expectedDiagnostics: A set of diagnostics that should _not_ result in a test failure.
-    func _test(
-        _ documentURL: String,
-        license: License,
-        expectedDiagnostics: Set<String> = [],
-        skipBuild: Bool = false
-    ) async throws {
+    ///   - skipBuild: A boolean value that indicates whether to skip the Swift package creation and build step.
+    /// - Throws: An error of if any step in the compatibility test harness fails.
+    func _test(_ documentURL: String, license: License, expectedDiagnostics: Set<String> = [], skipBuild: Bool = false)
+        async throws
+    {
         let diagnosticsCollector = RecordingDiagnosticCollector()
 
         // Download the OpenAPI document.
@@ -228,8 +252,7 @@ fileprivate extension CompatibilityTest {
                 for mode in GeneratorMode.allCases {
                     group.addTask {
                         let generator = makeGeneratorPipeline(
-                            formatter: { $0 },
-                            config: Config(mode: mode),
+                            config: Config(mode: mode, access: .public),
                             diagnostics: diagnosticsCollector
                         )
                         return try assertNoThrowWithValue(generator.run(input))
@@ -240,8 +263,7 @@ fileprivate extension CompatibilityTest {
         } else {
             outputs = try GeneratorMode.allCases.map { mode in
                 let generator = makeGeneratorPipeline(
-                    formatter: { $0 },
-                    config: Config(mode: mode),
+                    config: Config(mode: mode, access: .public),
                     diagnostics: diagnosticsCollector
                 )
                 return try assertNoThrowWithValue(generator.run(input))
@@ -263,12 +285,12 @@ fileprivate extension CompatibilityTest {
             XCTAssertNoThrow(try FileManager.default.createDirectory(at: packageDir, withIntermediateDirectories: true))
             let packageSwiftPath = packageDir.appendingPathComponent("Package.swift", isDirectory: false)
             let packageSwiftContents = """
-                // swift-tools-version:5.8
+                // swift-tools-version:5.9
                 import PackageDescription
                 let package = Package(
                     name: "\(packageName)",
                     platforms: [.macOS(.v13)],
-                    dependencies: [.package(url: "https://github.com/apple/swift-openapi-runtime", .upToNextMinor(from: "0.3.0"))],
+                    dependencies: [.package(url: "https://github.com/apple/swift-openapi-runtime", from: "1.0.0")],
                     targets: [.target(name: "Harness", dependencies: [.product(name: "OpenAPIRuntime", package: "swift-openapi-runtime")])]
                 )
                 """
@@ -276,9 +298,7 @@ fileprivate extension CompatibilityTest {
                 FileManager.default.createFile(atPath: packageSwiftPath.path, contents: Data(packageSwiftContents.utf8))
             )
 
-            let targetSourceDirectory =
-                packageDir
-                .appendingPathComponent("Sources", isDirectory: false)
+            let targetSourceDirectory = packageDir.appendingPathComponent("Sources", isDirectory: false)
                 .appendingPathComponent("Harness", isDirectory: true)
             XCTAssertNoThrow(
                 try FileManager.default.createDirectory(at: targetSourceDirectory, withIntermediateDirectories: true)
@@ -294,9 +314,8 @@ fileprivate extension CompatibilityTest {
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
             process.arguments = [
-                "swift", "build",
-                "--package-path", packageDir.path,
-                "-Xswiftc", "-Xllvm", "-Xswiftc", "-vectorize-slp=false",
+                "swift", "build", "--package-path", packageDir.path, "-Xswiftc", "-Xllvm", "-Xswiftc",
+                "-vectorize-slp=false",
             ]
             if let numBuildJobs = compatibilityTestNumBuildJobs {
                 process.arguments!.append(contentsOf: ["-j", String(numBuildJobs)])
@@ -334,9 +353,7 @@ fileprivate extension CompatibilityTest {
     }
 
     /// Prints a message with the current test name prepended (useful in parallel CI logs).
-    func log(_ message: String) {
-        print("\(name) \(message)")
-    }
+    func log(_ message: String) { print("\(name) \(message)") }
 
     var testCaseName: String {
         /// The `name` property is `<test-suite-name>.<test-case-name>` on Linux,
@@ -366,9 +383,7 @@ private final class RecordingDiagnosticCollector: DiagnosticCollector, @unchecke
         lock.lock()
         defer { lock.unlock() }
         _diagnostics.append(diagnostic)
-        if verbose {
-            print("Collected diagnostic: \(diagnostic.description)")
-        }
+        if verbose { print("Collected diagnostic: \(diagnostic.description)") }
     }
 }
 
@@ -379,33 +394,22 @@ private func assertNoThrowWithValue<T>(
     file: StaticString = #filePath,
     line: UInt = #line
 ) rethrows -> T {
-    do {
-        return try body()
-    } catch {
+    do { return try body() } catch {
         XCTFail("\(message.map { $0 + ": " } ?? "")unexpected error \(error) thrown", file: file, line: line)
-        if let defaultValue = defaultValue {
-            return defaultValue
-        } else {
-            throw error
-        }
+        if let defaultValue = defaultValue { return defaultValue } else { throw error }
     }
 }
 
 /// Returns true if `key` is a truthy string, otherwise returns false.
 private func getBoolEnv(_ key: String) -> Bool? {
     switch ProcessInfo.processInfo.environment[key]?.lowercased() {
-    case .none:
-        return nil
-    case "true", "y", "yes", "on", "1":
-        return true
-    default:
-        return false
+    case .none: return nil
+    case "true", "y", "yes", "on", "1": return true
+    default: return false
     }
 }
 
-private func getIntEnv(_ key: String) -> Int? {
-    ProcessInfo.processInfo.environment[key].flatMap(Int.init(_:))
-}
+private func getIntEnv(_ key: String) -> Int? { ProcessInfo.processInfo.environment[key].flatMap(Int.init(_:)) }
 
 fileprivate extension URLSession {
     func data(from url: URL) async throws -> (Data, URLResponse) {

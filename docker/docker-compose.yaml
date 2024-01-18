@@ -4,7 +4,7 @@
 #
 # % docker-compose \
 #   -f docker/docker-compose.yaml \
-#   -f docker/docker-compose.2204.58.yaml \
+#   -f docker/docker-compose.2204.59.yaml \
 #   run test
 #
 version: "3"
@@ -57,3 +57,7 @@ services:
     command: /bin/bash -xcl "swift -version && uname -a && bash ./scripts/check-for-docc-warnings.sh"
     environment:
       DOCC_TARGET: swift-openapi-generator
+
+  examples:
+    <<: *common
+    command: /bin/bash -xcl "swift -version && uname -a && bash ./scripts/test-examples.sh"

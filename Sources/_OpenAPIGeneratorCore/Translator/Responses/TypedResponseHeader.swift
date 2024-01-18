@@ -40,21 +40,15 @@ struct TypedResponseHeader {
 extension TypedResponseHeader {
 
     /// The name of the header sanitized to be a valid Swift identifier.
-    var variableName: String {
-        asSwiftSafeName(name)
-    }
+    var variableName: String { asSwiftSafeName(name) }
 
     /// A Boolean value that indicates whether the response header can
     /// be omitted in the HTTP response.
-    var isOptional: Bool {
-        !header.required
-    }
+    var isOptional: Bool { !header.required }
 }
 
 extension TypedResponseHeader: CustomStringConvertible {
-    var description: String {
-        typeUsage.description + "/header:\(name)"
-    }
+    var description: String { typeUsage.description + "/header:\(name)" }
 }
 
 extension FileTranslator {
@@ -68,19 +62,29 @@ extension FileTranslator {
     /// - Returns: A list of response headers; can be empty if no response
     /// headers are specified in the OpenAPI document, or if all headers are
     /// unsupported.
-    func typedResponseHeaders(
-        from response: OpenAPI.Response,
-        inParent parent: TypeName
-    ) throws -> [TypedResponseHeader] {
-        guard let headers = response.headers else {
-            return []
-        }
+    /// - Throws: An error if there's an issue processing or generating typed response
+    ///           headers, such as unsupported header types or invalid definitions.
+    func typedResponseHeaders(from response: OpenAPI.Response, inParent parent: TypeName) throws
+        -> [TypedResponseHeader]
+    { try typedResponseHeaders(from: response.headers, inParent: parent) }
+
+    /// Returns the response headers declared by the specified response.
+    ///
+    /// Skips any unsupported response headers.
+    /// - Parameters:
+    ///   - headers: The OpenAPI headers.
+    ///   - parent: The Swift type name of the parent type of the headers.
+    /// - Returns: A list of response headers; can be empty if no response
+    /// headers are specified in the OpenAPI document, or if all headers are
+    /// unsupported.
+    /// - Throws: An error if there's an issue processing or generating typed response
+    ///           headers, such as unsupported header types or invalid definitions.
+    func typedResponseHeaders(from headers: OpenAPI.Header.Map?, inParent parent: TypeName) throws
+        -> [TypedResponseHeader]
+    {
+        guard let headers else { return [] }
         return try headers.compactMap { name, header in
-            try typedResponseHeader(
-                from: header,
-                named: name,
-                inParent: parent
-            )
+            try typedResponseHeader(from: header, named: name, inParent: parent)
         }
     }
 
@@ -90,6 +94,9 @@ extension FileTranslator {
     ///   - name: The name of the header.
     ///   - parent: The Swift type name of the parent type of the headers.
     /// - Returns: Typed response header if supported, nil otherwise.
+    /// - Throws: An error if there's an issue processing or generating the typed response
+    ///           header, such as unsupported header types, invalid definitions, or schema
+    ///           validation failures.
     func typedResponseHeader(
         from unresolvedResponseHeader: UnresolvedResponseHeader,
         named name: String,
@@ -99,10 +106,8 @@ extension FileTranslator {
         // Collect the header
         let header: OpenAPI.Header
         switch unresolvedResponseHeader {
-        case let .a(ref):
-            header = try components.lookup(ref)
-        case let .b(_header):
-            header = _header
+        case let .a(ref): header = try components.lookup(ref)
+        case let .b(_header): header = _header
         }
 
         let foundIn = "\(parent.description)/\(name)"
@@ -115,41 +120,21 @@ extension FileTranslator {
             schema = schemaContext.schema
             codingStrategy = .uri
         case let .b(contentMap):
-            guard
-                let typedContent = try bestSingleTypedContent(
-                    contentMap,
-                    excludeBinary: true,
-                    inParent: parent
-                )
-            else {
-                return nil
-            }
+            guard let typedContent = try bestSingleTypedContent(contentMap, excludeBinary: true, inParent: parent)
+            else { return nil }
             schema = typedContent.content.schema ?? .b(.fragment)
-            codingStrategy =
-                typedContent
-                .content
-                .contentType
-                .codingStrategy
+            codingStrategy = typedContent.content.contentType.codingStrategy
         }
 
         // Check if schema is supported
-        guard
-            try validateSchemaIsSupported(
-                schema,
-                foundIn: foundIn
-            )
-        else {
-            return nil
-        }
+        guard try validateSchemaIsSupported(schema, foundIn: foundIn) else { return nil }
 
         let type: TypeUsage
         switch unresolvedResponseHeader {
-        case let .a(ref):
-            type = try typeAssigner.typeName(for: ref).asUsage
+        case let .a(ref): type = try typeAssigner.typeName(for: ref).asUsage
         case .b:
             switch schema {
-            case let .a(reference):
-                type = try typeAssigner.typeName(for: reference).asUsage
+            case let .a(reference): type = try typeAssigner.typeName(for: reference).asUsage
             case let .b(schema):
                 type = try typeAssigner.typeUsage(
                     forParameterNamed: name,
@@ -159,7 +144,8 @@ extension FileTranslator {
                 )
             }
         }
-        let usage = type.withOptional(!header.required)
+        let isOptional = try !header.required || typeMatcher.isOptional(schema, components: components)
+        let usage = type.withOptional(isOptional)
         return .init(
             header: header,
             name: name,

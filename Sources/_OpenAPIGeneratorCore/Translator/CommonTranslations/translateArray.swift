@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 import OpenAPIKit
 
-extension FileTranslator {
+extension TypesFileTranslator {
 
     /// Returns a list of declarations for an array schema.
     ///
@@ -26,21 +26,18 @@ extension FileTranslator {
     ///   document.
     ///   - arrayContext: The context for the array, including information such
     ///   as the element schema.
-    func translateArray(
-        typeName: TypeName,
-        openAPIDescription: String?,
-        arrayContext: JSONSchema.ArrayContext
-    ) throws -> [Declaration] {
+    /// - Throws: An error if there is an issue during translation.
+    /// - Returns: A list of declarations representing the translated array.
+    func translateArray(typeName: TypeName, openAPIDescription: String?, arrayContext: JSONSchema.ArrayContext) throws
+        -> [Declaration]
+    {
 
         var inline: [Declaration] = []
 
         // An OpenAPI array is represented as a Swift array with an element type
         let elementType: TypeUsage
         if let items = arrayContext.items {
-            if let builtinType = try typeMatcher.tryMatchReferenceableType(
-                for: items,
-                components: components
-            ) {
+            if let builtinType = try typeMatcher.tryMatchReferenceableType(for: items, components: components) {
                 elementType = builtinType
             } else {
                 elementType = try typeAssigner.typeUsage(
@@ -48,26 +45,20 @@ extension FileTranslator {
                     components: components,
                     inParent: typeName
                 )
-                let nestedDecls = try translateSchema(
-                    typeName: elementType.typeName,
-                    schema: items,
-                    overrides: .none
-                )
+                let nestedDecls = try translateSchema(typeName: elementType.typeName, schema: items, overrides: .none)
                 inline.append(contentsOf: nestedDecls)
             }
         } else {
             elementType = TypeName.valueContainer.asUsage
         }
 
-        let typealiasComment: Comment? =
-            typeName
-            .docCommentWithUserDescription(openAPIDescription)
+        let typealiasComment: Comment? = typeName.docCommentWithUserDescription(openAPIDescription)
         let arrayDecl: Declaration = .commentable(
             typealiasComment,
             .`typealias`(
                 accessModifier: config.access,
                 name: typeName.shortSwiftName,
-                existingType: elementType.typeName.asUsage.asArray.fullyQualifiedSwiftName
+                existingType: .init(elementType.typeName.asUsage.asArray)
             )
         )
         return inline + [arrayDecl]

@@ -13,6 +13,45 @@
 //===----------------------------------------------------------------------===//
 import OpenAPIKit
 
+extension FileTranslator {
+
+    /// Returns an expression representing the call to converter to set the provided header into
+    /// a header fields container.
+    /// - Parameter header: The header to set.
+    /// - Returns: An expression.
+    func translateMultipartOutgoingHeader(_ header: TypedResponseHeader) -> Expression {
+        .try(
+            .identifierPattern("converter").dot("setHeaderFieldAs\(header.codingStrategy.runtimeName)")
+                .call([
+                    .init(label: "in", expression: .inOut(.identifierPattern("headerFields"))),
+                    .init(label: "name", expression: .literal(header.name)),
+                    .init(
+                        label: "value",
+                        expression: .identifierPattern("value").dot("headers").dot(header.variableName)
+                    ),
+                ])
+        )
+    }
+
+    /// Returns an expression representing the call to converter to get the provided header from
+    /// a header fields container.
+    /// - Parameter header: The header to get.
+    /// - Returns: A function argument description.
+    func translateMultipartIncomingHeader(_ header: TypedResponseHeader) -> FunctionArgumentDescription {
+        let methodName =
+            "get\(header.isOptional ? "Optional" : "Required")HeaderFieldAs\(header.codingStrategy.runtimeName)"
+        let convertExpr: Expression = .try(
+            .identifierPattern("converter").dot(methodName)
+                .call([
+                    .init(label: "in", expression: .identifierPattern("headerFields")),
+                    .init(label: "name", expression: .literal(header.name)),
+                    .init(label: "as", expression: .identifierType(header.typeUsage.withOptional(false)).dot("self")),
+                ])
+        )
+        return .init(label: header.variableName, expression: convertExpr)
+    }
+}
+
 extension TypesFileTranslator {
 
     /// Returns the specified response header extracted into a property
@@ -22,20 +61,23 @@ extension TypesFileTranslator {
     ///   - header: A response parameter.
     ///   - parent: The type name of the parent struct.
     /// - Returns: A property blueprint.
-    func parseResponseHeaderAsProperty(
-        for header: TypedResponseHeader,
-        parent: TypeName
-    ) throws -> PropertyBlueprint {
-        let comment = parent.docCommentWithUserDescription(
-            header.header.description,
-            subPath: header.name
-        )
+    /// - Throws: An error if there's an issue while parsing the response header.
+    func parseResponseHeaderAsProperty(for header: TypedResponseHeader, parent: TypeName) throws -> PropertyBlueprint {
+        let schema = header.schema
+        let typeUsage = header.typeUsage
+        let associatedDeclarations: [Declaration]
+        if TypeMatcher.isInlinable(schema) {
+            associatedDeclarations = try translateSchema(typeName: typeUsage.typeName, schema: schema, overrides: .none)
+        } else {
+            associatedDeclarations = []
+        }
+        let comment = parent.docCommentWithUserDescription(header.header.description, subPath: header.name)
         return .init(
             comment: comment,
             originalName: header.name,
-            typeUsage: header.typeUsage,
+            typeUsage: typeUsage,
             default: header.header.required ? nil : .nil,
-            associatedDeclarations: [],
+            associatedDeclarations: associatedDeclarations,
             asSwiftSafeName: swiftSafeName
         )
     }
@@ -50,15 +92,12 @@ extension TypesFileTranslator {
     /// returned, the last one is the header type declaration, while any
     /// previous ones represent unnamed types in the OpenAPI document that
     /// need to be defined inline.
-    func translateResponseHeaderInTypes(
-        componentKey: OpenAPI.ComponentKey,
-        header: TypedResponseHeader
-    ) throws -> [Declaration] {
+    /// - Throws: An error if there's an issue while translating the response header or its inline types.
+    func translateResponseHeaderInTypes(componentKey: OpenAPI.ComponentKey, header: TypedResponseHeader) throws
+        -> [Declaration]
+    {
         let typeName = typeAssigner.typeName(for: componentKey, of: OpenAPI.Header.self)
-        return try translateResponseHeaderInTypes(
-            typeName: typeName,
-            header: header
-        )
+        return try translateResponseHeaderInTypes(typeName: typeName, header: header)
     }
 
     /// Returns a list of declarations for the specified reusable response
@@ -70,17 +109,12 @@ extension TypesFileTranslator {
     /// returned, the last one is the header type declaration, while any
     /// previous ones represent unnamed types in the OpenAPI document that
     /// need to be defined inline.
-    func translateResponseHeaderInTypes(
-        typeName: TypeName,
-        header: TypedResponseHeader
-    ) throws -> [Declaration] {
+    /// - Throws: An error if there's an issue while translating the response header or its inline types.
+    func translateResponseHeaderInTypes(typeName: TypeName, header: TypedResponseHeader) throws -> [Declaration] {
         let decl = try translateSchema(
             typeName: typeName,
             schema: header.schema,
-            overrides: .init(
-                isOptional: header.isOptional,
-                userDescription: header.header.description
-            )
+            overrides: .init(isOptional: header.isOptional, userDescription: header.header.description)
         )
         return decl
     }
@@ -94,30 +128,23 @@ extension ClientFileTranslator {
     ///   - header: The response header to extract.
     ///   - responseVariableName: The name of the response variable.
     /// - Returns: A function argument expression.
-    func translateResponseHeaderInClient(
-        _ header: TypedResponseHeader,
-        responseVariableName: String
-    ) throws -> FunctionArgumentDescription {
+    /// - Throws: An error if there's an issue while generating the extraction expression.
+    func translateResponseHeaderInClient(_ header: TypedResponseHeader, responseVariableName: String) throws
+        -> FunctionArgumentDescription
+    {
         .init(
             label: header.variableName,
             expression: .try(
-                .identifier("converter")
+                .identifierPattern("converter")
                     .dot(
                         "get\(header.isOptional ? "Optional" : "Required")HeaderFieldAs\(header.codingStrategy.runtimeName)"
                     )
                     .call([
-                        .init(
-                            label: "in",
-                            expression: .identifier(responseVariableName).dot("headerFields")
-                        ),
+                        .init(label: "in", expression: .identifierPattern(responseVariableName).dot("headerFields")),
                         .init(label: "name", expression: .literal(header.name)),
                         .init(
                             label: "as",
-                            expression:
-                                .identifier(
-                                    header.typeUsage.fullyQualifiedNonOptionalSwiftName
-                                )
-                                .dot("self")
+                            expression: .identifierType(header.typeUsage.withOptional(false)).dot("self")
                         ),
                     ])
             )
@@ -134,27 +161,20 @@ extension ServerFileTranslator {
     ///   - header: The header to extract.
     ///   - responseVariableName: The name of the response variable.
     /// - Returns: A function argument expression.
-    func translateResponseHeaderInServer(
-        _ header: TypedResponseHeader,
-        responseVariableName: String
-    ) throws -> Expression {
-        return .try(
-            .identifier("converter")
-                .dot("setHeaderFieldAs\(header.codingStrategy.runtimeName)")
+    /// - Throws: An error if there's an issue while generating the expression for setting the header field.
+    func translateResponseHeaderInServer(_ header: TypedResponseHeader, responseVariableName: String) throws
+        -> Expression
+    {
+        .try(
+            .identifierPattern("converter").dot("setHeaderFieldAs\(header.codingStrategy.runtimeName)")
                 .call([
                     .init(
                         label: "in",
-                        expression: .inOut(
-                            .identifier(responseVariableName)
-                                .dot("headerFields")
-                        )
-                    ),
-                    .init(label: "name", expression: .literal(header.name)),
+                        expression: .inOut(.identifierPattern(responseVariableName).dot("headerFields"))
+                    ), .init(label: "name", expression: .literal(header.name)),
                     .init(
                         label: "value",
-                        expression: .identifier("value")
-                            .dot("headers")
-                            .dot(header.variableName)
+                        expression: .identifierPattern("value").dot("headers").dot(header.variableName)
                     ),
                 ])
         )
