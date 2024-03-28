@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
+
 /// A description of an import declaration.
 ///
 /// For example: `import Foo`.
@@ -1068,6 +1070,10 @@ struct NamedFileDescription: Equatable, Codable {
 
     /// The contents of the file.
     var contents: FileDescription
+    init(name: String = UUID().uuidString, contents: FileDescription) {
+        self.name = name
+        self.contents = contents
+    }
 }
 
 /// A file with contents made up of structured Swift code.

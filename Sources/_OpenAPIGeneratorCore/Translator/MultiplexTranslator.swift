@@ -20,6 +20,7 @@ struct MultiplexTranslator: TranslatorProtocol {
         throws -> StructuredSwiftRepresentation
     {
         let translator: any FileTranslator
+        
         switch config.mode {
         case .types:
             translator = TypesFileTranslator(
@@ -27,6 +28,7 @@ struct MultiplexTranslator: TranslatorProtocol {
                 diagnostics: diagnostics,
                 components: parsedOpenAPI.components
             )
+            
         case .client:
             translator = ClientFileTranslator(
                 config: config,
@@ -41,5 +43,27 @@ struct MultiplexTranslator: TranslatorProtocol {
             )
         }
         return try translator.translateFile(parsedOpenAPI: parsedOpenAPI)
+    }
+    func translates(parsedOpenAPI: ParsedOpenAPIRepresentation, config: Config, diagnostics: any DiagnosticCollector)
+        throws -> [StructuredSwiftRepresentation]
+    {
+        
+        let translators: TypesFileTranslator
+        switch config.mode {
+        case .types:
+            translators = TypesFileTranslator(
+                config: config,
+                diagnostics: diagnostics,
+                components: parsedOpenAPI.components
+            )
+        default:
+            translators = TypesFileTranslator(
+                config: config,
+                diagnostics: diagnostics,
+                components: parsedOpenAPI.components
+            )
+        
+        }
+        return try translators.translateFiles(parsedOpenAPI: parsedOpenAPI)
     }
 }

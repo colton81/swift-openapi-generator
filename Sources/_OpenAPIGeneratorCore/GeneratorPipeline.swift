@@ -1,3 +1,5 @@
+import Foundation
+
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the SwiftOpenAPIGenerator open source project
@@ -12,8 +14,9 @@
 //
 //===----------------------------------------------------------------------===//
 import OpenAPIKit
-import Foundation
 import Yams
+
+// MARK: - GeneratorPipeline
 
 /// A sequence of steps that combined represents the full end-to-end
 /// functionality of the generator.
@@ -33,7 +36,6 @@ import Yams
 /// 3. Rendering: TranslatedOutput -> RenderedOutput, which converts a
 /// structured Swift representation into a raw Swift file.
 struct GeneratorPipeline {
-
     // Note: Until we have variadic generics we need to have a fixed number
     // of type parameters, but this is fine because have all the concrete
     // types for the stage boundaries already defined.
@@ -56,8 +58,11 @@ struct GeneratorPipeline {
     /// The translation phase.
     var translateOpenAPIToStructuredSwiftStage: GeneratorPipelineStage<ParsedInput, TranslatedOutput>
 
+    var translateOpenAPIToStructuredSwiftStages: GeneratorPipelineStage<ParsedInput, [TranslatedOutput]>
+
     /// The rendering phase.
     var renderSwiftFilesStage: GeneratorPipelineStage<TranslatedOutput, RenderedOutput>
+    var renderSwiftFilesStages: GeneratorPipelineStage<[TranslatedOutput], [RenderedOutput]>
 
     /// Runs the full pipeline.
     ///
@@ -69,7 +74,12 @@ struct GeneratorPipeline {
     /// - Returns: The output of the rendering stage.
     /// - Throws: An error if a non-recoverable issue occurs during pipeline execution.
     func run(_ input: RawInput) throws -> RenderedOutput {
-        try renderSwiftFilesStage.run(translateOpenAPIToStructuredSwiftStage.run(parseOpenAPIFileStage.run(input)))
+        let data = try renderSwiftFilesStage.run(translateOpenAPIToStructuredSwiftStage.run(parseOpenAPIFileStage.run(input)))
+        return data
+    }
+    func runs(_ input: RawInput) throws -> [RenderedOutput] {
+        let data = try renderSwiftFilesStages.run(translateOpenAPIToStructuredSwiftStages.run(parseOpenAPIFileStage.run(input)))
+        return data
     }
 }
 
@@ -83,7 +93,16 @@ struct GeneratorPipeline {
 /// - Returns: The raw contents of the generated Swift file.
 public func runGenerator(input: InMemoryInputFile, config: Config, diagnostics: any DiagnosticCollector) throws
     -> InMemoryOutputFile
-{ try makeGeneratorPipeline(config: config, diagnostics: diagnostics).run(input) }
+{
+    let data = try makeGeneratorPipeline(config: config, diagnostics: diagnostics).run(input)
+    return data
+}
+public func runGenerators(input: InMemoryInputFile, config: Config, diagnostics: any DiagnosticCollector) throws
+    -> [InMemoryOutputFile]
+{
+    let data = try makeGeneratorPipeline(config: config, diagnostics: diagnostics).runs(input)
+    return data
+}
 
 /// Creates a new pipeline instance.
 /// - Parameters:
@@ -110,7 +129,9 @@ func makeGeneratorPipeline(
     }
     let validateDoc = { (doc: OpenAPI.Document) -> OpenAPI.Document in
         let validationDiagnostics = try validator(doc, config)
-        for diagnostic in validationDiagnostics { diagnostics.emit(diagnostic) }
+        for diagnostic in validationDiagnostics {
+            diagnostics.emit(diagnostic)
+        }
         return doc
     }
     return .init(
@@ -125,10 +146,23 @@ func makeGeneratorPipeline(
                 try translator.translate(parsedOpenAPI: input, config: config, diagnostics: diagnostics)
             },
             postTransitionHooks: []
+        ), translateOpenAPIToStructuredSwiftStages: .init(
+            preTransitionHooks: [],
+            transition: { input in
+                try translator.translates(parsedOpenAPI: input, config: config, diagnostics: diagnostics)
+            },
+            postTransitionHooks: []
         ),
         renderSwiftFilesStage: .init(
             preTransitionHooks: [],
             transition: { input in try renderer.render(structured: input, config: config, diagnostics: diagnostics) },
+            postTransitionHooks: []
+        ),
+        renderSwiftFilesStages: .init(
+            preTransitionHooks: [],
+            transition: { input in
+                try renderer.renders(structured: input, config: config, diagnostics: diagnostics)
+            },
             postTransitionHooks: []
         )
     )

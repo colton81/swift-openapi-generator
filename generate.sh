@@ -2,8 +2,8 @@
 
 # Define the output directory and the location of the openapi.yaml file
 
-OUTPUT_DIRECTORY="/Users/coltonhillebrand/Documents/github/MTHAccountingTest/MTHAccountingTest/Helpers/APIManager/ClientFiles"
-#OUTPUT_DIRECTORY="/Users/coltonhillebrand/Documents/github/ERP-IOS/ERPProject/MTH Accounting/Utilities/APIServices/APIGenerated"
+#OUTPUT_DIRECTORY="/Users/coltonhillebrand/Documents/github/MTHAccountingTest/MTHAccountingTest/Helpers/APIManager/ClientFiles"
+OUTPUT_DIRECTORY="/Users/coltonhillebrand/Documents/github/ERP-IOS/ERPProject/MTH Accounting/Utilities/APIManager/ClientFiles"
 OPENAPI_YAML_PATH="$OUTPUT_DIRECTORY/openapi.yaml"
 
 

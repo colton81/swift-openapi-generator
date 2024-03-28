@@ -88,6 +88,17 @@ final class StringCodeWriter {
 /// A renderer that uses string interpolation and concatenation
 /// to convert the provided structure code into raw string form.
 struct TextBasedRenderer: RendererProtocol {
+    func renders(structured code: [StructuredSwiftRepresentation], config: Config, diagnostics: any DiagnosticCollector) throws -> [InMemoryOutputFile] {
+        var outputFiles: [InMemoryOutputFile] = []
+        for structured in code {
+            let namedFile = structured.file
+            renderFile(namedFile.contents)
+            let string = writer.rendered()
+            outputFiles.append(InMemoryOutputFile(baseName: namedFile.name, contents: Data(string.utf8)))
+        }
+        return outputFiles
+    }
+    
 
     func render(structured: StructuredSwiftRepresentation, config: Config, diagnostics: any DiagnosticCollector) throws
         -> InMemoryOutputFile

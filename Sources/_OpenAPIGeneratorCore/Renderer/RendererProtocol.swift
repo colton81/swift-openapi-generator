@@ -27,4 +27,6 @@ protocol RendererProtocol {
     /// - Throws: An error if an issue occurs during rendering.
     func render(structured code: StructuredSwiftRepresentation, config: Config, diagnostics: any DiagnosticCollector)
         throws -> InMemoryOutputFile
+    func renders(structured code: [StructuredSwiftRepresentation], config: Config, diagnostics: any DiagnosticCollector)
+    throws -> [InMemoryOutputFile]
 }

@@ -17,9 +17,9 @@
 //
 // When compiling for MacCatalyst, the plugin is (erroneously?) compiled with os(iOS).
 #if !(os(macOS) || os(Linux) || (os(iOS) && targetEnvironment(macCatalyst)))
-#error(
-    "_OpenAPIGeneratorCore is only to be used by swift-openapi-generator itself—your target should not link this library or the command line tool directly."
-)
+//#error(
+//    "_OpenAPIGeneratorCore is only to be used by swift-openapi-generator itself—your target should not link this library or the command line tool directly."
+//)
 #endif
 
 #if SWIFT_OPENAPI_STRICT_CONCURRENCY

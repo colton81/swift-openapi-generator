@@ -21,6 +21,7 @@ import struct Foundation.Data
 import class Foundation.FileManager
 import ArgumentParser
 import _OpenAPIGeneratorCore
+import Foundation
 
 extension _Tool {
     /// Runs the generator with the specified configuration values.
@@ -51,15 +52,29 @@ extension _Tool {
         try await withThrowingTaskGroup(of: Void.self) { group in
             for config in configs {
                 group.addTask {
-                    try runGenerator(
-                        doc: doc,
-                        docData: docData,
-                        config: config,
-                        outputDirectory: outputDirectory,
-                        outputFileName: config.mode.outputFileName,
-                        isDryRun: isDryRun,
-                        diagnostics: diagnostics
-                    )
+                    print("Config output style: \(config.outputStyle)")
+                    switch config.outputStyle{
+                        case .single:
+                            try runGenerator(
+                                doc: doc,
+                                docData: docData,
+                                config: config,
+                                outputDirectory: outputDirectory,
+                                outputFileName: config.mode.outputFileName,
+                                isDryRun: isDryRun,
+                                diagnostics: diagnostics
+                            )
+                        case .multi:
+                            try runGenerators(
+                                doc: doc,
+                                docData: docData,
+                                config: config,
+                                outputDirectory: outputDirectory,
+                                
+                                isDryRun: isDryRun,
+                                diagnostics: diagnostics
+                            )
+                    }
                 }
             }
             try await group.waitForAll()
@@ -105,7 +120,10 @@ extension _Tool {
         isDryRun: Bool,
         diagnostics: any DiagnosticCollector
     ) throws {
-        try replaceFileContents(
+        
+       
+        
+         try replaceFileContents(
             inDirectory: outputDirectory,
             fileName: outputFileName,
             with: {
@@ -118,6 +136,54 @@ extension _Tool {
             },
             isDryRun: isDryRun
         )
+    }
+    static func runGenerators(
+        doc: URL,
+        docData: Data,
+        config: Config,
+        outputDirectory: URL,
+       
+        isDryRun: Bool,
+        diagnostics: any DiagnosticCollector
+    ) throws {
+        
+        do{
+            let output = try _OpenAPIGeneratorCore.runGenerators(
+                input: .init(absolutePath: doc, contents: docData),
+                config: config,
+                diagnostics: diagnostics
+            )
+            
+             try replaceFileContentsForMultipleFiles(
+                inDirectory: outputDirectory,
+                files: output,
+                isDryRun: isDryRun
+            )
+        } catch {
+            print(error)
+        }
+    }
+    static func replaceFileContentsForMultipleFiles(
+        inDirectory outputDirectory: URL,
+        files: [InMemoryOutputFile],
+        isDryRun: Bool
+    ) throws {
+        for file in files {
+            print("File \(file)")
+            var name = file.baseName.isEmpty ? "\(UUID().uuidString).swift" : file.baseName
+            let path = outputDirectory.appendingPathComponent(name)
+            let data = file.contents
+            
+            if let existingData = try? Data(contentsOf: path), existingData == data {
+                print("File \(path.lastPathComponent) already up to date.")
+                continue
+            }
+            //print("Writing data to file \(path.lastPathComponent)...")
+            if !isDryRun {
+                try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
+                try data.write(to: path)
+            }
+        }
     }
 
     /// Evaluates a closure to generate file data and writes the data to disk

@@ -17,6 +17,7 @@
 #else
 import struct Foundation.URL
 import struct Foundation.Data
+import Foundation
 #endif
 
 /// An in-memory file that contains the generated Swift code.
@@ -56,7 +57,7 @@ public struct InMemoryOutputFile: Sendable {
     /// - Parameters:
     ///   - baseName: A base name representing the desired name.
     ///   - contents: Data contents of the file, encoded as UTF-8.
-    public init(baseName: String, contents: Data) {
+    public init(baseName: String = UUID().uuidString, contents: Data) {
         self.baseName = baseName
         self.contents = contents
     }

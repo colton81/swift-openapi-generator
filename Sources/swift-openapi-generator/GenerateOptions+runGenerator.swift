@@ -39,7 +39,8 @@ extension _GenerateOptions {
                 access: resolvedAccessModifier,
                 additionalImports: resolvedAdditionalImports,
                 filter: config?.filter,
-                featureFlags: resolvedFeatureFlags
+                featureFlags: resolvedFeatureFlags,
+                outputStyle: config?.outputStyle ?? .single
             )
         }
         let diagnostics: any DiagnosticCollector & Sendable
@@ -69,6 +70,7 @@ extension _GenerateOptions {
             - Plugin source: \(pluginSource?.rawValue ?? "<none>")
             - Is dry run: \(isDryRun)
             - Additional imports: \(resolvedAdditionalImports.isEmpty ? "<none>" : resolvedAdditionalImports.joined(separator: ", "))
+            - Output Style: \(config?.outputStyle?.rawValue ?? "<none>")
             """
         )
         do {

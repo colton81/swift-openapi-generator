@@ -27,8 +27,44 @@ struct TypesFileTranslator: FileTranslator {
     var config: Config
     var diagnostics: any DiagnosticCollector
     var components: OpenAPI.Components
-
+    
     func translateFile(parsedOpenAPI: ParsedOpenAPIRepresentation) throws -> StructuredSwiftRepresentation {
+
+            let doc = parsedOpenAPI
+
+            let topComment: Comment = .inline(Constants.File.topComment)
+
+            let imports = Constants.File.imports + config.additionalImports.map { ImportDescription(moduleName: $0) }
+
+            let apiProtocol = try translateAPIProtocol(doc.paths)
+
+            let apiProtocolExtension = try translateAPIProtocolExtension(doc.paths)
+
+            let serversDecl = translateServers(doc.servers)
+
+            let multipartSchemaNames = try parseSchemaNamesUsedInMultipart(paths: doc.paths, components: doc.components)
+            let components = try translateComponents(doc.components, multipartSchemaNames: multipartSchemaNames)
+            
+            let operationDescriptions = try OperationDescription.all(
+                from: doc.paths,
+                in: doc.components,
+                asSwiftSafeName: swiftSafeName
+            )
+            let operations = try translateOperations(operationDescriptions)
+
+            let typesFile = FileDescription(
+                topComment: topComment,
+                imports: imports,
+                codeBlocks: [
+                    .declaration(apiProtocol), .declaration(apiProtocolExtension), .declaration(serversDecl), components,
+                    operations,
+                ]
+            )
+        
+            return StructuredSwiftRepresentation(file: .init(name: GeneratorMode.types.outputFileName, contents: typesFile))
+        }
+
+    func translateFiles(parsedOpenAPI: ParsedOpenAPIRepresentation) throws -> [StructuredSwiftRepresentation] {
 
         let doc = parsedOpenAPI
 
@@ -44,7 +80,13 @@ struct TypesFileTranslator: FileTranslator {
 
         let multipartSchemaNames = try parseSchemaNamesUsedInMultipart(paths: doc.paths, components: doc.components)
         let components = try translateComponents(doc.components, multipartSchemaNames: multipartSchemaNames)
-
+        let files = try translateComponentsToFiles(doc.components, multipartSchemaNames: multipartSchemaNames)
+        var filesArray:[StructuredSwiftRepresentation] = []
+        for file in files {
+            let newFile: NamedFileDescription = .init(name: "", contents: file)
+           
+            filesArray.append(.init(file: newFile))
+        }
         let operationDescriptions = try OperationDescription.all(
             from: doc.paths,
             in: doc.components,
@@ -60,7 +102,7 @@ struct TypesFileTranslator: FileTranslator {
                 operations,
             ]
         )
-
-        return StructuredSwiftRepresentation(file: .init(name: GeneratorMode.types.outputFileName, contents: typesFile))
+        return filesArray
+        //return StructuredSwiftRepresentation(file: .init(name: GeneratorMode.types.outputFileName, contents: typesFile))
     }
 }

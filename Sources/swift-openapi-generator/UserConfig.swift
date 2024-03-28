@@ -35,6 +35,8 @@ struct _UserConfig: Codable {
 
     /// A set of features to explicitly enable.
     var featureFlags: FeatureFlags?
+    
+    var outputStyle: OutputStyle?
 
     /// A set of raw values corresponding to the coding keys of this struct.
     static let codingKeysRawValues = Set(CodingKeys.allCases.map({ $0.rawValue }))
@@ -45,5 +47,6 @@ struct _UserConfig: Codable {
         case additionalImports
         case filter
         case featureFlags
+        case outputStyle
     }
 }

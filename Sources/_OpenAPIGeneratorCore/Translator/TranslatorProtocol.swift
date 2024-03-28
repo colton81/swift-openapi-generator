@@ -28,4 +28,6 @@ protocol TranslatorProtocol {
     /// - Throws: An error if there are issues parsing or translating the request body.
     func translate(parsedOpenAPI: ParsedOpenAPIRepresentation, config: Config, diagnostics: any DiagnosticCollector)
         throws -> StructuredSwiftRepresentation
+    func translates(parsedOpenAPI: ParsedOpenAPIRepresentation, config: Config, diagnostics: any DiagnosticCollector)
+    throws -> [StructuredSwiftRepresentation]
 }

@@ -11,7 +11,10 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 //===----------------------------------------------------------------------===//
-
+public enum OutputStyle:String, Codable, CaseIterable, Sendable {
+    case multi
+    case single
+}
 /// A structure that contains configuration options for a single execution
 /// of the generator pipeline run.
 ///
@@ -37,6 +40,8 @@ public struct Config: Sendable {
 
     /// Additional pre-release features to enable.
     public var featureFlags: FeatureFlags
+    
+    public var outputStyle: OutputStyle
 
     /// Creates a configuration with the specified generator mode and imports.
     /// - Parameters:
@@ -50,12 +55,14 @@ public struct Config: Sendable {
         access: AccessModifier,
         additionalImports: [String] = [],
         filter: DocumentFilter? = nil,
-        featureFlags: FeatureFlags = []
+        featureFlags: FeatureFlags = [],
+        outputStyle: OutputStyle = .multi
     ) {
         self.mode = mode
         self.access = access
         self.additionalImports = additionalImports
         self.filter = filter
         self.featureFlags = featureFlags
+        self.outputStyle = outputStyle
     }
 }
